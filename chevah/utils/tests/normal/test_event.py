@@ -9,7 +9,7 @@ import os
 from jinja2 import DictLoader, Environment
 from mock import patch
 
-from chevah.commons import COMMONS_MODULE_PATH
+from chevah.utils import MODULE_PATH
 from chevah.empirical.testcase import (
     ChevahTestCase,
     LogTestCase,
@@ -166,7 +166,7 @@ class TestEventsDefinition(ChevahTestCase):
         Check that the events file is valid.
         """
         path = os.path.join(
-            COMMONS_MODULE_PATH, 'static', 'events', 'events.json')
+            MODULE_PATH, 'static', 'events', 'events.json')
         definitions = EventsDefinition(path=path)
 
         definitions.load()

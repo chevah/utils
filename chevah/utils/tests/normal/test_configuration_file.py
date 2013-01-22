@@ -8,7 +8,8 @@ from __future__ import with_statement
 import os
 from StringIO import StringIO
 
-from chevah.empirical import LogTestCase, factory
+from chevah.empirical import factory
+from chevah.empirical.testcase import LogTestCase
 from chevah.utils.configuration_file import (
     ConfigurationFileMixin,
     FileConfigurationProxy,

@@ -8,13 +8,13 @@ import sys
 
 # Marker for paver.sh.
 # This value is pavers by bash. Use a strict format.
-BRINK_VERSION = '0.6.6'
+BRINK_VERSION = '0.7.1'
 
 EXTRA_PACKAGES = [
     # FIXME:1022:
     # For new we need to update it by hand.
-    'chevah-compat==0.1.0',
-    'chevah-empirical==0.2.0',
+    'chevah-compat==0.3.0',
+    'chevah-empirical==0.3.0',
     ]
 
 from brink.pavement_commons import (
@@ -53,6 +53,7 @@ SETUP['pocket-lint']['include_files'] = ['pavement.py']
 SETUP['pocket-lint']['include_folders'] = ['chevah/utils']
 SETUP['pocket-lint']['exclude_files'] = []
 SETUP['test']['package'] = 'chevah.utils.tests'
+SETUP['test']['elevated'] = 'elevated'
 
 
 @task

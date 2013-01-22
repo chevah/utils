@@ -1,7 +1,7 @@
 # Copyright (c) 2011 Adi Roiban.
 # See LICENSE for details.
 '''Module for configuration loaded from local files.'''
-from chevah.commons import __future__
+from chevah.utils import __python_future__
 
 import ConfigParser
 import inspect

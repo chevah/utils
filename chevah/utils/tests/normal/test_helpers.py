@@ -27,6 +27,6 @@ class TestHelpers(ChevahTestCase):
         """
         Credentials must be initialized with at least the username.
         """
-        module = import_as_string('chevah.commons')
+        module = import_as_string('chevah.utils')
 
-        self.assertEqual('chevah.commons', module.__name__)
+        self.assertEqual('chevah.utils', module.__name__)

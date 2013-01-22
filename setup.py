@@ -1,9 +1,9 @@
 from distutils import log
-from setuptools import Command, setup
+from setuptools import Command, find_packages, setup
 import os
 import shutil
 
-VERSION = '0.1.0'
+VERSION = '0.3.4'
 
 
 class PublishCommand(Command):
@@ -52,7 +52,10 @@ distribution = setup(
     long_description=open('README.rst').read(),
     url='http://www.chevah.com',
     namespace_packages=['chevah'],
-    packages=['chevah', 'chevah.utils'],
+    packages=find_packages('.'),
+    package_data={'chevah.utils': [
+        'static/events/*'
+        ]},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",

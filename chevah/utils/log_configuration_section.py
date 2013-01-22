@@ -1,7 +1,7 @@
 # Copyright (c) 2011 Adi Roiban.
 # See LICENSE for details.
 '''Configuration section for Chevah logger.'''
-from chevah.commons import __future__
+from chevah.utils import __python_future__
 
 import re
 

@@ -3,7 +3,7 @@
 """
 An account as used by Chevah services.
 """
-from chevah.commons import __future__
+from chevah.utils import __python_future__
 from copy import copy
 
 from zope.interface import implements

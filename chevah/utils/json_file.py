@@ -7,8 +7,6 @@ from __future__ import with_statement
 
 import simplejson as json
 
-
-from chevah.compat import local_filesystem
 from chevah.utils.constants import (
     CONFIGURATION_DISABLED_VALUES,
     )
@@ -31,6 +29,7 @@ class JSONFile(object):
 
         File like object initialization is mainly for testing.
         """
+        from chevah.compat import local_filesystem
         self._path = path
         if self._path:
             self._segments = local_filesystem.getSegmentsFromRealPath(
@@ -69,6 +68,7 @@ class JSONFile(object):
         """
         Load the JSON from input file. Deserialize data.
         """
+        from chevah.compat import local_filesystem
         if self._segments:
             try:
                 self._file = (
