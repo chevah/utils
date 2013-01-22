@@ -8,7 +8,7 @@ import sys
 
 # Marker for paver.sh.
 # This value is pavers by bash. Use a strict format.
-BRINK_VERSION = '0.7.1'
+BRINK_VERSION = '0.7.2'
 
 EXTRA_PACKAGES = [
     # FIXME:1022:

@@ -206,7 +206,7 @@ class _Logger(object):
 
         if account:
             try:
-                from chevah.commons.compat import system_users
+                from chevah.compat import system_users
                 with system_users.executeAsUser(username=account):
                     configureHandlers()
             except ChangeUserException, error:
@@ -230,7 +230,7 @@ class _Logger(object):
         if not self._configuration.file:
             return
 
-        from chevah.commons.compat import local_filesystem
+        from chevah.compat import local_filesystem
         log_path = os.path.abspath(
             local_filesystem.getEncodedPath(self._configuration.file))
 
