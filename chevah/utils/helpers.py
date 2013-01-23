@@ -30,7 +30,7 @@ def _(string):
 
 
 def log_add_default_handlers(nt_service=False, name=LOGGER_NAME):
-    from chevah.commons.utils.logger import Logger
+    from chevah.utils.logger import Logger
     Logger.addDefaultHandlers(nt_service=nt_service, name=name)
 
 
@@ -66,7 +66,7 @@ def generate_ssh_key(options):
 
     For success, exit_code is 0.
     '''
-    from chevah.commons.utils.crypto import Key
+    from chevah.utils.crypto import Key
     exit_code = 0
     message = ''
     try:

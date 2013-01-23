@@ -336,7 +336,7 @@ class ConfigurationFileMixin(object):
         for section in self.section_names:
             section_configuration = getattr(self, section, None)
             if section_configuration is None:
-                from chevah.commons.utils.logger import debug
+                from chevah.utils.logger import debug
                 debug('Could not found section "%s".' % (section))
                 continue
             section_properties = section_configuration.getAllProperties()
