@@ -15,7 +15,7 @@ from StringIO import StringIO
 from time import time
 
 from chevah.empirical import ChevahTestCase, factory
-from chevah.commons.utils.logger import (
+from chevah.utils.logger import (
     LogEntry,
     WatchedFileHandler,
     )
