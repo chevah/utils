@@ -15,7 +15,7 @@ from StringIO import StringIO
 from time import time
 
 from chevah.empirical import ChevahTestCase, factory
-from chevah.utils.logger import (
+from chevah.commons.utils.logger import (
     LogEntry,
     WatchedFileHandler,
     )
@@ -141,7 +141,7 @@ class TestLoggerFile(ChevahTestCase):
             # Add two log entries and close the logger.
             logger.log(log_id, log_message)
             logger.log(log_id + 1, log_message)
-            logger.shutdown()
+            logger.removeAllHandlers()
 
             # Check that file exists and it has the right content.
             self.assertTrue(factory.fs.exists(segments))
@@ -173,7 +173,7 @@ class TestLoggerFile(ChevahTestCase):
             self.assertIsNotNone(logger._file_handler)
             self.assertTrue(
                 isinstance(logger._file_handler, WatchedFileHandler))
-            logger.shutdown()
+            logger.removeAllHandlers()
         finally:
             factory.fs.deleteFile(segments)
 
@@ -200,7 +200,7 @@ class TestLoggerFile(ChevahTestCase):
             self.assertTrue(
                 isinstance(logger._file_handler, RotatingFileHandler))
             self.assertEqual(10, logger._file_handler.backupCount)
-            logger.shutdown()
+            logger.removeAllHandlers()
         finally:
             factory.fs.deleteFile(segments)
 
@@ -228,7 +228,7 @@ class TestLoggerFile(ChevahTestCase):
             self.assertEqual(0, logger._file_handler.backupCount)
             self.assertEqual('H', logger._file_handler.when)
             self.assertEqual(2 * 60 * 60, logger._file_handler.interval)
-            logger.shutdown()
+            logger.removeAllHandlers()
         finally:
             factory.fs.deleteFile(segments)
 
@@ -243,7 +243,7 @@ class TestLoggerHandlers(ChevahTestCase):
         self.logger = factory.makeLogger(log_name=log_name)
 
     def tearDown(self):
-        self.logger.shutdown()
+        self.logger.removeAllHandlers()
         super(TestLoggerHandlers, self).tearDown()
 
     def test_addHandler(self):
@@ -299,3 +299,34 @@ class TestLoggerHandlers(ChevahTestCase):
         self.assertNotContains(log_handler, handlers)
         self.assertIsEmpty(handlers)
         self.assertIsEmpty(log_output.getvalue())
+
+    def test_removeHandler_closes_handler(self):
+        """
+        Handlers are closed when they are removed from the logger.
+        """
+        log_output = StringIO()
+
+        class DummyStreamHandlerWithClose(StreamHandler):
+            def close(self):
+                self.stream.close()
+                StreamHandler.close(self)
+
+        log_handler = DummyStreamHandlerWithClose(log_output)
+        self.logger.addHandler(log_handler)
+        self.logger.removeHandler(log_handler)
+
+        self.assertTrue(log_output.closed)
+
+    def test_removeAllHandlers(self):
+        """
+        All handlers are removed.
+        """
+        log_output = StringIO()
+        log_handler1 = StreamHandler(log_output)
+        log_handler2 = StreamHandler(log_output)
+        self.logger.addHandler(log_handler1)
+        self.logger.addHandler(log_handler2)
+
+        self.logger.removeAllHandlers()
+
+        self.assertIsEmpty(self.logger.getHandlers())

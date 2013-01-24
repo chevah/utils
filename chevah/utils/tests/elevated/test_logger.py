@@ -70,7 +70,7 @@ class TestLogger(ChevahTestCase):
 
         try:
             logger.configure(configuration=config, account=account)
-            logger.shutdown()
+            logger.removeAllHandlers()
 
             self.assertTrue(
                 factory.fs.exists(segments),

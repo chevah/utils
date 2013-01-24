@@ -346,9 +346,19 @@ class _Logger(object):
 
     def removeHandler(self, handler):
         """
-        Remove specified handler from the logger.
+        Remove specified handler from the logger and close it.
         """
         self._log.removeHandler(handler)
+        handler.close()
+
+    def removeAllHandlers(self):
+        """
+        Remove all handlers from the logger instance.
+        """
+        handlers = []
+        handlers.extend(self.getHandlers())
+        for handler in handlers:
+            self.removeHandler(handler)
 
     def getHandlers(self):
         """
