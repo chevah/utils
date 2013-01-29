@@ -6,7 +6,6 @@ Build script for chevah-compat.
 from __future__ import with_statement
 import sys
 
-# Marker for paver.sh.
 # This value is pavers by bash. Use a strict format.
 BRINK_VERSION = '0.9.0'
 
