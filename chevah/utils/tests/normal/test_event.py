@@ -27,7 +27,7 @@ from chevah.utils.event import (
     )
 from chevah.utils.exceptions import (
     ConfigurationError,
-    OperationalException,
+    ChevahException,
     )
 from chevah.utils.interfaces import (
     IEvent,
@@ -268,7 +268,7 @@ class TestEventsDefinition(ChevahTestCase):
     def test_load_EventDefinition_missing_group(self):
         """
         Loading an EventDefinition with a reference to a non-existent group
-        will reaise OperationalException.
+        will reaise ChevahException.
         """
         event_id = factory.getUniqueString()
         group_1 = factory.getUniqueString()
@@ -291,7 +291,7 @@ class TestEventsDefinition(ChevahTestCase):
             ''' % (event_id, message, group_1)
         config = factory.makeEventsDefinition(content=content, load=False)
 
-        with self.assertRaises(OperationalException):
+        with self.assertRaises(ChevahException):
             config.load()
 
     def test_getAllEventGroupDefinitions_good(self):

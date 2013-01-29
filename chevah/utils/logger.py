@@ -212,7 +212,7 @@ class _Logger(object):
             except ChangeUserException, error:
                 raise ConfigurationError(1026, _(
                     u'Failed to initialize logger as account "%s". %s.)' % (
-                        account, error.text)))
+                        account, error.message)))
         else:
             configureHandlers()
 
