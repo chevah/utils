@@ -8,7 +8,7 @@ import sys
 
 # Marker for paver.sh.
 # This value is pavers by bash. Use a strict format.
-BRINK_VERSION = '0.8.1'
+BRINK_VERSION = '0.9.0'
 
 EXTRA_PACKAGES = [
     # FIXME:1022:
@@ -22,6 +22,7 @@ from brink.pavement_commons import (
     buildbot_list,
     buildbot_try,
     default,
+    github,
     harness,
     help,
     lint,
@@ -38,6 +39,7 @@ from paver.easy import task
 buildbot_list
 buildbot_try
 default
+github,
 harness
 help
 lint
