@@ -8,8 +8,8 @@ from twisted.internet import defer
 from twisted.web import server
 import simplejson as json
 
-from chevah.empirical import ChevahTestCase, factory
 from chevah.utils.json_rpc import JSONRPCResource, JSONRPCError
+from chevah.utils.testing import manufacturer, UtilsTestCase
 
 
 class ImplementedJSONRPCResource(JSONRPCResource, object):
@@ -82,13 +82,14 @@ class ImplementedJSONRPCResource(JSONRPCResource, object):
         return u'private_method'
 
 
-class TestJSONRPC(ChevahTestCase):
+class TestJSONRPC(UtilsTestCase):
     '''Test JSONRPC server.'''
 
     def _getDeferredResponse(self, data):
         '''Return the JSON-RPC response from deferred data.'''
         resource = ImplementedJSONRPCResource()
-        request = factory.makeTwistedWebRequest(resource=resource, data=data)
+        request = manufacturer.makeTwistedWebRequest(
+            resource=resource, data=data)
         result = resource.render_POST(request)
         self.assertEqual(server.NOT_DONE_YET, result)
         self.runDeferred(resource._deferred)
@@ -100,7 +101,7 @@ class TestJSONRPC(ChevahTestCase):
         """
         data = '{bad-json,}'
         resource = ImplementedJSONRPCResource()
-        request = factory.makeTwistedWebRequest(
+        request = manufacturer.makeTwistedWebRequest(
             resource=resource, data=data)
         response = json.loads(resource.render_POST(request))
         self.assertIsNone(response['result'])
@@ -113,7 +114,8 @@ class TestJSONRPC(ChevahTestCase):
         """
         data = '{"method": "some_method", "id": 2, "params": {}}'
         resource = ImplementedJSONRPCResource()
-        request = factory.makeTwistedWebRequest(resource=resource, data=data)
+        request = manufacturer.makeTwistedWebRequest(
+            resource=resource, data=data)
         response = json.loads(resource.render_POST(request).decode('utf-8'))
         self.assertIsNone(response['result'])
         self.assertEqual(-32600, response['error']['code'])
@@ -122,7 +124,8 @@ class TestJSONRPC(ChevahTestCase):
 
     def _checkNotificationResult(self, data):
         resource = ImplementedJSONRPCResource()
-        request = factory.makeTwistedWebRequest(resource=resource, data=data)
+        request = manufacturer.makeTwistedWebRequest(
+            resource=resource, data=data)
         result = resource.render_POST(request)
         self.assertEqual('', result)
 
@@ -204,7 +207,8 @@ class TestJSONRPC(ChevahTestCase):
             '{"jsonrpc": "2.0", "id": 1, '
             '"method": "private_method", "params": {}}')
         resource = ImplementedJSONRPCResource()
-        request = factory.makeTwistedWebRequest(resource=resource, data=data)
+        request = manufacturer.makeTwistedWebRequest(
+            resource=resource, data=data)
         session = request.getSession()
         request.setRequestHeader('authorization', session.uid)
 
@@ -365,8 +369,8 @@ class TestJSONRPC(ChevahTestCase):
             '"method": "public_method_internal_error", "params": []}')
 
         resource = ImplementedJSONRPCResource()
-        peer = factory.makeIPv4Address()
-        request = factory.makeTwistedWebRequest(
+        peer = manufacturer.makeIPv4Address()
+        request = manufacturer.makeTwistedWebRequest(
             resource=resource, data=data, peer=peer)
 
         result = resource.render_POST(request)
@@ -400,7 +404,7 @@ class TestJSONRPC(ChevahTestCase):
         A JSON-RCP method can also be requested using GET.
         """
         resource = ImplementedJSONRPCResource()
-        request = factory.makeTwistedWebRequest(resource=resource)
+        request = manufacturer.makeTwistedWebRequest(resource=resource)
         request.postpath = ['method_name']
         # We monkey patch the renderJSONRPCOverHTTP since here we only
         # care about how a GET reqeust is converted into a JSON-RPC
@@ -418,7 +422,7 @@ class TestJSONRPC(ChevahTestCase):
         By default GET on JSON-RCP will call get_index.
         """
         resource = ImplementedJSONRPCResource()
-        request = factory.makeTwistedWebRequest(resource=resource)
+        request = manufacturer.makeTwistedWebRequest(resource=resource)
         request.postpath = ['']
 
         # We monkey patch the renderJSONRPCOverHTTP since here we only

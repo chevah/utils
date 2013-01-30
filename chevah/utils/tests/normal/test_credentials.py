@@ -5,7 +5,7 @@ Tests for credentials used by Chevah project.
 """
 from __future__ import with_statement
 
-from chevah.empirical import ChevahTestCase, factory
+from chevah.utils.testing import UtilsTestCase, manufacturer
 from chevah.utils.credentials import (
     CredentialsBase,
     PasswordCredentials,
@@ -14,7 +14,7 @@ from chevah.utils.credentials import (
     )
 
 
-class TestCredentialsBase(ChevahTestCase):
+class TestCredentialsBase(UtilsTestCase):
     """
     Tests for CredentialsBase.
     """
@@ -37,7 +37,7 @@ class TestCredentialsBase(ChevahTestCase):
         """
         By default values for credentialsBase.
         """
-        username = factory.getUniqueString()
+        username = manufacturer.getUniqueString()
         credentials = CredentialsBase(username=username)
 
         self.assertEqual(username, credentials.username)
@@ -47,12 +47,12 @@ class TestCredentialsBase(ChevahTestCase):
         """
         If type name is request, a NotImplementedError is raises.
         """
-        credentials = CredentialsBase(username=factory.getUniqueString())
+        credentials = CredentialsBase(username=manufacturer.getUniqueString())
         with self.assertRaises(NotImplementedError):
             credentials.kind_name
 
 
-class TestPasswordCredentials(ChevahTestCase):
+class TestPasswordCredentials(UtilsTestCase):
     """
     Tests for PasswordCredentials.
     """
@@ -61,7 +61,8 @@ class TestPasswordCredentials(ChevahTestCase):
         """
         Check default valuse.
         """
-        credentials = PasswordCredentials(username=factory.getUniqueString())
+        credentials = PasswordCredentials(
+            username=manufacturer.getUniqueString())
         self.assertIsNone(credentials.password)
         self.assertEqual(u'password', credentials.kind_name)
 
@@ -71,7 +72,7 @@ class TestPasswordCredentials(ChevahTestCase):
         """
         with self.assertRaises(AssertionError):
             PasswordCredentials(
-                username=factory.getUniqueString(),
+                username=manufacturer.getUniqueString(),
                 password='a')
 
     def test_init_values(self):
@@ -80,9 +81,9 @@ class TestPasswordCredentials(ChevahTestCase):
 
         We use any kind of values.
         """
-        username = factory.getUniqueString()
-        password = factory.getUniqueString()
-        peer = factory.getUniqueString()
+        username = manufacturer.getUniqueString()
+        password = manufacturer.getUniqueString()
+        peer = manufacturer.getUniqueString()
         credentials = PasswordCredentials(
             username=username,
             password=password,
@@ -93,7 +94,7 @@ class TestPasswordCredentials(ChevahTestCase):
         self.assertEqual(peer, credentials.peer)
 
 
-class TestSSHKeyCredentials(ChevahTestCase):
+class TestSSHKeyCredentials(UtilsTestCase):
     """
     Tests for SSHKeyCredentials.
     """
@@ -102,7 +103,8 @@ class TestSSHKeyCredentials(ChevahTestCase):
         """
         Check default values.
         """
-        credentials = SSHKeyCredentials(username=factory.getUniqueString())
+        credentials = SSHKeyCredentials(
+            username=manufacturer.getUniqueString())
         self.assertIsNone(credentials.key_data)
         self.assertIsNone(credentials.key_algorithm)
         self.assertIsNone(credentials.key_signature)
@@ -113,12 +115,12 @@ class TestSSHKeyCredentials(ChevahTestCase):
         """
         Check set values.
         """
-        key_data = factory.getUniqueString()
-        key_algorithm = factory.getUniqueString()
-        key_signature = factory.getUniqueString()
-        key_signed_data = factory.getUniqueString()
+        key_data = manufacturer.getUniqueString()
+        key_algorithm = manufacturer.getUniqueString()
+        key_signature = manufacturer.getUniqueString()
+        key_signed_data = manufacturer.getUniqueString()
         credentials = SSHKeyCredentials(
-            username=factory.getUniqueString(),
+            username=manufacturer.getUniqueString(),
             key_data=key_data,
             key_signature=key_signature,
             key_algorithm=key_algorithm,
@@ -130,7 +132,7 @@ class TestSSHKeyCredentials(ChevahTestCase):
         self.assertEqual(key_signed_data, credentials.key_signed_data)
 
 
-class TestSSLCertificateCredentials(ChevahTestCase):
+class TestSSLCertificateCredentials(UtilsTestCase):
     """
     Tests for SSLCertificateCredentials.
     """
@@ -140,7 +142,7 @@ class TestSSLCertificateCredentials(ChevahTestCase):
         Check default values.
         """
         credentials = SSLCertificateCredentials(
-            username=factory.getUniqueString())
+            username=manufacturer.getUniqueString())
         self.assertIsNone(credentials.certificate)
         self.assertEqual(u'ssl certificate', credentials.kind_name)
 
@@ -148,9 +150,9 @@ class TestSSLCertificateCredentials(ChevahTestCase):
         """
         Check set values.
         """
-        certificate = factory.getUniqueString()
+        certificate = manufacturer.getUniqueString()
         credentials = SSLCertificateCredentials(
-            username=factory.getUniqueString(),
+            username=manufacturer.getUniqueString(),
             certificate=certificate,
             )
 

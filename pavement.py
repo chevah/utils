@@ -12,8 +12,8 @@ BRINK_VERSION = '0.9.0'
 EXTRA_PACKAGES = [
     # FIXME:1022:
     # For new we need to update it by hand.
-    'chevah-compat==0.3.2',
-    'chevah-empirical==0.3.2',
+    'chevah-compat==0.5.0-adi1',
+    'chevah-empirical==0.5.0-adi3',
     ]
 
 from brink.pavement_commons import (

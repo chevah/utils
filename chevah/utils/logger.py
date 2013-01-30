@@ -31,12 +31,14 @@ import sys
 import time
 import types
 
+from chevah.compat.exceptions import (
+    ChangeUserException,
+    )
 from chevah.utils.constants import (
     LOGGER_NAME,
     LOGGER_TIMESTAMP_FORMAT,
     )
 from chevah.utils.exceptions import (
-    ChangeUserException,
     ConfigurationError,
     )
 from chevah.utils.helpers import _
@@ -209,6 +211,9 @@ class _Logger(object):
                 from chevah.compat import system_users
                 with system_users.executeAsUser(username=account):
                     configureHandlers()
+            # FIXME:1050:
+            # system_users.executeAsUser should raise a CompatError
+            # insted of ChangeUserException.
             except ChangeUserException, error:
                 raise ConfigurationError(1026, _(
                     u'Failed to initialize logger as account "%s". %s.)' % (
@@ -267,15 +272,16 @@ class _Logger(object):
                 _(u'Could not initialize the logging file. %s' % (
                     unicode(error))))
 
-    def addDefaultHandlers(self, nt_service=False, name=LOGGER_NAME):
+    def addDefaultHandlers(self):
         '''Add default handlers.
 
         This is not called in init to enable re-routing logs in tests.
         It is not called in debug mode.
         '''
+        nt_service = getattr(self, '_svc_name_', None)
         if nt_service:
             from logging.handlers import NTEventLogHandler
-            self._log_ntevent_handler = NTEventLogHandler(name)
+            self._log_ntevent_handler = NTEventLogHandler(nt_service)
             self.addHandler(self._log_ntevent_handler, patch_format=True)
         else:
             self._log_stdout_handler = StdOutHandler()

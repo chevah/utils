@@ -85,16 +85,8 @@ class EventException(ChevahException):
         return self.__repr__()
 
 
-class PermissionException(ChevahException):
-    '''The action was not permited.'''
-
-
 class TimeoutException(ChevahException):
     '''The action return a generic error.'''
-
-
-class ChangeUserException(ChevahException):
-    '''User could not be impersonated.'''
 
 
 class SSLException(ChevahException):

@@ -4,13 +4,13 @@
 
 from __future__ import with_statement
 
-from chevah.empirical import ChevahTestCase, factory
+from chevah.utils.testing import UtilsTestCase, manufacturer
 from chevah.utils.exceptions import (
     ConfigurationError,
     )
 
 
-class TestLogger(ChevahTestCase):
+class TestLogger(UtilsTestCase):
     """
     Tests for the logger.
     """
@@ -32,9 +32,9 @@ class TestLogger(ChevahTestCase):
             'log_sqlite': 'Disabled',
             'log_webadmin': 'Disabled',
             }
-        proxy = factory.makeFileConfigurationProxy(
+        proxy = manufacturer.makeFileConfigurationProxy(
             content=content, defaults=defaults)
-        return factory.makeLogConfigurationSection(proxy=proxy)
+        return manufacturer.makeLogConfigurationSection(proxy=proxy)
 
     def test_configure_no_services_account(self):
         """
@@ -43,7 +43,7 @@ class TestLogger(ChevahTestCase):
         """
         config = self._getConfiguration()
         account = u'no-such-account'
-        logger = factory.makeLogger()
+        logger = manufacturer.makeLogger()
 
         with self.assertRaises(ConfigurationError) as context:
             logger.configure(configuration=config, account=account)
@@ -55,7 +55,7 @@ class TestLogger(ChevahTestCase):
         Integration test that the logger will initialize the log file
         using the account name.
         """
-        path, segments = factory.fs.makePathInTemp()
+        path, segments = manufacturer.fs.makePathInTemp()
         content = (
             '[log]\n'
             'log_file: %s\n'
@@ -64,16 +64,16 @@ class TestLogger(ChevahTestCase):
         if self._drop_user != '-':
             account = self._drop_user
         else:
-            account = factory.username
+            account = manufacturer.username
 
-        logger = factory.makeLogger()
+        logger = manufacturer.makeLogger()
 
         try:
             logger.configure(configuration=config, account=account)
             logger.removeAllHandlers()
 
             self.assertTrue(
-                factory.fs.exists(segments),
+                manufacturer.fs.exists(segments),
                 'Log file was not created at ' + path.encode('utf-8'),
                 )
 
@@ -82,6 +82,6 @@ class TestLogger(ChevahTestCase):
             # for matching "account" and not "Administrators".
             self.assertIn(
                 [unicode(account), 'Administrators'],
-                factory.fs.getOwner(segments))
+                manufacturer.fs.getOwner(segments))
         finally:
-            factory.fs.deleteFile(segments, ignore_errors=True)
+            manufacturer.fs.deleteFile(segments, ignore_errors=True)

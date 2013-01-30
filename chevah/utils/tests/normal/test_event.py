@@ -10,11 +10,11 @@ from jinja2 import DictLoader, Environment
 from mock import patch
 
 from chevah.utils import MODULE_PATH
-from chevah.empirical.testcase import (
-    ChevahTestCase,
+from chevah.utils.testing import (
     LogTestCase,
+    manufacturer,
+    UtilsTestCase,
     )
-from chevah.empirical.mockup import factory
 from chevah.utils.constants import (
     CONFIGURATION_ALL_LOG_ENABLED_GROUPS,
     )
@@ -37,15 +37,15 @@ from chevah.utils.interfaces import (
     )
 
 
-class TestEventGroupDefinition(ChevahTestCase):
+class TestEventGroupDefinition(UtilsTestCase):
     """Unit tests for EventGroupDefinition."""
 
     def test_init(self):
         """
         Check EventGroupDefinition initialization.
         """
-        name = factory.getUniqueString()
-        description = factory.getUniqueString()
+        name = manufacturer.getUniqueString()
+        description = manufacturer.getUniqueString()
 
         event_group = EventGroupDefinition(
             name=name, description=description)
@@ -55,7 +55,7 @@ class TestEventGroupDefinition(ChevahTestCase):
         self.assertEqual(description, event_group.description)
 
 
-class TestEventDefinition(ChevahTestCase):
+class TestEventDefinition(UtilsTestCase):
     """
     Unit tests for EventDefinition.
     """
@@ -64,14 +64,14 @@ class TestEventDefinition(ChevahTestCase):
         """
         Check EventDefinition initialization.
         """
-        event_id = factory.getUniqueString() + 'greater_than_5'
-        description = factory.getUniqueString()
-        message = factory.getUniqueString()
-        version_added = factory.getUniqueString()
-        version_removed = factory.getUniqueString()
+        event_id = manufacturer.getUniqueString() + 'greater_than_5'
+        description = manufacturer.getUniqueString()
+        message = manufacturer.getUniqueString()
+        version_added = manufacturer.getUniqueString()
+        version_removed = manufacturer.getUniqueString()
         groups = [
-            factory.makeEventGroupDefinition(),
-            factory.makeEventGroupDefinition(),
+            manufacturer.makeEventGroupDefinition(),
+            manufacturer.makeEventGroupDefinition(),
             ]
 
         event_definition = EventDefinition(
@@ -119,20 +119,20 @@ class TestEventDefinition(ChevahTestCase):
         self.assertEqual('100320', event_definition.id_padded)
 
 
-class TestEvent(ChevahTestCase):
+class TestEvent(UtilsTestCase):
     """Unit tests for Event."""
 
     def test_init(self):
         """
         Check Event initialization.
         """
-        event_id = factory.getUniqueString()
-        message = factory.getUniqueString()
+        event_id = manufacturer.getUniqueString()
+        message = manufacturer.getUniqueString()
         data = {
             'attr1': 'value1',
             'attr2': 'value2',
-            'peer': factory.makeIPv4Address(),
-            'avatar': factory.makeApplicationAvatar()}
+            'peer': manufacturer.makeIPv4Address(),
+            'avatar': manufacturer.makeFilesystemApplicationAvatar()}
 
         event = Event(
             id=event_id,
@@ -146,7 +146,7 @@ class TestEvent(ChevahTestCase):
         self.assertEqual(data, event.data)
 
 
-class TestEventsDefinition(ChevahTestCase):
+class TestEventsDefinition(UtilsTestCase):
     """
     Unit tests for EventsDefinition.
     """
@@ -179,8 +179,8 @@ class TestEventsDefinition(ChevahTestCase):
         Trying to configure from a bad formated configuration file
         will raise ConfigurationError.
         """
-        content = factory.getUniqueString()
-        definitions = factory.makeEventsDefinition(
+        content = manufacturer.getUniqueString()
+        definitions = manufacturer.makeEventsDefinition(
             content=content, load=False)
 
         with self.assertRaises(ConfigurationError) as context:
@@ -193,7 +193,7 @@ class TestEventsDefinition(ChevahTestCase):
         An EventGroup with just a complex or simple description will load
         just fine.
         """
-        definitions = factory.makeEventsDefinition(content=u'')
+        definitions = manufacturer.makeEventsDefinition(content=u'')
 
         definitions.load()
 
@@ -205,9 +205,9 @@ class TestEventsDefinition(ChevahTestCase):
         An EventGroup with just a complex or simple description will load
         just fine.
         """
-        name_1 = factory.getUniqueString()
-        name_2 = factory.getUniqueString()
-        description = factory.getUniqueString()
+        name_1 = manufacturer.getUniqueString()
+        name_2 = manufacturer.getUniqueString()
+        description = manufacturer.getUniqueString()
         content = '''
             {
             "groups" : {
@@ -217,7 +217,7 @@ class TestEventsDefinition(ChevahTestCase):
             "events" : {}
             }
             ''' % (name_1, description, name_2)
-        definitions = factory.makeEventsDefinition(content=content)
+        definitions = manufacturer.makeEventsDefinition(content=content)
 
         group = definitions.getEventGroupDefinition(name=name_1)
         self.assertEqual(name_1, group.name)
@@ -229,10 +229,10 @@ class TestEventsDefinition(ChevahTestCase):
         """
         An EventDefinition with a message and groups will load just fine.
         """
-        event_id = factory.getUniqueString()
-        group_1 = factory.getUniqueString()
-        group_2 = factory.getUniqueString()
-        message = factory.getUniqueString()
+        event_id = manufacturer.getUniqueString()
+        group_1 = manufacturer.getUniqueString()
+        group_2 = manufacturer.getUniqueString()
+        message = manufacturer.getUniqueString()
         content = '''
             {
             "groups" : {
@@ -252,7 +252,8 @@ class TestEventsDefinition(ChevahTestCase):
                 }
             }
             ''' % (group_1, group_2, event_id, message, group_1, group_2)
-        config = factory.makeEventsDefinition(content=content, load=False)
+        config = manufacturer.makeEventsDefinition(
+            content=content, load=False)
 
         config.load()
 
@@ -270,9 +271,9 @@ class TestEventsDefinition(ChevahTestCase):
         Loading an EventDefinition with a reference to a non-existent group
         will reaise ChevahException.
         """
-        event_id = factory.getUniqueString()
-        group_1 = factory.getUniqueString()
-        message = factory.getUniqueString()
+        event_id = manufacturer.getUniqueString()
+        group_1 = manufacturer.getUniqueString()
+        message = manufacturer.getUniqueString()
         content = '''
             {
             "groups" : {},
@@ -289,7 +290,8 @@ class TestEventsDefinition(ChevahTestCase):
                 }
             }
             ''' % (event_id, message, group_1)
-        config = factory.makeEventsDefinition(content=content, load=False)
+        config = manufacturer.makeEventsDefinition(
+            content=content, load=False)
 
         with self.assertRaises(ChevahException):
             config.load()
@@ -299,9 +301,9 @@ class TestEventsDefinition(ChevahTestCase):
         An getAllEventGroupDefinitions with return a dictionary with all
         defined EventGroups.
         """
-        name_1 = factory.getUniqueString()
-        name_2 = factory.getUniqueString()
-        description = factory.getUniqueString()
+        name_1 = manufacturer.getUniqueString()
+        name_2 = manufacturer.getUniqueString()
+        description = manufacturer.getUniqueString()
         content = '''
             {
             "groups" : {
@@ -311,7 +313,7 @@ class TestEventsDefinition(ChevahTestCase):
             "events" : {}
             }
             ''' % (name_1, description, name_2)
-        config = factory.makeEventsDefinition(content=content)
+        config = manufacturer.makeEventsDefinition(content=content)
 
         result = config.getAllEventGroupDefinitions()
 
@@ -351,7 +353,7 @@ class TestEventsDefinition(ChevahTestCase):
                 }
             }
             '''
-        config = factory.makeEventsDefinition(content=content)
+        config = manufacturer.makeEventsDefinition(content=content)
 
         result = config.getAllEventDefinitions()
 
@@ -391,7 +393,7 @@ class TestEventsDefinition(ChevahTestCase):
                 }
             }
             '''
-        config = factory.makeEventsDefinition(content=content)
+        config = manufacturer.makeEventsDefinition(content=content)
 
         result = config.getAllEventDefinitionsPadded()
 
@@ -458,7 +460,7 @@ class TestEventsDefinition(ChevahTestCase):
             '\n'
             '{% endfor %}\n'
             )
-        config = factory.makeEventsDefinition(content=content)
+        config = manufacturer.makeEventsDefinition(content=content)
         templates_loader = DictLoader(
             {'events_documentation.rst': template_content})
         jinja_environment = Environment(loader=templates_loader)
@@ -494,8 +496,8 @@ class TestEventsHandler(LogTestCase):
         EventsHandler can be configured.
         """
         handler = EventsHandler()
-        definitions = factory.makeEventsDefinition()
-        log_configuration_section = factory.makeLogConfigurationSection()
+        definitions = manufacturer.makeEventsDefinition()
+        log_configuration_section = manufacturer.makeLogConfigurationSection()
 
         handler.configure(
             definitions=definitions,
@@ -511,8 +513,8 @@ class TestEventsHandler(LogTestCase):
         EventsHandler configurations can be removed using removeConfiguration.
         """
         handler = EventsHandler()
-        definitions = factory.makeEventsDefinition()
-        log_configuration_section = factory.makeLogConfigurationSection()
+        definitions = manufacturer.makeEventsDefinition()
+        log_configuration_section = manufacturer.makeLogConfigurationSection()
         handler.configure(
             definitions=definitions,
             log_configuration_section=log_configuration_section)
@@ -529,7 +531,7 @@ class TestEventsHandler(LogTestCase):
         Event definitions and other configurations is not used.
         """
         handler = EventsHandler()
-        message = u'Some message ' + factory.getUniqueString()
+        message = u'Some message ' + manufacturer.getUniqueString()
 
         handler.emit('100', message=message)
 
@@ -541,9 +543,9 @@ class TestEventsHandler(LogTestCase):
         interface to emit an event.
         """
         handler = EventsHandler()
-        message = u'Some message ' + factory.getUniqueString()
-        peer = factory.makeIPv4Address()
-        avatar = factory.makeApplicationAvatar()
+        message = u'Some message ' + manufacturer.getUniqueString()
+        peer = manufacturer.makeIPv4Address()
+        avatar = manufacturer.makeFilesystemApplicationAvatar()
         data = {}
         handler.log(100, message, peer=peer, avatar=avatar, data=data)
 
@@ -559,7 +561,7 @@ class TestEventsHandler(LogTestCase):
         When event id is an integer, it will be converted to string.
         """
         handler = EventsHandler()
-        message = u'Some message ' + factory.getUniqueString()
+        message = u'Some message ' + manufacturer.getUniqueString()
 
         with patch.object(handler, 'emitEvent') as patched:
             handler.emit(100, message=message)
@@ -572,7 +574,7 @@ class TestEventsHandler(LogTestCase):
         Events can be emitted with unicode ids.
         """
         handler = EventsHandler()
-        message = u'Some message ' + factory.getUniqueString()
+        message = u'Some message ' + manufacturer.getUniqueString()
 
         with patch.object(handler, 'emitEvent') as patched:
             handler.emit(u'100', message=message)
@@ -585,7 +587,7 @@ class TestEventsHandler(LogTestCase):
         Events can be emitted with string ids and are converted to unicode.
         """
         handler = EventsHandler()
-        message = u'Some message ' + factory.getUniqueString()
+        message = u'Some message ' + manufacturer.getUniqueString()
 
         with patch.object(handler, 'emitEvent') as patched:
             handler.emit(u'100', message=message)
@@ -599,9 +601,9 @@ class TestEventsHandler(LogTestCase):
         the text of the unknown id.
         """
         handler = EventsHandler()
-        message = u'Some message ' + factory.getUniqueString()
-        definitions = factory.makeEventsDefinition()
-        log_configuration_section = factory.makeLogConfigurationSection()
+        message = u'Some message ' + manufacturer.getUniqueString()
+        definitions = manufacturer.makeEventsDefinition()
+        log_configuration_section = manufacturer.makeLogConfigurationSection()
         handler.configure(
             definitions=definitions,
             log_configuration_section=log_configuration_section,
@@ -645,8 +647,8 @@ class TestEventsHandler(LogTestCase):
                 }
             }
             '''
-        definitions = factory.makeEventsDefinition(content=content)
-        log_configuration_section = factory.makeLogConfigurationSection()
+        definitions = manufacturer.makeEventsDefinition(content=content)
+        log_configuration_section = manufacturer.makeLogConfigurationSection()
         log_configuration_section.enabled_groups = ['enabled']
         handler.configure(
             definitions=definitions,
@@ -690,8 +692,8 @@ class TestEventsHandler(LogTestCase):
                 }
             }
             '''
-        definitions = factory.makeEventsDefinition(content=content)
-        log_configuration_section = factory.makeLogConfigurationSection()
+        definitions = manufacturer.makeEventsDefinition(content=content)
+        log_configuration_section = manufacturer.makeLogConfigurationSection()
         log_configuration_section.enabled_groups = [
             CONFIGURATION_ALL_LOG_ENABLED_GROUPS]
         handler.configure(
@@ -730,8 +732,8 @@ class TestEventsHandler(LogTestCase):
                 }
             }
             '''
-        definitions = factory.makeEventsDefinition(content=content)
-        log_configuration_section = factory.makeLogConfigurationSection()
+        definitions = manufacturer.makeEventsDefinition(content=content)
+        log_configuration_section = manufacturer.makeLogConfigurationSection()
         handler.configure(
             definitions=definitions,
             log_configuration_section=log_configuration_section)
@@ -764,13 +766,13 @@ class TestEventsHandler(LogTestCase):
                 }
             }
             '''
-        definitions = factory.makeEventsDefinition(content=content)
-        log_configuration_section = factory.makeLogConfigurationSection()
+        definitions = manufacturer.makeEventsDefinition(content=content)
+        log_configuration_section = manufacturer.makeLogConfigurationSection()
         handler.configure(
             definitions=definitions,
             log_configuration_section=log_configuration_section)
 
-        data_string = factory.getUniqueString()
+        data_string = manufacturer.getUniqueString()
         handler.emit('100', data={'data': data_string})
 
         self.assertLog(100, regex="100 " + data_string + " some m")
@@ -799,8 +801,8 @@ class TestEventsHandler(LogTestCase):
                 }
             }
             '''
-        definitions = factory.makeEventsDefinition(content=content)
-        log_configuration_section = factory.makeLogConfigurationSection()
+        definitions = manufacturer.makeEventsDefinition(content=content)
+        log_configuration_section = manufacturer.makeLogConfigurationSection()
         handler.configure(
             definitions=definitions,
             log_configuration_section=log_configuration_section)

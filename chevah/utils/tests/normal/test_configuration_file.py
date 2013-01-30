@@ -8,8 +8,7 @@ from __future__ import with_statement
 import os
 from StringIO import StringIO
 
-from chevah.empirical import factory
-from chevah.empirical.testcase import LogTestCase
+from chevah.utils.testing import LogTestCase, manufacturer
 from chevah.utils.configuration_file import (
     ConfigurationFileMixin,
     FileConfigurationProxy,
@@ -47,7 +46,7 @@ class TestFileConfigurationProxy(LogTestCase):
         if os.name != 'posix':
             raise self.skipTest()
 
-        test_filesystem = factory.makeTestRunnerFilesystem()
+        test_filesystem = manufacturer.fs
         test_segments = None
         config_path = None
         try:
@@ -74,7 +73,7 @@ class TestFileConfigurationProxy(LogTestCase):
             u'[some_section]\n'
             u'some_section_option: some_section_value\n'
             u'')
-        test_filesystem = factory.makeTestRunnerFilesystem()
+        test_filesystem = manufacturer.fs
         test_segments = None
         try:
             test_segments = test_filesystem.createFileInTemp(
@@ -118,7 +117,7 @@ class TestFileConfigurationProxy(LogTestCase):
         config_content = (
             u'[another_muță]\n'
             u'another_muță_option: another_muță_value\n\n')
-        test_filesystem = factory.makeTestRunnerFilesystem()
+        test_filesystem = manufacturer.fs
         test_segments = None
         try:
             test_segments = test_filesystem.createFileInTemp(
@@ -642,7 +641,7 @@ class TestConfigurationFileMixin(LogTestCase):
             u'[some_section]\n'
             u'some_section_option: some_section_value\n'
             u'')
-        test_filesystem = factory.makeTestRunnerFilesystem()
+        test_filesystem = manufacturer.fs
         test_segments = None
         try:
             test_segments = test_filesystem.createFileInTemp(
