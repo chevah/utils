@@ -29,11 +29,11 @@ class ChevahError(Exception):
         self.data = data
 
     def __repr__(self):
-        return '%s - %s\n%s' % (
-            str(self.id), self.text.encode('utf-8'), self.data)
+        return '%s\n%s' % (str(self.__class__), self.__str__)
 
     def __str__(self):
-        return self.__repr__()
+        return '%s - %s\n%s' % (
+            str(self.id), self.text.encode('utf-8'), self.data)
 
 
 class ConfigurationError(ChevahError):

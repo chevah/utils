@@ -165,7 +165,7 @@ class UtilsTestCase(ChevahTestCase):
         self.assertEqual(CONFIGURATION_INHERIT[0], option)
 
 
-class EventTestCase(ChevahTestCase):
+class EventTestCase(UtilsTestCase):
     """
     A test case which checks that all emited events are tested.
     """
@@ -274,7 +274,7 @@ class EventTestCase(ChevahTestCase):
         return json.dumps(content)
 
 
-class LogTestCase(ChevahTestCase):
+class LogTestCase(UtilsTestCase):
     '''A test factory which checks that all log messages were tested.'''
 
     def setUp(self):
