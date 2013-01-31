@@ -9,7 +9,7 @@ from twisted.web import server
 import simplejson as json
 
 from chevah.utils.json_rpc import JSONRPCResource, JSONRPCError
-from chevah.utils.testing import manufacturer, UtilsTestCase
+from chevah.utils.testing import manufacture, UtilsTestCase
 
 
 class ImplementedJSONRPCResource(JSONRPCResource, object):
@@ -88,7 +88,7 @@ class TestJSONRPC(UtilsTestCase):
     def _getDeferredResponse(self, data):
         '''Return the JSON-RPC response from deferred data.'''
         resource = ImplementedJSONRPCResource()
-        request = manufacturer.makeTwistedWebRequest(
+        request = manufacture.makeTwistedWebRequest(
             resource=resource, data=data)
         result = resource.render_POST(request)
         self.assertEqual(server.NOT_DONE_YET, result)
@@ -101,7 +101,7 @@ class TestJSONRPC(UtilsTestCase):
         """
         data = '{bad-json,}'
         resource = ImplementedJSONRPCResource()
-        request = manufacturer.makeTwistedWebRequest(
+        request = manufacture.makeTwistedWebRequest(
             resource=resource, data=data)
         response = json.loads(resource.render_POST(request))
         self.assertIsNone(response['result'])
@@ -114,7 +114,7 @@ class TestJSONRPC(UtilsTestCase):
         """
         data = '{"method": "some_method", "id": 2, "params": {}}'
         resource = ImplementedJSONRPCResource()
-        request = manufacturer.makeTwistedWebRequest(
+        request = manufacture.makeTwistedWebRequest(
             resource=resource, data=data)
         response = json.loads(resource.render_POST(request).decode('utf-8'))
         self.assertIsNone(response['result'])
@@ -124,7 +124,7 @@ class TestJSONRPC(UtilsTestCase):
 
     def _checkNotificationResult(self, data):
         resource = ImplementedJSONRPCResource()
-        request = manufacturer.makeTwistedWebRequest(
+        request = manufacture.makeTwistedWebRequest(
             resource=resource, data=data)
         result = resource.render_POST(request)
         self.assertEqual('', result)
@@ -207,7 +207,7 @@ class TestJSONRPC(UtilsTestCase):
             '{"jsonrpc": "2.0", "id": 1, '
             '"method": "private_method", "params": {}}')
         resource = ImplementedJSONRPCResource()
-        request = manufacturer.makeTwistedWebRequest(
+        request = manufacture.makeTwistedWebRequest(
             resource=resource, data=data)
         session = request.getSession()
         request.setRequestHeader('authorization', session.uid)
@@ -369,8 +369,8 @@ class TestJSONRPC(UtilsTestCase):
             '"method": "public_method_internal_error", "params": []}')
 
         resource = ImplementedJSONRPCResource()
-        peer = manufacturer.makeIPv4Address()
-        request = manufacturer.makeTwistedWebRequest(
+        peer = manufacture.makeIPv4Address()
+        request = manufacture.makeTwistedWebRequest(
             resource=resource, data=data, peer=peer)
 
         result = resource.render_POST(request)
@@ -404,7 +404,7 @@ class TestJSONRPC(UtilsTestCase):
         A JSON-RCP method can also be requested using GET.
         """
         resource = ImplementedJSONRPCResource()
-        request = manufacturer.makeTwistedWebRequest(resource=resource)
+        request = manufacture.makeTwistedWebRequest(resource=resource)
         request.postpath = ['method_name']
         # We monkey patch the renderJSONRPCOverHTTP since here we only
         # care about how a GET reqeust is converted into a JSON-RPC
@@ -422,7 +422,7 @@ class TestJSONRPC(UtilsTestCase):
         By default GET on JSON-RCP will call get_index.
         """
         resource = ImplementedJSONRPCResource()
-        request = manufacturer.makeTwistedWebRequest(resource=resource)
+        request = manufacture.makeTwistedWebRequest(resource=resource)
         request.postpath = ['']
 
         # We monkey patch the renderJSONRPCOverHTTP since here we only

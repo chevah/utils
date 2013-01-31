@@ -4,14 +4,14 @@ from __future__ import with_statement
 
 
 from chevah.utils.exceptions import ConfigurationError
-from chevah.utils.testing import manufacturer, UtilsTestCase
+from chevah.utils.testing import manufacture, UtilsTestCase
 
 
 class TestLogConfigurationSection(UtilsTestCase):
 
     def _getSection(self, content):
-        proxy = manufacturer.makeFileConfigurationProxy(content=content)
-        return manufacturer.makeLogConfigurationSection(proxy=proxy)
+        proxy = manufacture.makeFileConfigurationProxy(content=content)
+        return manufacture.makeLogConfigurationSection(proxy=proxy)
 
     def test_file_disabled_as_none(self):
         """

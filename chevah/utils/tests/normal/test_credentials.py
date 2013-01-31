@@ -5,7 +5,7 @@ Tests for credentials used by Chevah project.
 """
 from __future__ import with_statement
 
-from chevah.utils.testing import UtilsTestCase, manufacturer
+from chevah.utils.testing import UtilsTestCase, manufacture
 from chevah.utils.credentials import (
     CredentialsBase,
     PasswordCredentials,
@@ -37,7 +37,7 @@ class TestCredentialsBase(UtilsTestCase):
         """
         By default values for credentialsBase.
         """
-        username = manufacturer.getUniqueString()
+        username = manufacture.getUniqueString()
         credentials = CredentialsBase(username=username)
 
         self.assertEqual(username, credentials.username)
@@ -47,7 +47,7 @@ class TestCredentialsBase(UtilsTestCase):
         """
         If type name is request, a NotImplementedError is raises.
         """
-        credentials = CredentialsBase(username=manufacturer.getUniqueString())
+        credentials = CredentialsBase(username=manufacture.getUniqueString())
         with self.assertRaises(NotImplementedError):
             credentials.kind_name
 
@@ -62,7 +62,7 @@ class TestPasswordCredentials(UtilsTestCase):
         Check default valuse.
         """
         credentials = PasswordCredentials(
-            username=manufacturer.getUniqueString())
+            username=manufacture.getUniqueString())
         self.assertIsNone(credentials.password)
         self.assertEqual(u'password', credentials.kind_name)
 
@@ -72,7 +72,7 @@ class TestPasswordCredentials(UtilsTestCase):
         """
         with self.assertRaises(AssertionError):
             PasswordCredentials(
-                username=manufacturer.getUniqueString(),
+                username=manufacture.getUniqueString(),
                 password='a')
 
     def test_init_values(self):
@@ -81,9 +81,9 @@ class TestPasswordCredentials(UtilsTestCase):
 
         We use any kind of values.
         """
-        username = manufacturer.getUniqueString()
-        password = manufacturer.getUniqueString()
-        peer = manufacturer.getUniqueString()
+        username = manufacture.getUniqueString()
+        password = manufacture.getUniqueString()
+        peer = manufacture.getUniqueString()
         credentials = PasswordCredentials(
             username=username,
             password=password,
@@ -104,7 +104,7 @@ class TestSSHKeyCredentials(UtilsTestCase):
         Check default values.
         """
         credentials = SSHKeyCredentials(
-            username=manufacturer.getUniqueString())
+            username=manufacture.getUniqueString())
         self.assertIsNone(credentials.key_data)
         self.assertIsNone(credentials.key_algorithm)
         self.assertIsNone(credentials.key_signature)
@@ -115,12 +115,12 @@ class TestSSHKeyCredentials(UtilsTestCase):
         """
         Check set values.
         """
-        key_data = manufacturer.getUniqueString()
-        key_algorithm = manufacturer.getUniqueString()
-        key_signature = manufacturer.getUniqueString()
-        key_signed_data = manufacturer.getUniqueString()
+        key_data = manufacture.getUniqueString()
+        key_algorithm = manufacture.getUniqueString()
+        key_signature = manufacture.getUniqueString()
+        key_signed_data = manufacture.getUniqueString()
         credentials = SSHKeyCredentials(
-            username=manufacturer.getUniqueString(),
+            username=manufacture.getUniqueString(),
             key_data=key_data,
             key_signature=key_signature,
             key_algorithm=key_algorithm,
@@ -142,7 +142,7 @@ class TestSSLCertificateCredentials(UtilsTestCase):
         Check default values.
         """
         credentials = SSLCertificateCredentials(
-            username=manufacturer.getUniqueString())
+            username=manufacture.getUniqueString())
         self.assertIsNone(credentials.certificate)
         self.assertEqual(u'ssl certificate', credentials.kind_name)
 
@@ -150,9 +150,9 @@ class TestSSLCertificateCredentials(UtilsTestCase):
         """
         Check set values.
         """
-        certificate = manufacturer.getUniqueString()
+        certificate = manufacture.getUniqueString()
         credentials = SSLCertificateCredentials(
-            username=manufacturer.getUniqueString(),
+            username=manufacture.getUniqueString(),
             certificate=certificate,
             )
 

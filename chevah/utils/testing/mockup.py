@@ -39,7 +39,7 @@ from chevah.utils.log_configuration_section import (
     )
 
 
-class UtilsManufacturer(CompatManufacture):
+class UtilsManufacture(CompatManufacture):
     '''This class creates objects from chevah.utils module.
 
     It is designed to help with the tests and creating 'mock' objects.
@@ -250,4 +250,4 @@ class UtilsManufacturer(CompatManufacture):
         return config
 
 
-manufacturer = UtilsManufacturer()
+manufacture = UtilsManufacture()

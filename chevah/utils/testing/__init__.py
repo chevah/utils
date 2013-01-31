@@ -9,10 +9,10 @@ from chevah.utils.testing.testcase import (
     LogTestCase,
     UtilsTestCase,
     )
-from chevah.utils.testing.mockup import manufacturer
+from chevah.utils.testing.mockup import manufacture
 
 # Silence the linter.
 EventTestCase
 LogTestCase
 UtilsTestCase
-manufacturer
+manufacture

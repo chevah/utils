@@ -12,7 +12,7 @@ from mock import patch
 from chevah.utils import MODULE_PATH
 from chevah.utils.testing import (
     LogTestCase,
-    manufacturer,
+    manufacture,
     UtilsTestCase,
     )
 from chevah.utils.constants import (
@@ -44,8 +44,8 @@ class TestEventGroupDefinition(UtilsTestCase):
         """
         Check EventGroupDefinition initialization.
         """
-        name = manufacturer.getUniqueString()
-        description = manufacturer.getUniqueString()
+        name = manufacture.getUniqueString()
+        description = manufacture.getUniqueString()
 
         event_group = EventGroupDefinition(
             name=name, description=description)
@@ -64,14 +64,14 @@ class TestEventDefinition(UtilsTestCase):
         """
         Check EventDefinition initialization.
         """
-        event_id = manufacturer.getUniqueString() + 'greater_than_5'
-        description = manufacturer.getUniqueString()
-        message = manufacturer.getUniqueString()
-        version_added = manufacturer.getUniqueString()
-        version_removed = manufacturer.getUniqueString()
+        event_id = manufacture.getUniqueString() + 'greater_than_5'
+        description = manufacture.getUniqueString()
+        message = manufacture.getUniqueString()
+        version_added = manufacture.getUniqueString()
+        version_removed = manufacture.getUniqueString()
         groups = [
-            manufacturer.makeEventGroupDefinition(),
-            manufacturer.makeEventGroupDefinition(),
+            manufacture.makeEventGroupDefinition(),
+            manufacture.makeEventGroupDefinition(),
             ]
 
         event_definition = EventDefinition(
@@ -126,13 +126,13 @@ class TestEvent(UtilsTestCase):
         """
         Check Event initialization.
         """
-        event_id = manufacturer.getUniqueString()
-        message = manufacturer.getUniqueString()
+        event_id = manufacture.getUniqueString()
+        message = manufacture.getUniqueString()
         data = {
             'attr1': 'value1',
             'attr2': 'value2',
-            'peer': manufacturer.makeIPv4Address(),
-            'avatar': manufacturer.makeFilesystemApplicationAvatar()}
+            'peer': manufacture.makeIPv4Address(),
+            'avatar': manufacture.makeFilesystemApplicationAvatar()}
 
         event = Event(
             id=event_id,
@@ -179,8 +179,8 @@ class TestEventsDefinition(UtilsTestCase):
         Trying to configure from a bad formated configuration file
         will raise ConfigurationError.
         """
-        content = manufacturer.getUniqueString()
-        definitions = manufacturer.makeEventsDefinition(
+        content = manufacture.getUniqueString()
+        definitions = manufacture.makeEventsDefinition(
             content=content, load=False)
 
         with self.assertRaises(ConfigurationError) as context:
@@ -193,7 +193,7 @@ class TestEventsDefinition(UtilsTestCase):
         An EventGroup with just a complex or simple description will load
         just fine.
         """
-        definitions = manufacturer.makeEventsDefinition(content=u'')
+        definitions = manufacture.makeEventsDefinition(content=u'')
 
         definitions.load()
 
@@ -205,9 +205,9 @@ class TestEventsDefinition(UtilsTestCase):
         An EventGroup with just a complex or simple description will load
         just fine.
         """
-        name_1 = manufacturer.getUniqueString()
-        name_2 = manufacturer.getUniqueString()
-        description = manufacturer.getUniqueString()
+        name_1 = manufacture.getUniqueString()
+        name_2 = manufacture.getUniqueString()
+        description = manufacture.getUniqueString()
         content = '''
             {
             "groups" : {
@@ -217,7 +217,7 @@ class TestEventsDefinition(UtilsTestCase):
             "events" : {}
             }
             ''' % (name_1, description, name_2)
-        definitions = manufacturer.makeEventsDefinition(content=content)
+        definitions = manufacture.makeEventsDefinition(content=content)
 
         group = definitions.getEventGroupDefinition(name=name_1)
         self.assertEqual(name_1, group.name)
@@ -229,10 +229,10 @@ class TestEventsDefinition(UtilsTestCase):
         """
         An EventDefinition with a message and groups will load just fine.
         """
-        event_id = manufacturer.getUniqueString()
-        group_1 = manufacturer.getUniqueString()
-        group_2 = manufacturer.getUniqueString()
-        message = manufacturer.getUniqueString()
+        event_id = manufacture.getUniqueString()
+        group_1 = manufacture.getUniqueString()
+        group_2 = manufacture.getUniqueString()
+        message = manufacture.getUniqueString()
         content = '''
             {
             "groups" : {
@@ -252,7 +252,7 @@ class TestEventsDefinition(UtilsTestCase):
                 }
             }
             ''' % (group_1, group_2, event_id, message, group_1, group_2)
-        config = manufacturer.makeEventsDefinition(
+        config = manufacture.makeEventsDefinition(
             content=content, load=False)
 
         config.load()
@@ -271,9 +271,9 @@ class TestEventsDefinition(UtilsTestCase):
         Loading an EventDefinition with a reference to a non-existent group
         will reaise ChevahException.
         """
-        event_id = manufacturer.getUniqueString()
-        group_1 = manufacturer.getUniqueString()
-        message = manufacturer.getUniqueString()
+        event_id = manufacture.getUniqueString()
+        group_1 = manufacture.getUniqueString()
+        message = manufacture.getUniqueString()
         content = '''
             {
             "groups" : {},
@@ -290,7 +290,7 @@ class TestEventsDefinition(UtilsTestCase):
                 }
             }
             ''' % (event_id, message, group_1)
-        config = manufacturer.makeEventsDefinition(
+        config = manufacture.makeEventsDefinition(
             content=content, load=False)
 
         with self.assertRaises(ChevahException):
@@ -301,9 +301,9 @@ class TestEventsDefinition(UtilsTestCase):
         An getAllEventGroupDefinitions with return a dictionary with all
         defined EventGroups.
         """
-        name_1 = manufacturer.getUniqueString()
-        name_2 = manufacturer.getUniqueString()
-        description = manufacturer.getUniqueString()
+        name_1 = manufacture.getUniqueString()
+        name_2 = manufacture.getUniqueString()
+        description = manufacture.getUniqueString()
         content = '''
             {
             "groups" : {
@@ -313,7 +313,7 @@ class TestEventsDefinition(UtilsTestCase):
             "events" : {}
             }
             ''' % (name_1, description, name_2)
-        config = manufacturer.makeEventsDefinition(content=content)
+        config = manufacture.makeEventsDefinition(content=content)
 
         result = config.getAllEventGroupDefinitions()
 
@@ -353,7 +353,7 @@ class TestEventsDefinition(UtilsTestCase):
                 }
             }
             '''
-        config = manufacturer.makeEventsDefinition(content=content)
+        config = manufacture.makeEventsDefinition(content=content)
 
         result = config.getAllEventDefinitions()
 
@@ -393,7 +393,7 @@ class TestEventsDefinition(UtilsTestCase):
                 }
             }
             '''
-        config = manufacturer.makeEventsDefinition(content=content)
+        config = manufacture.makeEventsDefinition(content=content)
 
         result = config.getAllEventDefinitionsPadded()
 
@@ -460,7 +460,7 @@ class TestEventsDefinition(UtilsTestCase):
             '\n'
             '{% endfor %}\n'
             )
-        config = manufacturer.makeEventsDefinition(content=content)
+        config = manufacture.makeEventsDefinition(content=content)
         templates_loader = DictLoader(
             {'events_documentation.rst': template_content})
         jinja_environment = Environment(loader=templates_loader)
@@ -496,8 +496,8 @@ class TestEventsHandler(LogTestCase):
         EventsHandler can be configured.
         """
         handler = EventsHandler()
-        definitions = manufacturer.makeEventsDefinition()
-        log_configuration_section = manufacturer.makeLogConfigurationSection()
+        definitions = manufacture.makeEventsDefinition()
+        log_configuration_section = manufacture.makeLogConfigurationSection()
 
         handler.configure(
             definitions=definitions,
@@ -513,8 +513,8 @@ class TestEventsHandler(LogTestCase):
         EventsHandler configurations can be removed using removeConfiguration.
         """
         handler = EventsHandler()
-        definitions = manufacturer.makeEventsDefinition()
-        log_configuration_section = manufacturer.makeLogConfigurationSection()
+        definitions = manufacture.makeEventsDefinition()
+        log_configuration_section = manufacture.makeLogConfigurationSection()
         handler.configure(
             definitions=definitions,
             log_configuration_section=log_configuration_section)
@@ -531,7 +531,7 @@ class TestEventsHandler(LogTestCase):
         Event definitions and other configurations is not used.
         """
         handler = EventsHandler()
-        message = u'Some message ' + manufacturer.getUniqueString()
+        message = u'Some message ' + manufacture.getUniqueString()
 
         handler.emit('100', message=message)
 
@@ -543,9 +543,9 @@ class TestEventsHandler(LogTestCase):
         interface to emit an event.
         """
         handler = EventsHandler()
-        message = u'Some message ' + manufacturer.getUniqueString()
-        peer = manufacturer.makeIPv4Address()
-        avatar = manufacturer.makeFilesystemApplicationAvatar()
+        message = u'Some message ' + manufacture.getUniqueString()
+        peer = manufacture.makeIPv4Address()
+        avatar = manufacture.makeFilesystemApplicationAvatar()
         data = {}
         handler.log(100, message, peer=peer, avatar=avatar, data=data)
 
@@ -561,7 +561,7 @@ class TestEventsHandler(LogTestCase):
         When event id is an integer, it will be converted to string.
         """
         handler = EventsHandler()
-        message = u'Some message ' + manufacturer.getUniqueString()
+        message = u'Some message ' + manufacture.getUniqueString()
 
         with patch.object(handler, 'emitEvent') as patched:
             handler.emit(100, message=message)
@@ -574,7 +574,7 @@ class TestEventsHandler(LogTestCase):
         Events can be emitted with unicode ids.
         """
         handler = EventsHandler()
-        message = u'Some message ' + manufacturer.getUniqueString()
+        message = u'Some message ' + manufacture.getUniqueString()
 
         with patch.object(handler, 'emitEvent') as patched:
             handler.emit(u'100', message=message)
@@ -587,7 +587,7 @@ class TestEventsHandler(LogTestCase):
         Events can be emitted with string ids and are converted to unicode.
         """
         handler = EventsHandler()
-        message = u'Some message ' + manufacturer.getUniqueString()
+        message = u'Some message ' + manufacture.getUniqueString()
 
         with patch.object(handler, 'emitEvent') as patched:
             handler.emit(u'100', message=message)
@@ -601,9 +601,9 @@ class TestEventsHandler(LogTestCase):
         the text of the unknown id.
         """
         handler = EventsHandler()
-        message = u'Some message ' + manufacturer.getUniqueString()
-        definitions = manufacturer.makeEventsDefinition()
-        log_configuration_section = manufacturer.makeLogConfigurationSection()
+        message = u'Some message ' + manufacture.getUniqueString()
+        definitions = manufacture.makeEventsDefinition()
+        log_configuration_section = manufacture.makeLogConfigurationSection()
         handler.configure(
             definitions=definitions,
             log_configuration_section=log_configuration_section,
@@ -647,8 +647,8 @@ class TestEventsHandler(LogTestCase):
                 }
             }
             '''
-        definitions = manufacturer.makeEventsDefinition(content=content)
-        log_configuration_section = manufacturer.makeLogConfigurationSection()
+        definitions = manufacture.makeEventsDefinition(content=content)
+        log_configuration_section = manufacture.makeLogConfigurationSection()
         log_configuration_section.enabled_groups = ['enabled']
         handler.configure(
             definitions=definitions,
@@ -692,8 +692,8 @@ class TestEventsHandler(LogTestCase):
                 }
             }
             '''
-        definitions = manufacturer.makeEventsDefinition(content=content)
-        log_configuration_section = manufacturer.makeLogConfigurationSection()
+        definitions = manufacture.makeEventsDefinition(content=content)
+        log_configuration_section = manufacture.makeLogConfigurationSection()
         log_configuration_section.enabled_groups = [
             CONFIGURATION_ALL_LOG_ENABLED_GROUPS]
         handler.configure(
@@ -732,8 +732,8 @@ class TestEventsHandler(LogTestCase):
                 }
             }
             '''
-        definitions = manufacturer.makeEventsDefinition(content=content)
-        log_configuration_section = manufacturer.makeLogConfigurationSection()
+        definitions = manufacture.makeEventsDefinition(content=content)
+        log_configuration_section = manufacture.makeLogConfigurationSection()
         handler.configure(
             definitions=definitions,
             log_configuration_section=log_configuration_section)
@@ -766,13 +766,13 @@ class TestEventsHandler(LogTestCase):
                 }
             }
             '''
-        definitions = manufacturer.makeEventsDefinition(content=content)
-        log_configuration_section = manufacturer.makeLogConfigurationSection()
+        definitions = manufacture.makeEventsDefinition(content=content)
+        log_configuration_section = manufacture.makeLogConfigurationSection()
         handler.configure(
             definitions=definitions,
             log_configuration_section=log_configuration_section)
 
-        data_string = manufacturer.getUniqueString()
+        data_string = manufacture.getUniqueString()
         handler.emit('100', data={'data': data_string})
 
         self.assertLog(100, regex="100 " + data_string + " some m")
@@ -801,8 +801,8 @@ class TestEventsHandler(LogTestCase):
                 }
             }
             '''
-        definitions = manufacturer.makeEventsDefinition(content=content)
-        log_configuration_section = manufacturer.makeLogConfigurationSection()
+        definitions = manufacture.makeEventsDefinition(content=content)
+        log_configuration_section = manufacture.makeLogConfigurationSection()
         handler.configure(
             definitions=definitions,
             log_configuration_section=log_configuration_section)

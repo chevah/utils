@@ -18,7 +18,7 @@ from chevah.utils.logger import (
     LogEntry,
     WatchedFileHandler,
     )
-from chevah.utils.testing import manufacturer, UtilsTestCase
+from chevah.utils.testing import manufacture, UtilsTestCase
 
 
 class TestLogEntry(UtilsTestCase):
@@ -29,9 +29,9 @@ class TestLogEntry(UtilsTestCase):
         Check LogEntry initialization.
         """
         log_id = 999999
-        log_text = manufacturer.getUniqueString()
-        log_avatar = manufacturer.makeFilesystemApplicationAvatar()
-        log_peer = manufacturer.makeIPv4Address()
+        log_text = manufacture.getUniqueString()
+        log_avatar = manufacture.makeFilesystemApplicationAvatar()
+        log_peer = manufacture.makeIPv4Address()
         entry = LogEntry(log_id, log_text, log_avatar, log_peer)
         now = time()
         self.assertEqual(log_id, entry.message_id)
@@ -65,7 +65,7 @@ class TestLogEntry(UtilsTestCase):
         """
         Check human readable format for an avatar with data.
         """
-        log_avatar = manufacturer.makeFilesystemApplicationAvatar()
+        log_avatar = manufacture.makeFilesystemApplicationAvatar()
         entry = LogEntry(None, None, log_avatar, None)
         self.assertEqual(log_avatar.name, entry.avatar_hr)
 
@@ -73,7 +73,7 @@ class TestLogEntry(UtilsTestCase):
         """
         Check human readable format for a peer with data.
         """
-        peer = manufacturer.makeIPv4Address()
+        peer = manufacture.makeIPv4Address()
         entry = LogEntry(None, None, None, peer)
         expected_peer_string = (u'%s:%d' % (peer.host, peer.port))
         self.assertEqual(expected_peer_string, entry.peer_hr)
@@ -93,9 +93,9 @@ class TestLoggerFile(UtilsTestCase):
             'log_file_rotate_count': 'Disabled',
             'log_syslog': 'Disabled',
             }
-        proxy = manufacturer.makeFileConfigurationProxy(
+        proxy = manufacture.makeFileConfigurationProxy(
             content=content, defaults=defaults)
-        return manufacturer.makeLogConfigurationSection(proxy=proxy)
+        return manufacture.makeLogConfigurationSection(proxy=proxy)
 
     def test_configure_log_file_disabled(self):
         """
@@ -105,7 +105,7 @@ class TestLoggerFile(UtilsTestCase):
             '[log]\n'
             'log_file: Disabled\n')
         configuration = self._getConfiguration(content=content)
-        logger = manufacturer.makeLogger()
+        logger = manufacture.makeLogger()
         self.assertIsNone(logger._file_handler)
 
         logger.configure(configuration)
@@ -113,9 +113,9 @@ class TestLoggerFile(UtilsTestCase):
         self.assertIsNone(logger._file_handler)
 
     def _getTempFilePath(self):
-        segments = manufacturer.fs.temp_segments
-        segments.append(manufacturer.getUniqueString())
-        file_path = manufacturer.fs.getRealPathFromSegments(segments)
+        segments = manufacture.fs.temp_segments
+        segments.append(manufacture.getUniqueString())
+        file_path = manufacture.fs.getRealPathFromSegments(segments)
         return (file_path, segments)
 
     def test_configure_log_file_normal(self):
@@ -126,11 +126,11 @@ class TestLoggerFile(UtilsTestCase):
         content = (
             u'[log]\n'
             u'log_file: %s\n' % (file_name))
-        log_id = manufacturer.getUniqueInteger()
-        log_message = manufacturer.getUniqueString()
+        log_id = manufacture.getUniqueInteger()
+        log_message = manufacture.getUniqueString()
 
         configuration = self._getConfiguration(content=content)
-        logger = manufacturer.makeLogger()
+        logger = manufacture.makeLogger()
         try:
             logger.configure(configuration)
 
@@ -144,14 +144,14 @@ class TestLoggerFile(UtilsTestCase):
             logger.removeAllHandlers()
 
             # Check that file exists and it has the right content.
-            self.assertTrue(manufacturer.fs.exists(segments))
-            log_content = manufacturer.fs.getFileContent(segments)
+            self.assertTrue(manufacture.fs.exists(segments))
+            log_content = manufacture.fs.getFileContent(segments)
             self.assertEqual(2, len(log_content))
             self.assertStartsWith(str(log_id), log_content[0])
             self.assertEndsWith(log_message, log_content[0])
             self.assertStartsWith(str(log_id + 1), log_content[1])
         finally:
-            manufacturer.fs.deleteFile(segments)
+            manufacture.fs.deleteFile(segments)
 
     def test_configure_log_file_rotate_external(self):
         """
@@ -165,7 +165,7 @@ class TestLoggerFile(UtilsTestCase):
              ) % (file_name)
 
         configuration = self._getConfiguration(content=content)
-        logger = manufacturer.makeLogger()
+        logger = manufacture.makeLogger()
 
         try:
             logger.configure(configuration)
@@ -175,7 +175,7 @@ class TestLoggerFile(UtilsTestCase):
                 isinstance(logger._file_handler, WatchedFileHandler))
             logger.removeAllHandlers()
         finally:
-            manufacturer.fs.deleteFile(segments)
+            manufacture.fs.deleteFile(segments)
 
     def test_configure_log_file_rotate_at_size(self):
         """
@@ -191,7 +191,7 @@ class TestLoggerFile(UtilsTestCase):
              ) % (file_name)
 
         configuration = self._getConfiguration(content=content)
-        logger = manufacturer.makeLogger()
+        logger = manufacture.makeLogger()
 
         try:
             logger.configure(configuration)
@@ -202,7 +202,7 @@ class TestLoggerFile(UtilsTestCase):
             self.assertEqual(10, logger._file_handler.backupCount)
             logger.removeAllHandlers()
         finally:
-            manufacturer.fs.deleteFile(segments)
+            manufacture.fs.deleteFile(segments)
 
     def test_configure_log_file_rotate_each(self):
         """
@@ -218,7 +218,7 @@ class TestLoggerFile(UtilsTestCase):
              ) % (file_name)
 
         configuration = self._getConfiguration(content=content)
-        logger = manufacturer.makeLogger()
+        logger = manufacture.makeLogger()
         try:
             logger.configure(configuration)
 
@@ -230,7 +230,7 @@ class TestLoggerFile(UtilsTestCase):
             self.assertEqual(2 * 60 * 60, logger._file_handler.interval)
             logger.removeAllHandlers()
         finally:
-            manufacturer.fs.deleteFile(segments)
+            manufacture.fs.deleteFile(segments)
 
 
 class TestLoggerHandlers(UtilsTestCase):
@@ -239,8 +239,8 @@ class TestLoggerHandlers(UtilsTestCase):
     """
     def setUp(self):
         super(TestLoggerHandlers, self).setUp()
-        log_name = manufacturer.getUniqueString()
-        self.logger = manufacturer.makeLogger(log_name=log_name)
+        log_name = manufacture.getUniqueString()
+        self.logger = manufacture.makeLogger(log_name=log_name)
 
     def tearDown(self):
         self.logger.removeAllHandlers()
@@ -253,8 +253,8 @@ class TestLoggerHandlers(UtilsTestCase):
         """
         log_output = StringIO()
         log_handler = StreamHandler(log_output)
-        log_entry_id = manufacturer.getUniqueInteger()
-        log_entry = manufacturer.getUniqueString()
+        log_entry_id = manufacture.getUniqueInteger()
+        log_entry = manufacture.getUniqueString()
 
         self.logger.addHandler(log_handler)
         self.logger.log(log_entry_id, log_entry)
@@ -288,8 +288,8 @@ class TestLoggerHandlers(UtilsTestCase):
         """
         log_output = StringIO()
         log_handler = StreamHandler(log_output)
-        log_entry_id = manufacturer.getUniqueInteger()
-        log_entry = manufacturer.getUniqueString()
+        log_entry_id = manufacture.getUniqueInteger()
+        log_entry = manufacture.getUniqueString()
 
         self.logger.addHandler(log_handler)
         self.logger.removeHandler(log_handler)

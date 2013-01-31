@@ -6,7 +6,7 @@ Stay tunes, the infinite loop is near...
 '''
 from __future__ import with_statement
 
-from chevah.utils.testing import UtilsTestCase, manufacturer
+from chevah.utils.testing import UtilsTestCase, manufacture
 
 
 class TestFactory(UtilsTestCase):
@@ -16,7 +16,7 @@ class TestFactory(UtilsTestCase):
         """
         Make sure that credentials are created as unicode.
         """
-        creds = manufacturer.makePasswordCredentials(
+        creds = manufacture.makePasswordCredentials(
             username='user',
             password='pass',
             token='don-t update',
