@@ -10,7 +10,7 @@ from twisted.conch.ssh.keys import Key as ConchSSHKey
 
 from chevah.utils.constants import DEFAULT_KEY_SIZE
 from chevah.utils.helpers import _
-from chevah.utils.exceptions import OperationalException
+from chevah.utils.exceptions import UtilsError
 
 __all__ = []
 KEY_CLASSES = {
@@ -28,7 +28,7 @@ class Key(ConchSSHKey):
     def generate(self, key_type=crypto.TYPE_RSA, key_size=DEFAULT_KEY_SIZE):
         '''Create the key data.'''
         if key_type not in [crypto.TYPE_RSA, crypto.TYPE_DSA]:
-            raise OperationalException(1003,
+            raise UtilsError(u'1003',
                 _('Unknown key type "%s".' % (key_type)))
 
         key = None
@@ -36,7 +36,7 @@ class Key(ConchSSHKey):
         try:
             key = key_class.generate(bits=key_size, randfunc=rand.bytes)
         except ValueError, error:
-            raise OperationalException(1004,
+            raise UtilsError(u'1004',
                 _(u'Wrong key size "%d". %s.' % (key_size, unicode(error))))
         self.keyObject = key
 

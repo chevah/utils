@@ -197,14 +197,14 @@ class IEventsDefinition(Interface):
     def load():
         """Load configured events, eventgroups and rules.
 
-        Raises ConfigurationError if the configration is not valid.
+        Raises an error if the configration is not valid.
         """
 
     def getEventDefinition(id):
         """
         Return the EventDefiniton for `id`.
 
-        Raises OperationalException if EventDefinition was not found.
+        Raises an error if EventDefinition was not found.
         """
 
     def getAllEventDefinitions():
@@ -225,7 +225,7 @@ class IEventsDefinition(Interface):
         """
         Return the EventGroupDefinition for `name`.
 
-        Raises OperationalException if EventGroupDefinition was not found.
+        Raises an exception if EventGroupDefinition was not found.
         """
 
     def getAllEventGroupDefinitions():

@@ -14,7 +14,7 @@ from chevah.utils.constants import (
     CONFIGURATION_DISABLED_VALUES,
     CONFIGURATION_INHERIT,
     )
-from chevah.utils.exceptions import ConfigurationError
+from chevah.utils.exceptions import UtilsError
 from chevah.utils.helpers import _
 from chevah.utils.interfaces import (
     IConfiguration,
@@ -44,7 +44,7 @@ class FileConfigurationProxy(object):
             configuration_segments = local_filesystem.getSegmentsFromRealPath(
                 configuration_path)
             if not local_filesystem.isFile(configuration_segments):
-                raise ConfigurationError(1011, _(
+                raise UtilsError(u'1011', _(
                     u'Configuration file "%s" does not exists.' % (
                         configuration_path)))
             try:
@@ -52,7 +52,7 @@ class FileConfigurationProxy(object):
                     local_filesystem.openFileForReading(
                          configuration_segments, utf8=True))
             except IOError:
-                raise ConfigurationError(1012, _(
+                raise UtilsError(u'1012', _(
                     u'Server process could not read the configuration file '
                     u'"%s".' % (configuration_path))
                     )
@@ -70,7 +70,7 @@ class FileConfigurationProxy(object):
             message = error.message
             if not isinstance(message, unicode):
                 message = message.decode('utf-8')
-            raise ConfigurationError(1002, _(
+            raise UtilsError(u'1002', _(
                 u'Could not parse the configuration file. %s' % (message))
                 )
         else:
@@ -143,7 +143,7 @@ class FileConfigurationProxy(object):
             else:
                 return method(section, option)
         except ValueError, error:
-            raise ConfigurationError(1000, _(
+            raise UtilsError(u'1000', _(
                 u'Wrong %(type)s value for option "%(option)s" in '
                 u'section "%(section)s". %(error_details)s' % {
                     'type': type_string,

@@ -39,7 +39,7 @@ from chevah.utils.constants import (
     LOGGER_TIMESTAMP_FORMAT,
     )
 from chevah.utils.exceptions import (
-    ConfigurationError,
+    UtilsError,
     )
 from chevah.utils.helpers import _
 
@@ -215,7 +215,7 @@ class _Logger(object):
             # system_users.executeAsUser should raise a CompatError
             # insted of ChangeUserException.
             except ChangeUserException, error:
-                raise ConfigurationError(1026, _(
+                raise UtilsError(u'1026', _(
                     u'Failed to initialize logger as account "%s". %s.)' % (
                         account, error.message)))
         else:
@@ -268,7 +268,7 @@ class _Logger(object):
 
             self.addHandler(self._file_handler, patch_format=True)
         except IOError, error:
-            raise ConfigurationError(1010,
+            raise UtilsError(u'1010',
                 _(u'Could not initialize the logging file. %s' % (
                     unicode(error))))
 

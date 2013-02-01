@@ -8,7 +8,7 @@ from StringIO import StringIO
 
 from chevah.utils.testing import EventTestCase, manufacture
 
-from chevah.utils.exceptions import ConfigurationError
+from chevah.utils.exceptions import UtilsError
 from chevah.utils.json_file import JSONFile
 
 
@@ -53,12 +53,12 @@ class TestJSONFile(EventTestCase):
 
     def test_load_file_io_error(self):
         """
-        An ConfigurationError is raised for any IO/OS Error.
+        An UtilsError is raised for any IO/OS Error.
         """
         path = manufacture.makeFilename()
         json_file = JSONFile(path=path)
 
-        with self.assertRaises(ConfigurationError) as context:
+        with self.assertRaises(UtilsError) as context:
             json_file.load()
 
         self.assertExceptionID(u'1027', context.exception)
@@ -72,12 +72,12 @@ class TestJSONFile(EventTestCase):
 
     def test_load_file_bad_format(self):
         """
-        An ConfigurationError is raised for a bad formated JSON file.
+        An UtilsError is raised for a bad formated JSON file.
         """
         content = '{ some-bad: "JSON"}'
         json_file = JSONFile(file=StringIO(content))
 
-        with self.assertRaises(ConfigurationError) as context:
+        with self.assertRaises(UtilsError) as context:
             json_file.load()
 
         self.assertExceptionID(u'1028', context.exception)
