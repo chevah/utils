@@ -16,11 +16,12 @@ class UtilsError(Exception):
         self.data = data
 
     def __repr__(self):
-        return 'CompatError %s - %s\n%s' % (
-            str(self.event_id), self.message.encode('utf-8'), str(self.data))
+        return '%s\n%s' % (
+            str(self.__class__), self.__str__())
 
     def __str__(self):
-        return self.__repr__()
+        return '%s - %s\n%s' % (
+            str(self.event_id), self.message.encode('utf-8'), str(self.data))
 
 
 class UtilsException(Exception):

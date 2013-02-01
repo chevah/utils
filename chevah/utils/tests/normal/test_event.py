@@ -268,7 +268,7 @@ class TestEventsDefinition(UtilsTestCase):
     def test_load_EventDefinition_missing_group(self):
         """
         Loading an EventDefinition with a reference to a non-existent group
-        will raise ChevahException.
+        will raise UtilsError.
         """
         event_id = manufacture.getUniqueString()
         group_1 = manufacture.getUniqueString()
