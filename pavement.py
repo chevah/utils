@@ -7,7 +7,7 @@ from __future__ import with_statement
 import sys
 
 # This value is pavers by bash. Use a strict format.
-BRINK_VERSION = '0.10.7'
+BRINK_VERSION = '0.11.3'
 
 EXTRA_PACKAGES = [
     # FIXME:1022:
