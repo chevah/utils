@@ -5,13 +5,13 @@ Tests for chevah commons helpers.
 """
 from __future__ import with_statement
 
-from chevah.empirical import ChevahTestCase
+from chevah.utils.testing import UtilsTestCase
 from chevah.utils.helpers import (
     import_as_string,
     )
 
 
-class TestHelpers(ChevahTestCase):
+class TestHelpers(UtilsTestCase):
     """
     Tests for helpers.
     """

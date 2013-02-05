@@ -5,11 +5,13 @@ General exceptions for Chevah projects.
 """
 
 
-class ChevahException(Exception):
+class ChevahError(Exception):
     """
-    Generic exception used by Chevah components.
+    Generic error used by Chevah components.
 
     It has an ID and data attached and is very tightly coupled with an event.
+
+    Errors are exceptions that could not be handled.
     """
 
     def __init__(self, message_id=0, text=None,
@@ -27,14 +29,14 @@ class ChevahException(Exception):
         self.data = data
 
     def __repr__(self):
+        return '%s\n%s' % (str(self.__class__), self.__str__)
+
+    def __str__(self):
         return '%s - %s\n%s' % (
             str(self.id), self.text.encode('utf-8'), self.data)
 
-    def __str__(self):
-        return self.__repr__()
 
-
-class ConfigurationError(ChevahException):
+class ConfigurationError(ChevahError):
     '''The configuration data is not valid.
 
     Exception raised when something is wrong with the server
@@ -53,20 +55,38 @@ class ConfigurationError(ChevahException):
     '''
 
 
-class PermissionException(ChevahException):
-    '''The action was not permited.'''
-
-
-class OperationalException(ChevahException):
+class OperationalException(ChevahError):
     '''The action return a generic error.'''
+
+
+class ChevahException(Exception):
+    """
+    Generic exception used by Chevah components.
+
+    Exceptions are used to signal various errors which can be
+    handled and solved.
+    """
+
+
+class EventException(ChevahException):
+    """
+    An exception containing an event
+    """
+
+    def __init__(self, event_id, data):
+        self.event_id = event_id
+        self.data = data
+
+    def __repr__(self):
+        return 'EventException %s\n%s' % (
+            str(self.event_id), self.data.encode('utf-8'))
+
+    def __str__(self):
+        return self.__repr__()
 
 
 class TimeoutException(ChevahException):
     '''The action return a generic error.'''
-
-
-class ChangeUserException(ChevahException):
-    '''User could not be impersonated.'''
 
 
 class SSLException(ChevahException):

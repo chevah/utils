@@ -29,7 +29,7 @@ from zope.interface import implements
 from chevah.utils.constants import (
     CONFIGURATION_ALL_LOG_ENABLED_GROUPS,
     )
-from chevah.utils.exceptions import OperationalException
+from chevah.utils.exceptions import ChevahException
 from chevah.utils.helpers import _
 from chevah.utils.interfaces import (
     IEvent,
@@ -289,8 +289,8 @@ class EventsDefinition(JSONFile):
         try:
             event_definition = self._event_definitions[id]
         except KeyError:
-            raise OperationalException(
-                0, _('No EventDefinition with id "%s"' % (id)))
+            raise ChevahException(
+                _('No EventDefinition with id "%s"' % (id)))
         else:
             return event_definition
 
@@ -316,8 +316,8 @@ class EventsDefinition(JSONFile):
         try:
             event_group = self._group_definitions[name]
         except KeyError:
-            raise OperationalException(
-                0, _('No EventGroupDefinition with name "%s"' % (name)))
+            raise ChevahException(
+                _('No EventGroupDefinition with name "%s"' % (name)))
         else:
             return event_group
 
@@ -441,7 +441,7 @@ class EventsHandler(object):
     def handleEventLog(self, event):
         try:
             event_definition = self.definitions.getEventDefinition(event.id)
-        except OperationalException:
+        except ChevahException:
             # FIXME:864:
             # Decide how to handle unknown events.
             # Maybe use a custom exception.

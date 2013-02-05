@@ -16,7 +16,6 @@ from OpenSSL import crypto
 
 from chevah.utils.constants import (
     DEFAULT_PUBLIC_KEY_EXTENSION,
-    LOGGER_NAME,
     )
 from chevah.utils.exceptions import (
     OperationalException,
@@ -27,11 +26,6 @@ from chevah.utils.exceptions import (
 def _(string):
     '''Placeholder for future gettext integration.'''
     return string
-
-
-def log_add_default_handlers(nt_service=False, name=LOGGER_NAME):
-    from chevah.utils.logger import Logger
-    Logger.addDefaultHandlers(nt_service=nt_service, name=name)
 
 
 def open_local_admin_webpage(address, port):
@@ -195,20 +189,6 @@ class TimeoutCommunicate(object):
         thread.join(timeout)
         if thread.isAlive():
             raise TimeoutException()
-
-
-class NoOpContext(object):
-    """
-    A context manager that does nothing.
-    """
-
-    def __enter__(self):
-        '''Do nothing.'''
-        return self
-
-    def __exit__(self, exc_type, exc_value, tb):
-        '''Just propagate errors.'''
-        return False
 
 
 class Bunch(object):

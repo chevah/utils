@@ -6,7 +6,7 @@ Tests for JSON file handling.
 from __future__ import with_statement
 from StringIO import StringIO
 
-from chevah.empirical import factory, EventTestCase
+from chevah.utils.testing import EventTestCase, manufacture
 
 from chevah.utils.exceptions import ConfigurationError
 from chevah.utils.json_file import JSONFile
@@ -35,7 +35,7 @@ class TestJSONFile(EventTestCase):
         """
         Everthing should be fine if initialized with a path.
         """
-        path = factory.makeFilename()
+        path = manufacture.makeFilename()
 
         json_file = JSONFile(path=path)
 
@@ -55,7 +55,7 @@ class TestJSONFile(EventTestCase):
         """
         An ConfigurationError is raised for any IO/OS Error.
         """
-        path = factory.makeFilename()
+        path = manufacture.makeFilename()
         json_file = JSONFile(path=path)
 
         with self.assertRaises(ConfigurationError) as context:
@@ -93,7 +93,7 @@ class TestJSONFile(EventTestCase):
         """
         The parsed data will be available for read/write if it is valid.
         """
-        string_value = factory.getUniqueString()
+        string_value = manufacture.getUniqueString()
         content = '{ "some-good": 1, "utf8": "%s"}' % (string_value)
         json_file = JSONFile(file=StringIO(content))
 
@@ -119,7 +119,7 @@ class TestJSONFile(EventTestCase):
         getValueOrNone will return `None` for disabled values.
         """
         content = '{ "some": "None", "blah": "Disabled", "deh": ""}'
-        json_file = factory.makeJSONFile(content=content)
+        json_file = manufacture.makeJSONFile(content=content)
 
         self.assertIsNone(json_file.getValueOrNone(json_file.data, 'some'))
         self.assertIsNone(json_file.getValueOrNone(json_file.data, 'blah'))
@@ -129,9 +129,9 @@ class TestJSONFile(EventTestCase):
         """
         getValueOrNone will return the actual value.
         """
-        value = factory.getUniqueString()
+        value = manufacture.getUniqueString()
         content = '{ "some": "%s"}' % (value)
-        json_file = factory.makeJSONFile(content=content)
+        json_file = manufacture.makeJSONFile(content=content)
 
         self.assertEqual(
             value,
@@ -143,7 +143,7 @@ class TestJSONFile(EventTestCase):
         getValueOrNone will raise AssertionError if key is not found.
         """
         content = '{ "some": "value"}'
-        json_file = factory.makeJSONFile(content=content)
+        json_file = manufacture.makeJSONFile(content=content)
 
         with self.assertRaises(AssertionError):
             json_file.getValueOrNone(json_file.data, 'other')

@@ -2,15 +2,16 @@
 # See LICENSE for details.
 from __future__ import with_statement
 
-from chevah.empirical import ChevahTestCase, factory
+
 from chevah.utils.exceptions import ConfigurationError
+from chevah.utils.testing import manufacture, UtilsTestCase
 
 
-class TestLogConfigurationSection(ChevahTestCase):
+class TestLogConfigurationSection(UtilsTestCase):
 
     def _getSection(self, content):
-        proxy = factory.makeFileConfigurationProxy(content=content)
-        return factory.makeLogConfigurationSection(proxy=proxy)
+        proxy = manufacture.makeFileConfigurationProxy(content=content)
+        return manufacture.makeLogConfigurationSection(proxy=proxy)
 
     def test_file_disabled_as_none(self):
         """

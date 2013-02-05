@@ -8,9 +8,9 @@ from StringIO import StringIO
 
 from nose.plugins.attrib import attr
 
-from chevah.empirical.testcase import LogTestCase
-from chevah.utils.exceptions import OperationalException
 from chevah.utils.crypto import Key
+from chevah.utils.exceptions import OperationalException
+from chevah.utils.testing import LogTestCase
 
 PUBLIC_RSA_ARMOR_START = u'-----BEGIN PUBLIC KEY-----\n'
 PUBLIC_RSA_ARMOR_END = u'\n-----END PUBLIC KEY-----\n'
