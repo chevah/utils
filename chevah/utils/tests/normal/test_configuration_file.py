@@ -14,7 +14,7 @@ from chevah.utils.configuration_file import (
     FileConfigurationProxy,
     )
 from chevah.utils.constants import CONFIGURATION_INHERIT
-from chevah.utils.exceptions import ConfigurationError
+from chevah.utils.exceptions import UtilsError
 
 
 class TestFileConfigurationProxy(LogTestCase):
@@ -31,12 +31,12 @@ class TestFileConfigurationProxy(LogTestCase):
         """
         An error is raised when initialized with a bad path.
         """
-        with self.assertRaises(ConfigurationError) as context:
+        with self.assertRaises(UtilsError) as context:
             config_file = StringIO()
             FileConfigurationProxy(
                 configuration_path='some-path',
                 configuration_file=config_file)
-        self.assertEqual(1011, context.exception.id)
+        self.assertEqual(u'1011', context.exception.event_id)
 
     def test_init_no_read_to_config_file(self):
         '''Test loading a configuration file with no read permissions.'''
@@ -55,9 +55,9 @@ class TestFileConfigurationProxy(LogTestCase):
                 test_segments)
             test_filesystem.setAttributes(
                 test_segments, {'permissions': 0})
-            with self.assertRaises(ConfigurationError) as context:
+            with self.assertRaises(UtilsError) as context:
                 FileConfigurationProxy(configuration_path=config_path)
-            self.assertEqual(1012, context.exception.id)
+            self.assertEqual(u'1012', context.exception.event_id)
         finally:
             test_filesystem.setAttributes(
                 test_segments, {'permissions': 0777})
@@ -251,9 +251,9 @@ class TestFileConfigurationProxy(LogTestCase):
             '[remote_admin]\n'
             'remote_admin_enabled: No\n')
         config = FileConfigurationProxy(configuration_file=config_file)
-        with self.assertRaises(ConfigurationError) as context:
+        with self.assertRaises(UtilsError) as context:
             config.load()
-        self.assertEqual(1002, context.exception.id)
+        self.assertEqual(u'1002', context.exception.event_id)
         config_file.close()
 
     def test_getBoolean_bad_values(self):
@@ -263,9 +263,9 @@ class TestFileConfigurationProxy(LogTestCase):
             'bool_option = 3234\n')
         config = FileConfigurationProxy(configuration_file=config_file)
         config.load()
-        with self.assertRaises(ConfigurationError) as context:
+        with self.assertRaises(UtilsError) as context:
             config.getBoolean('section', 'bool_option')
-        self.assertEqual(1000, context.exception.id)
+        self.assertEqual(u'1000', context.exception.event_id)
 
     def test_getString(self):
         """

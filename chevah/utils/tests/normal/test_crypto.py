@@ -9,7 +9,7 @@ from StringIO import StringIO
 from nose.plugins.attrib import attr
 
 from chevah.utils.crypto import Key
-from chevah.utils.exceptions import OperationalException
+from chevah.utils.exceptions import UtilsError
 from chevah.utils.testing import LogTestCase
 
 PUBLIC_RSA_ARMOR_START = u'-----BEGIN PUBLIC KEY-----\n'
@@ -77,10 +77,10 @@ class TestKey(LogTestCase):
         """
         An error is raised when generating a key with unknow type.
         """
-        with self.assertRaises(OperationalException) as context:
+        with self.assertRaises(UtilsError) as context:
             key = Key(None)
             key.generate(key_type=0)
-        self.assertEqual(1003, context.exception.id)
+        self.assertEqual(u'1003', context.exception.event_id)
 
     @attr('slow')
     def test_init_rsa(self):

@@ -3,7 +3,7 @@
 from __future__ import with_statement
 
 
-from chevah.utils.exceptions import ConfigurationError
+from chevah.utils.exceptions import UtilsError
 from chevah.utils.testing import manufacture, UtilsTestCase
 
 
@@ -141,10 +141,10 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         section = self._getSection(content)
 
-        with self.assertRaises(ConfigurationError) as context:
+        with self.assertRaises(UtilsError) as context:
             section.file_rotate_each
 
-        self.assertEqual(1023, context.exception.id)
+        self.assertEqual(u'1023', context.exception.event_id)
 
     def test_file_rotate_each_bad_interval(self):
         """
@@ -157,10 +157,10 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         section = self._getSection(content)
 
-        with self.assertRaises(ConfigurationError) as context:
+        with self.assertRaises(UtilsError) as context:
             section.file_rotate_each
 
-        self.assertEqual(1023, context.exception.id)
+        self.assertEqual(u'1023', context.exception.event_id)
 
     def test_file_rotate_each_bad_interval_type(self):
         """
@@ -174,10 +174,10 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         section = self._getSection(content)
 
-        with self.assertRaises(ConfigurationError) as context:
+        with self.assertRaises(UtilsError) as context:
             section.file_rotate_each
 
-        self.assertEqual(1023, context.exception.id)
+        self.assertEqual(u'1023', context.exception.event_id)
 
     def test_file_rotate_each_second(self):
         """

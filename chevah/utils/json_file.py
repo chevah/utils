@@ -10,7 +10,7 @@ import simplejson as json
 from chevah.utils.constants import (
     CONFIGURATION_DISABLED_VALUES,
     )
-from chevah.utils.exceptions import ConfigurationError
+from chevah.utils.exceptions import UtilsError
 
 
 class JSONFile(object):
@@ -79,7 +79,10 @@ class JSONFile(object):
                     'path': self._path,
                     'details': str(error),
                 }
-                raise ConfigurationError(u'1027', data=data)
+                raise UtilsError(u'1027',
+                    u'Failed to load JSON file "%(path)s". %(details)s' % (
+                        data),
+                    data=data)
 
         try:
             result = json.load(self._file)
@@ -92,7 +95,10 @@ class JSONFile(object):
                     'path': self._path,
                     'details': str(error),
                 }
-                raise ConfigurationError(u'1028', data=data)
+                raise UtilsError(u'1028',
+                    u'Bad format for JSON file "%(path)s". %(details)s' % (
+                        data),
+                    data=data)
 
         self._data = result
 

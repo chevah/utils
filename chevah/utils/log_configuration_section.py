@@ -9,7 +9,7 @@ from chevah.utils.configuration_file import ConfigurationSectionBase
 from chevah.utils.constants import (
     CONFIGURATION_SECTION_LOG,
     )
-from chevah.utils.exceptions import ConfigurationError
+from chevah.utils.exceptions import UtilsError
 from chevah.utils.helpers import _
 from chevah.utils.observer import Signal
 
@@ -106,7 +106,7 @@ class LogConfigurationSection(ConfigurationSectionBase):
         tokens = re.split('\W+', value)
 
         def get_rotate_each_error(details):
-            return ConfigurationError(1023,
+            return UtilsError(u'1023',
                 _(u'Wrong value for logger rotation based on time interval. '
                   u'%s' % (details)))
 

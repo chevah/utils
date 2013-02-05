@@ -26,8 +26,7 @@ from chevah.utils.event import (
     EventsHandler,
     )
 from chevah.utils.exceptions import (
-    ConfigurationError,
-    ChevahException,
+    UtilsError,
     )
 from chevah.utils.interfaces import (
     IEvent,
@@ -177,13 +176,13 @@ class TestEventsDefinition(UtilsTestCase):
     def test_load_bad_config_file(self):
         """
         Trying to configure from a bad formated configuration file
-        will raise ConfigurationError.
+        will raise UtilsError.
         """
         content = manufacture.getUniqueString()
         definitions = manufacture.makeEventsDefinition(
             content=content, load=False)
 
-        with self.assertRaises(ConfigurationError) as context:
+        with self.assertRaises(UtilsError) as context:
             definitions.load()
 
         self.assertExceptionID(u'1028', context.exception)
@@ -269,7 +268,7 @@ class TestEventsDefinition(UtilsTestCase):
     def test_load_EventDefinition_missing_group(self):
         """
         Loading an EventDefinition with a reference to a non-existent group
-        will reaise ChevahException.
+        will raise UtilsError.
         """
         event_id = manufacture.getUniqueString()
         group_1 = manufacture.getUniqueString()
@@ -293,7 +292,7 @@ class TestEventsDefinition(UtilsTestCase):
         config = manufacture.makeEventsDefinition(
             content=content, load=False)
 
-        with self.assertRaises(ChevahException):
+        with self.assertRaises(UtilsError):
             config.load()
 
     def test_getAllEventGroupDefinitions_good(self):

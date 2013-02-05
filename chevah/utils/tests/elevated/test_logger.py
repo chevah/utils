@@ -5,9 +5,7 @@
 from __future__ import with_statement
 
 from chevah.utils.testing import UtilsTestCase, manufacture
-from chevah.utils.exceptions import (
-    ConfigurationError,
-    )
+from chevah.utils.exceptions import UtilsError
 
 
 class TestLogger(UtilsTestCase):
@@ -45,10 +43,10 @@ class TestLogger(UtilsTestCase):
         account = u'no-such-account'
         logger = manufacture.makeLogger()
 
-        with self.assertRaises(ConfigurationError) as context:
+        with self.assertRaises(UtilsError) as context:
             logger.configure(configuration=config, account=account)
 
-        self.assertEqual(1026, context.exception.id)
+        self.assertEqual(u'1026', context.exception.event_id)
 
     def test_configure_logger_file_permissions_unix(self):
         """

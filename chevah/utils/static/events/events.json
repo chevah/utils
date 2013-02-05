@@ -348,6 +348,34 @@
     }
 },
 
+"1029": {
+    "message": "Process executon timed out after %s",
+    "groups": ["operational", "failure"],
+    "version_added": "0.6.0",
+    "version_removed": "None",
+    "description": "Error raised when a process exection times out.",
+    "data": {}
+},
+
+"1030": {
+    "message": "No EventDefinition with id \"%s\"'",
+    "groups": ["operational", "failure"],
+    "version_added": "0.6.0",
+    "version_removed": "None",
+    "description": "The event could not be found in the database.",
+    "data": {}
+},
+
+"1031": {
+    "message": "No EventGroupDefinition with name %s",
+    "groups": ["operational", "failure"],
+    "version_added": "0.6.0",
+    "version_removed": "None",
+    "description": "The event group could not be found in the database.",
+    "data": {}
+},
+
+
 "__last_event__": {
     "message": "Internal usage",
     "groups": [],

@@ -18,8 +18,7 @@ from chevah.utils.constants import (
     DEFAULT_PUBLIC_KEY_EXTENSION,
     )
 from chevah.utils.exceptions import (
-    OperationalException,
-    TimeoutException,
+    UtilsError,
     )
 
 
@@ -95,7 +94,7 @@ def generate_ssh_key(options):
             options.key_type, key_size, public_file, private_file)
         exit_code = 0
 
-    except OperationalException, error:
+    except UtilsError, error:
         exit_code = 1
         message = unicode(error)
 
@@ -171,7 +170,7 @@ class TimeoutCommunicate(object):
     process = Popen()
     try:
         timeout_communite = TimeoutCommunicate(process, 4)
-    except TimeoutException:
+    except TimeoutError:
         print 'Timeout'
     print timeout_communicate.output
     '''
@@ -188,7 +187,8 @@ class TimeoutCommunicate(object):
         thread.start()
         thread.join(timeout)
         if thread.isAlive():
-            raise TimeoutException()
+            raise UtilsError(u'1029',
+                'Process executon timed out after "%s"', str(timeout))
 
 
 class Bunch(object):
