@@ -46,15 +46,25 @@ class NoSuchSectionError(UtilsError):
         self.data = None
 
 
-class ReadOnlyPropertyError(UtilsError):
+class MissingPropertyError(UtilsError):
     """
-    Error raised when the configuration is requested to write a read
-    only property.
+    Error raised when the configuration object does not implements a property.
     """
 
     def __init__(self, message=''):
         self.event_id = u'1034'
-        self.message = "Property is read only %s" % (message)
+        self.message = "Property not implemented %s" % (message)
+        self.data = None
+
+
+class MissingSectionError(UtilsError):
+    """
+    Error raised when the configuration object does not implements a section.
+    """
+
+    def __init__(self, message=''):
+        self.event_id = u'1035'
+        self.message = "Section not implemented %s" % (message)
         self.data = None
 
 

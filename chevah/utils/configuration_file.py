@@ -17,7 +17,8 @@ from chevah.utils.exceptions import (
     UtilsError,
     NoSuchPropertyError,
     NoSuchSectionError,
-    ReadOnlyPropertyError,
+    MissingPropertyError,
+    MissingSectionError,
     )
 from chevah.utils.helpers import _
 from chevah.utils.interfaces import (
@@ -25,6 +26,7 @@ from chevah.utils.interfaces import (
     IConfigurationProxy,
     IConfigurationSection,
     PublicAttribute,
+    PublicSectionAttribute,
     PublicWritableAttribute
     )
 from chevah.utils.observer import Signal, ObserverMixin
@@ -298,7 +300,102 @@ class FileConfigurationProxy(object):
             self._raw_config.getfloat, section, option, 'floating number')
 
 
-class ConfigurationFileMixin(object):
+class WithConfigurationPropertyMixin(object):
+    """
+    Mixing for object exporting configuration properties.
+    """
+
+    def _getAttributeNames(self, kind):
+        """
+        Iterate over all interfaces and return the name of the attributes
+        that are instances of `kind`.
+        """
+        for interface in self.__provides__.flattened():
+            for name, description in interface.namesAndDescriptions():
+                if not isinstance(description, kind):
+                    continue
+                yield name
+
+    def getAllProperties(self):
+        """
+        See `_IWithPropertiesMixin`.
+        """
+        result = {}
+
+        # Look for direct attributes.
+        for name in self._getAttributeNames(PublicAttribute):
+            try:
+                value = getattr(self, name)
+            except AttributeError:
+                raise MissingPropertyError(name)
+            result.update({name: value})
+
+        # Then for sections.
+        for name in self._getAttributeNames(PublicSectionAttribute):
+            try:
+                value = getattr(self, name)
+            except AttributeError:
+                raise MissingSectionError(name)
+            section_properties = value.getAllProperties()
+            result.update({name: section_properties})
+
+        return result
+
+    def setProperty(self, property_path, value):
+        """
+        See `_IWithPropertiesMixin`.
+        """
+        try:
+            head, tail = property_path.split('/', 1)
+        except ValueError:
+            head = property_path
+            tail = None
+
+        if tail is None:
+            self._setDirectProperty(head, value)
+        else:
+            self._setSectionProperty(head, tail, value)
+
+    def _setDirectProperty(self, property_name, value):
+        """
+        Try to set a property from this object.
+        """
+        for name in self._getAttributeNames(PublicWritableAttribute):
+            if name != property_name:
+                continue
+
+            if not hasattr(self, name):
+                raise NoSuchPropertyError(property_name)
+
+            setattr(self, name, value)
+            # We stop the search here.
+            return
+
+        # If we are here, it means that property was not found.
+        raise NoSuchPropertyError(property_name)
+
+    def _setSectionProperty(self, head, tail, value):
+        """
+        Try to set a property from a branch section.
+        """
+        for name in self._getAttributeNames(PublicSectionAttribute):
+            if name != head:
+                continue
+
+            try:
+                section = getattr(self, name)
+            except AttributeError:
+                raise NoSuchSectionError(head)
+            else:
+                section.setProperty(tail, value)
+                # We stop the search here.
+                return
+
+        # If we are here, it means that section was not found.
+        raise NoSuchSectionError(head)
+
+
+class ConfigurationFileMixin(WithConfigurationPropertyMixin):
     '''
     Basic code for all configuration files.
 
@@ -336,94 +433,14 @@ class ConfigurationFileMixin(object):
             if not self._proxy.hasSection(section):
                 self._proxy.addSection(section)
 
-    def getAllProperties(self):
-        """
-        See `IConfiguration`.
-        """
-        result = {}
-        for section in self.section_names:
-            section_configuration = getattr(self, section, None)
-            if section_configuration is None:
-                from chevah.utils.logger import debug
-                debug('Could not found section "%s".' % (section))
-                continue
-            section_properties = section_configuration.getAllProperties()
-            result.update({section: section_properties})
-        return result
 
-    def setProperty(self, property_path, value):
-        """
-        See `IConfiguration`.
-        """
-        try:
-            head, tail = property_path.split('/', 1)
-        except ValueError:
-            raise NoSuchPropertyError(property_path)
-
-        if not head in self.section_names:
-            raise NoSuchSectionError(head)
-
-        section_configuration = getattr(self, head, None)
-        if section_configuration is None:
-            raise NoSuchPropertyError(property_path)
-
-        section_configuration.setProperty(tail, value)
-
-
-class ConfigurationSectionMixin(ObserverMixin):
+class ConfigurationSectionMixin(
+        ObserverMixin, WithConfigurationPropertyMixin):
     """
     Mixin for a configuration section.
     """
 
     implements(IConfigurationSection)
-
-    def getAllProperties(self):
-        """
-        See `IConfigurationSection`.
-        """
-        result = {}
-
-        for interface in self.__provides__.flattened():
-            for name, description in interface.namesAndDescriptions():
-                if not isinstance(description, PublicAttribute):
-                    continue
-                try:
-                    value = getattr(self, name)
-                except AttributeError:
-                    raise NoSuchPropertyError(name)
-                result.update({name: value})
-        return result
-
-    def setProperty(self, property_path, value):
-        """
-        See `IConfigurationSection`.
-        """
-        try:
-            head, tail = property_path.split('/', 1)
-        except ValueError:
-            head = property_path
-            tail = None
-
-        if tail is not None:
-            raise NoSuchPropertyError(property_path)
-
-        for interface in self.__provides__.flattened():
-            for name, description in interface.namesAndDescriptions():
-                if name != head:
-                    continue
-
-                if not isinstance(description, PublicWritableAttribute):
-                    raise ReadOnlyPropertyError(property_path)
-
-                if not hasattr(self, name):
-                    raise NoSuchPropertyError(property_path)
-
-                setattr(self, name, value)
-                # We stop the search here.
-                return
-
-        # If we are here, it means that property was not found.
-        raise NoSuchPropertyError(property_path)
 
     @property
     def enabled(self):

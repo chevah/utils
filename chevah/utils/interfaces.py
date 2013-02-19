@@ -17,6 +17,13 @@ class PublicWritableAttribute(PublicAttribute):
     """
 
 
+class PublicSectionAttribute(Attribute):
+    """
+    An public section atribute. This is a collection of attributes and
+    can not be written.
+    """
+
+
 class IConfigurationProxy(Interface):
     '''Interface for configurations objects.'''
 
