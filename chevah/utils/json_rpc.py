@@ -175,7 +175,9 @@ class JSONRPCResource(resource.Resource, object):
                 # Do nothing for notifications.
                 return
 
-            self.logInternalError(str(failure.value), peer=request.client)
+            error_message = '%s - %s' % (
+                failure.value, failure.getTraceback())
+            self.logInternalError(error_message, peer=request.client)
             error = _internalError(
                 message=u'Internal server error. %s' % (failure.value))
 
