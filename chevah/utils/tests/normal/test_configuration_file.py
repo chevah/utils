@@ -8,16 +8,30 @@ from __future__ import with_statement
 import os
 from StringIO import StringIO
 
-from chevah.utils.testing import LogTestCase, manufacture
+from zope.interface import implements
+
+from chevah.utils.testing import manufacture, UtilsTestCase
 from chevah.utils.configuration_file import (
     ConfigurationFileMixin,
+    ConfigurationSectionMixin,
     FileConfigurationProxy,
     )
 from chevah.utils.constants import CONFIGURATION_INHERIT
-from chevah.utils.exceptions import UtilsError
+from chevah.utils.exceptions import (
+    NoSuchPropertyError,
+    NoSuchSectionError,
+    ReadOnlyPropertyError,
+    UtilsError,
+    )
+from chevah.utils.interfaces import (
+    Attribute,
+    Interface,
+    PublicAttribute,
+    PublicWritableAttribute,
+    )
 
 
-class TestFileConfigurationProxy(LogTestCase):
+class TestFileConfigurationProxy(UtilsTestCase):
     '''FileConfigurationProxy tests.'''
 
     def test_init_with_no_arguments(self):
@@ -540,21 +554,165 @@ class TestFileConfigurationProxy(LogTestCase):
             config.getIntegerOrNone(u'some_section', u'some_int'))
 
 
-class TestSection(object):
-    '''A test section.'''
+class IDummySection(Interface):
+    """
+    Interface for IDummySection.
+    """
 
-    def __init__(self, sign):
+    hidden_property = Attribute('Some attribute which is not exposed')
+    enabled = PublicWritableAttribute('Public attribute')
+    property1 = PublicWritableAttribute('Public attribute')
+    property2 = PublicAttribute('Public attribute in read only')
+
+    def some_method():
+        """
+        Just for test.
+        """
+
+
+class MissingPropertyConfigurationSection(ConfigurationSectionMixin):
+    """
+    A configurarion section used for testing properties behavior
+    when property is not defined.
+    """
+
+    implements(IDummySection)
+
+    def __init__(self):
+        pass
+
+
+class DummyConfigurationSection(ConfigurationSectionMixin):
+    """
+    A dummy configuration section used to help with testing.
+    """
+
+    implements(IDummySection)
+
+    _section_name = 'section1'
+    _prefix = 'sec'
+
+    def __init__(self, sign='sign', proxy=None):
+        if proxy is None:
+            self._proxy = manufacture.makeFileConfigurationProxy(
+                content='[section1]\nsec_enabled: True\n')
+        else:
+            self._proxy = proxy
         self.property1 = u'value1-' + sign
         self.property2 = u'value2-' + sign
+        self.hiden_property = u'value3-' + sign
 
-    def getAllProperties(self):
-        return {
-            'property1': self.property1,
-            'property2': self.property2,
-        }
+    def some_method(self):
+        """
+        Here, just to create trouble.
+        """
+        return
 
 
-class ConfigurationFileMixinUser(ConfigurationFileMixin):
+class TestConfigurationSectionMixin(UtilsTestCase):
+    """
+    Test for ConfigurationSectionMixin.
+    """
+
+    def setUp(self):
+        super(TestConfigurationSectionMixin, self).setUp()
+        self.config = DummyConfigurationSection()
+
+    def test_getAllProperties_good(self):
+        """
+        All public properties are exported without a prefix.
+        """
+        result = self.config.getAllProperties()
+
+        self.assertEqual(3, len(result))
+        self.assertFalse('hiden_property' in result)
+        self.assertTrue(result['enabled'])
+        self.assertEqual(u'value1-sign', result['property1'])
+        self.assertEqual(u'value2-sign', result['property2'])
+
+    def test_getAllProperties_missing_properties(self):
+        """
+        An error is raised if the interface defines an public attribute
+        which is not defined in the object.
+        """
+        self.config = MissingPropertyConfigurationSection()
+
+        with self.assertRaises(NoSuchPropertyError) as context:
+            self.config.getAllProperties()
+
+        self.assertEqual(
+            'No such property property1', context.exception.message)
+
+    def test_enabled(self):
+        """
+        Enabled property is provided by the Mixin and it also emits
+        signals on change.
+        """
+        call_list = []
+
+        def notification(signal):
+            call_list.append(signal)
+
+        self.config.subscribe('enabled', notification)
+        self.config.enabled = True
+        self.assertIsTrue(self.config.enabled)
+
+        self.config.enabled = False
+        self.assertIsFalse(self.config.enabled)
+
+        self.assertEqual(2, len(call_list))
+        signal = call_list[1]
+        self.assertIsTrue(signal.initial_value)
+        self.assertIsFalse(signal.current_value)
+        self.assertEqual(self.config, signal.source)
+
+    def test_setProperty_with_parent(self):
+        """
+        An error is raise if property_path still have a parent.
+        """
+        with self.assertRaises(NoSuchPropertyError) as context:
+            self.config.setProperty('property1/child', 'something')
+
+        self.assertExceptionID(u'1032', context.exception)
+
+    def test_setProperty_non_existent(self):
+        """
+        An error is raise if property_path does not existes.
+        """
+        with self.assertRaises(NoSuchPropertyError) as context:
+            self.config.setProperty('property_non_existent', 'something')
+
+        self.assertExceptionID(u'1032', context.exception)
+
+    def test_setProperty_read_only(self):
+        """
+        An error is raised when trying to write a read only property.
+        """
+        with self.assertRaises(ReadOnlyPropertyError) as context:
+            self.config.setProperty('property2', 'something')
+
+        self.assertExceptionID(u'1034', context.exception)
+
+    def test_setProperty_defined_but_non_exitent(self):
+        """
+        An error is raised if property is defined on the interface, but
+        not existent on the object.
+        """
+        self.config = MissingPropertyConfigurationSection()
+
+        with self.assertRaises(NoSuchPropertyError):
+            self.config.setProperty('property1', 'something')
+
+    def test_setProperty_ok(self):
+        """
+        Value is set of property exists..
+        """
+        self.config.setProperty('property1', 'something')
+
+        self.assertEqual('something', self.config.property1)
+
+
+class DummyConfigurationFileMixin(ConfigurationFileMixin):
     '''A test class using `ConfigurationFileMixin`.'''
 
     def __init__(self, configuration_path=None, configuration_file=None):
@@ -564,26 +722,30 @@ class ConfigurationFileMixinUser(ConfigurationFileMixin):
             configuration_path=configuration_path,
             configuration_file=configuration_file)
         self._proxy.load()
-        self.section1 = TestSection(u'1')
-        self.section2 = TestSection(u'2')
+        self.section1 = DummyConfigurationSection(
+            sign=u'1', proxy=self._proxy)
+        self.section2 = DummyConfigurationSection(
+            sign=u'2', proxy=self._proxy)
 
     @property
     def section_names(self):
         return [u'section1', u'section2']
 
 
-class TestConfigurationFileMixin(LogTestCase):
-    '''General tests for configuration file.'''
+class TestConfigurationFileMixin(UtilsTestCase):
+    """
+    Tests for ConfigurationFileMixin.
+    """
 
     def test_config_init_with_bad_arguments(self):
         """
         An error is raised at initialization if bad arguments are provided.
         """
         with self.assertRaises(AssertionError):
-            ConfigurationFileMixinUser()
+            DummyConfigurationFileMixin()
         with self.assertRaises(AssertionError):
             config_file = StringIO()
-            ConfigurationFileMixinUser(
+            DummyConfigurationFileMixin(
                 configuration_path='some-path',
                 configuration_file=config_file)
 
@@ -593,7 +755,7 @@ class TestConfigurationFileMixin(LogTestCase):
         create default sections.
         """
         config_file = StringIO(u'[section3]\n')
-        config = ConfigurationFileMixinUser(configuration_file=config_file)
+        config = DummyConfigurationFileMixin(configuration_file=config_file)
         self.assertFalse(config._proxy.hasSection(u'section1'))
         self.assertFalse(config._proxy.hasSection(u'section2'))
         self.assertTrue(config._proxy.hasSection(u'section3'))
@@ -608,7 +770,7 @@ class TestConfigurationFileMixin(LogTestCase):
         create only those sections.
         """
         config_file = StringIO(u'[section3]\n')
-        config = ConfigurationFileMixinUser(configuration_file=config_file)
+        config = DummyConfigurationFileMixin(configuration_file=config_file)
         self.assertFalse(config._proxy.hasSection(u'section1'))
         self.assertFalse(config._proxy.hasSection(u'section2'))
         self.assertTrue(config._proxy.hasSection(u'section3'))
@@ -619,17 +781,87 @@ class TestConfigurationFileMixin(LogTestCase):
 
     def test_getAllProperties(self):
         """
-        Check getting all properties.
+        All properties from all sections are returned, expecting hidden
+        properties.
         """
-        config_file = StringIO(u'[section3]\n')
-        config = ConfigurationFileMixinUser(configuration_file=config_file)
+        config_file = StringIO(
+            u'[section1]\n'
+            u'sec_enabled: True\n'
+            u'[section2]\n'
+            u'sec_enabled: True\n'
+            )
+        config = DummyConfigurationFileMixin(configuration_file=config_file)
+
         props = config.getAllProperties()
+
         self.assertEqual(2, len(props))
         self.assertTrue(u'section1' in props)
         self.assertTrue(u'section2' in props)
-        self.assertEqual(2, len(props['section1']))
+
+        self.assertEqual(3, len(props['section1']))
+        self.assertEqual(True, props['section1']['enabled'])
         self.assertEqual(u'value1-1', props['section1']['property1'])
-        self.assertEqual(u'value2-2', props['section2']['property2'])
+        self.assertEqual(u'value2-1', props['section1']['property2'])
+
+    def test_setProperties_final_property(self):
+        """
+        An error is raised when trying to set a final property which
+        has no section.
+        """
+        config = DummyConfigurationFileMixin(configuration_file=StringIO())
+
+        with self.assertRaises(NoSuchPropertyError):
+            config.setProperty('section1', 'something')
+
+    def test_setProperties_unknown_section(self):
+        """
+        An error is raised when trying to set a property forn an unknown
+        section.
+        """
+        config = DummyConfigurationFileMixin(configuration_file=StringIO())
+
+        with self.assertRaises(NoSuchSectionError) as context:
+            config.setProperty('no_such_section/property', 'something')
+
+        self.assertExceptionID(u'1033', context.exception)
+
+    def test_setProperties_unknown_property(self):
+        """
+        An error is raised when trying to set an unknown property for a
+        valid section.
+        """
+        config = DummyConfigurationFileMixin(configuration_file=StringIO())
+
+        with self.assertRaises(NoSuchPropertyError):
+            config.setProperty('section1/unknown_property', 'something')
+
+    def test_setProperties_ok_attribute(self):
+        """
+        Value is set if section and property exists and property is
+        a direct attribute.
+        """
+        config = DummyConfigurationFileMixin(configuration_file=StringIO())
+        value = manufacture.getUniqueString()
+
+        config.setProperty('section1/property1', value)
+
+        self.assertEqual(value, config.section1.property1)
+
+    def test_setProperties_ok_property(self):
+        """
+        Value is set even if property is defiend using @property decorator.
+        """
+        content = (
+            '[section1]\n'
+            'sec_enabled: True\n'
+            )
+        config = DummyConfigurationFileMixin(
+            configuration_file=StringIO(content))
+        self.assertIsTrue(config.section1.enabled)
+
+        config.setProperty('section1/enabled', False)
+
+        self.assertIsFalse(config.section1.enabled)
 
     def test_save(self):
         """
@@ -649,7 +881,7 @@ class TestConfigurationFileMixin(LogTestCase):
             config_path = test_filesystem.getRealPathFromSegments(
                 test_segments)
             with test_filesystem._impersonateUser():
-                config = ConfigurationFileMixinUser(
+                config = DummyConfigurationFileMixin(
                     configuration_path=config_path)
                 self.assertEqual(
                     u'another_muță_value',
@@ -663,7 +895,7 @@ class TestConfigurationFileMixin(LogTestCase):
                         u'muță_value',
                         )
                 config.save()
-                config = ConfigurationFileMixinUser(
+                config = DummyConfigurationFileMixin(
                     configuration_path=config_path)
                 self.assertEqual(
                     u'muță_value',

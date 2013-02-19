@@ -5,6 +5,18 @@
 from zope.interface import Interface, Attribute
 
 
+class PublicAttribute(Attribute):
+    """
+    An public atribute which can only be read.
+    """
+
+
+class PublicWritableAttribute(PublicAttribute):
+    """
+    An public atribute which can be read and written.
+    """
+
+
 class IConfigurationProxy(Interface):
     '''Interface for configurations objects.'''
 
@@ -39,30 +51,47 @@ class IConfigurationProxy(Interface):
         '''Return the Float value for `option` from `section`.'''
 
 
-class IConfiguration(Interface):
-    '''Main configuration for a Chevah service.'''
+class _IWithPropertiesMixin(Interface):
+    """
+    Private interface use to share attributed related to properties
+    handling.
 
-    def __init__(configuration_path, configuration_file):
-        '''Initialize the IConfiguration.
-
-        configuration_path and configuration_file are mutually exclusive.
-        '''
-
-    def getAllProperties():
-        '''Return a dictionary for properties from all sections.
-
-        { section_name : { property_name: property_value}}
-        '''
-
-
-class IConfigurationSection(Interface):
-    '''A section from the configuration file.'''
+    The class implementing this interface should also define the properties
+    using PublicAttribute and PublicWritableAttribute.
+    """
 
     def getAllProperties():
         '''Return a dictionary for all section properties.
 
         It should read all property members and return them as key-value.
         {property_name1: property1_value, property_name2: property2_value}
+        '''
+
+    def setProperty(property_path, value):
+        """
+        Set property denoted by `property_path`.
+
+        property_path is in the format section/subsection/property.
+        """
+
+
+class IConfigurationSection(_IWithPropertiesMixin):
+    """
+    A section from the configuration file.
+    """
+
+    _section_name = Attribute('Name of the section')
+    _prefix = Attribute('Prefix appended to all options. Without trailing _')
+    _proxy = Attribute('Proxy used for persisting the configurations.')
+
+
+class IConfiguration(_IWithPropertiesMixin):
+    '''Root configuration.'''
+
+    def __init__(configuration_path, configuration_file):
+        '''Initialize the IConfiguration.
+
+        configuration_path and configuration_file are mutually exclusive.
         '''
 
 

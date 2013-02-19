@@ -4,7 +4,7 @@
 from __future__ import with_statement
 
 from unittest2 import TestCase
-from chevah.utils.observer import HasObserver, Signal
+from chevah.utils.observer import ObserverMixin, Signal
 
 
 class TestSignal(TestCase):
@@ -23,21 +23,21 @@ class TestSignal(TestCase):
         self.assertEqual(signal.key, u'value')
 
 
-class TestHasObserver(TestCase):
+class TestObserverMixin(TestCase):
     '''FileConfiguration.'''
 
     def test_init(self):
         """
-        Check HasObserver initialization.
+        Check ObserverMixin initialization.
         """
-        observer = HasObserver()
+        observer = ObserverMixin()
         self.assertFalse(hasattr(observer, '_subscribers'))
 
     def test_subscribe(self):
         """
         Check subscribe.
         """
-        observer = HasObserver()
+        observer = ObserverMixin()
 
         def one_callback(signal):
             pass
@@ -67,7 +67,7 @@ class TestHasObserver(TestCase):
         """
         Check notify.
         """
-        observer = HasObserver()
+        observer = ObserverMixin()
         self.signals_called = []
 
         def one_callback(signal):
@@ -103,7 +103,7 @@ class TestHasObserver(TestCase):
         """
         Check unsubscribe.
         """
-        observer = HasObserver()
+        observer = ObserverMixin()
 
         def one_callback(signal):
             pass
@@ -121,7 +121,7 @@ class TestHasObserver(TestCase):
         """
         Check unsubscribe for a specific signal.
         """
-        observer = HasObserver()
+        observer = ObserverMixin()
 
         def one_callback(signal):
             pass
@@ -142,7 +142,7 @@ class TestHasObserver(TestCase):
         """
         Check unsubscribe for a specific callback.
         """
-        observer = HasObserver()
+        observer = ObserverMixin()
 
         def one_callback(signal):
             pass

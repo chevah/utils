@@ -5,7 +5,7 @@ from chevah.utils import __python_future__
 
 import re
 
-from chevah.utils.configuration_file import ConfigurationSectionBase
+from chevah.utils.configuration_file import ConfigurationSectionMixin
 from chevah.utils.constants import (
     CONFIGURATION_SECTION_LOG,
     )
@@ -14,7 +14,7 @@ from chevah.utils.helpers import _
 from chevah.utils.observer import Signal
 
 
-class LogConfigurationSection(ConfigurationSectionBase):
+class LogConfigurationSection(ConfigurationSectionMixin):
     '''Configurations for the log section.
 
     It also contains the 'enabled' property for consistency, but right now

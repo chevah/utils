@@ -4,7 +4,6 @@
 from chevah.utils import __python_future__
 
 import ConfigParser
-import inspect
 
 from zope.interface import implements
 
@@ -14,14 +13,21 @@ from chevah.utils.constants import (
     CONFIGURATION_DISABLED_VALUES,
     CONFIGURATION_INHERIT,
     )
-from chevah.utils.exceptions import UtilsError
+from chevah.utils.exceptions import (
+    UtilsError,
+    NoSuchPropertyError,
+    NoSuchSectionError,
+    ReadOnlyPropertyError,
+    )
 from chevah.utils.helpers import _
 from chevah.utils.interfaces import (
     IConfiguration,
     IConfigurationProxy,
     IConfigurationSection,
+    PublicAttribute,
+    PublicWritableAttribute
     )
-from chevah.utils.observer import Signal, HasObserver
+from chevah.utils.observer import Signal, ObserverMixin
 
 
 class ChevahConfigParser(object, ConfigParser.ConfigParser):
@@ -331,7 +337,9 @@ class ConfigurationFileMixin(object):
                 self._proxy.addSection(section)
 
     def getAllProperties(self):
-        '''Return a dictionary with all the current public configuration.'''
+        """
+        See `IConfiguration`.
+        """
         result = {}
         for section in self.section_names:
             section_configuration = getattr(self, section, None)
@@ -343,27 +351,79 @@ class ConfigurationFileMixin(object):
             result.update({section: section_properties})
         return result
 
+    def setProperty(self, property_path, value):
+        """
+        See `IConfiguration`.
+        """
+        try:
+            head, tail = property_path.split('/', 1)
+        except ValueError:
+            raise NoSuchPropertyError(property_path)
 
-class ConfigurationSectionBase(HasObserver):
-    '''Basic class for configuration sections.'''
+        if not head in self.section_names:
+            raise NoSuchSectionError(head)
+
+        section_configuration = getattr(self, head, None)
+        if section_configuration is None:
+            raise NoSuchPropertyError(property_path)
+
+        section_configuration.setProperty(tail, value)
+
+
+class ConfigurationSectionMixin(ObserverMixin):
+    """
+    Mixin for a configuration section.
+    """
 
     implements(IConfigurationSection)
 
     def getAllProperties(self):
-        '''Return the dictionary containing all properties.'''
+        """
+        See `IConfigurationSection`.
+        """
         result = {}
 
-        export_prefix = getattr(self, '_export_prefix', '')
-
-        # Use use getattr in case the subclass does not define this
-        # attribute and we default to None.
-        hidden_properties = getattr(self, '_hidden_properties', [])
-        for name, value in inspect.getmembers(self):
-            if hidden_properties and name in hidden_properties:
-                continue
-            if not name.startswith('_') and not inspect.ismethod(value):
-                result.update({export_prefix + name: value})
+        for interface in self.__provides__.flattened():
+            for name, description in interface.namesAndDescriptions():
+                if not isinstance(description, PublicAttribute):
+                    continue
+                try:
+                    value = getattr(self, name)
+                except AttributeError:
+                    raise NoSuchPropertyError(name)
+                result.update({name: value})
         return result
+
+    def setProperty(self, property_path, value):
+        """
+        See `IConfigurationSection`.
+        """
+        try:
+            head, tail = property_path.split('/', 1)
+        except ValueError:
+            head = property_path
+            tail = None
+
+        if tail is not None:
+            raise NoSuchPropertyError(property_path)
+
+        for interface in self.__provides__.flattened():
+            for name, description in interface.namesAndDescriptions():
+                if name != head:
+                    continue
+
+                if not isinstance(description, PublicWritableAttribute):
+                    raise ReadOnlyPropertyError(property_path)
+
+                if not hasattr(self, name):
+                    raise NoSuchPropertyError(property_path)
+
+                setattr(self, name, value)
+                # We stop the search here.
+                return
+
+        # If we are here, it means that property was not found.
+        raise NoSuchPropertyError(property_path)
 
     @property
     def enabled(self):
