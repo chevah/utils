@@ -352,7 +352,9 @@ class ConfigurationSectionBase(HasObserver):
     def getAllProperties(self):
         '''Return the dictionary containing all properties.'''
         result = {}
-        section_prefix = self._section_name + '_'
+
+        export_prefix = getattr(self, '_export_prefix', '')
+
         # Use use getattr in case the subclass does not define this
         # attribute and we default to None.
         hidden_properties = getattr(self, '_hidden_properties', [])
@@ -360,7 +362,7 @@ class ConfigurationSectionBase(HasObserver):
             if hidden_properties and name in hidden_properties:
                 continue
             if not name.startswith('_') and not inspect.ismethod(value):
-                result.update({section_prefix + name: value})
+                result.update({export_prefix + name: value})
         return result
 
     @property
