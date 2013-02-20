@@ -4,6 +4,7 @@ from __future__ import with_statement
 
 
 from chevah.utils.exceptions import UtilsError
+from chevah.utils.interfaces import ILogConfigurationSection
 from chevah.utils.testing import manufacture, UtilsTestCase
 
 
@@ -12,6 +13,26 @@ class TestLogConfigurationSection(UtilsTestCase):
     def _getSection(self, content):
         proxy = manufacture.makeFileConfigurationProxy(content=content)
         return manufacture.makeLogConfigurationSection(proxy=proxy)
+
+    def test_init(self):
+        """
+        LogConfigurationSection
+        """
+        content = (
+            '[log]\n'
+            'log_file: None\n'
+            'log_file_rotate_external: Yes\n'
+            'log_file_rotate_at_size: 0\n'
+            'log_file_rotate_each: 2 seconds\n'
+            'log_file_rotate_count: Disabled\n'
+            'log_enabled_groups: all\n'
+            'log_syslog: Disabled\n'
+            )
+        section = self._getSection(content)
+
+        self.assertProvides(ILogConfigurationSection, section)
+        self.assertEqual(u'log', section._section_name)
+        self.assertEqual(u'log', section._prefix)
 
     def test_file_disabled_as_none(self):
         """

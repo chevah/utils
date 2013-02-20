@@ -5,11 +5,14 @@ from chevah.utils import __python_future__
 
 import re
 
+from zope.interface import implements
+
 from chevah.utils.configuration_file import ConfigurationSectionMixin
 from chevah.utils.constants import (
     CONFIGURATION_SECTION_LOG,
     )
 from chevah.utils.exceptions import UtilsError
+from chevah.utils.interfaces import ILogConfigurationSection
 from chevah.utils.helpers import _
 from chevah.utils.observer import Signal
 
@@ -24,16 +27,18 @@ class LogConfigurationSection(ConfigurationSectionMixin):
     log_file: /path/to/file
     log_file_rotate_external: Yes | No
     log_file_rotate_at_size: 0 | Disabled
-    log_file_rotate_each_type:
+    log_file_rotate_each:
         1 hour | 2 seconds | 2 midnight | 3 Monday | Disabled
     log_file_rotate_count: 3 | 0 | Disabled
     log_syslog: /path/to/syslog/pype | syslog.host:port
+    log_enabled_groups: all
     '''
+
+    implements(ILogConfigurationSection)
 
     def __init__(self, proxy):
         self._proxy = proxy
         self._section_name = CONFIGURATION_SECTION_LOG
-        self._hidden_properties = None
         self._prefix = u'log'
 
     @property
@@ -159,7 +164,7 @@ class LogConfigurationSection(ConfigurationSectionMixin):
     def enabled_groups(self):
         '''Return the list of enabled log groups.'''
         value = self._proxy.getString(
-                self._section_name, self._section_name + '_enabled_groups')
+                self._section_name, self._prefix + '_enabled_groups')
         groups = []
         for group in value.split(','):
             group = group.strip()
@@ -173,6 +178,6 @@ class LogConfigurationSection(ConfigurationSectionMixin):
         '''Set the list of enabled groups.'''
         self._proxy.setString(
             self._section_name,
-            self._section_name + '_enabled_groups',
+            self._prefix + '_enabled_groups',
             ', '.join(value),
             )

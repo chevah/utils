@@ -302,6 +302,8 @@ class FileConfigurationProxy(object):
 
 class WithConfigurationPropertyMixin(object):
     """
+    See `_IWithPropertiesMixin`.
+
     Mixing for object exporting configuration properties.
     """
 
@@ -310,7 +312,7 @@ class WithConfigurationPropertyMixin(object):
         Iterate over all interfaces and return the name of the attributes
         that are instances of `kind`.
         """
-        for interface in self.__provides__.flattened():
+        for interface in self.__implemented__.flattened():
             for name, description in interface.namesAndDescriptions():
                 if not isinstance(description, kind):
                     continue
@@ -358,7 +360,7 @@ class WithConfigurationPropertyMixin(object):
 
     def _setDirectProperty(self, property_name, value):
         """
-        Try to set a property from this object.
+        Try to set a property for this object.
         """
         for name in self._getAttributeNames(PublicWritableAttribute):
             if name != property_name:
@@ -396,13 +398,13 @@ class WithConfigurationPropertyMixin(object):
 
 
 class ConfigurationFileMixin(WithConfigurationPropertyMixin):
-    '''
+    """
     Basic code for all configuration files.
 
     Classes using this mixin should initialize the following members:
      * proxy - FileProxyConfiguration
      * section_names - list of section names
-    '''
+    """
 
     implements(IConfiguration)
 

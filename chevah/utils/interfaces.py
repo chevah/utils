@@ -63,8 +63,11 @@ class _IWithPropertiesMixin(Interface):
     Private interface use to share attributed related to properties
     handling.
 
-    The class implementing this interface should also define the properties
-    using PublicAttribute and PublicWritableAttribute.
+    The class implementing this interface should also define one of the
+    following properties to allow exporting them:
+    * PublicAttribute
+    * PublicWritableAttribute
+    * PublicSectionAttribute
     """
 
     def getAllProperties():
@@ -320,3 +323,24 @@ class IIdleTimeoutProtocol(Interface):
 
         Override to define behavior other than dropping the connection.
         """
+
+
+class ILogConfigurationSection(Interface):
+    """
+    Section stroting configurtions for the logger.
+    """
+    file = PublicWritableAttribute(
+        'Path to file where logs are stored.')
+    file_rotate_external = PublicWritableAttribute(
+        'Should be enabled when an external log rotation is enabled. '
+        'Yes | No')
+    file_rotate_at_size = PublicWritableAttribute(
+        'Trigger rotation when file reaches this size. 0 | Disabled')
+    file_rotate_each = PublicWritableAttribute(
+        '1 hour | 2 seconds | 2 midnight | 3 Monday | Disabled')
+    file_rotate_count = PublicWritableAttribute(
+        'How many rotated file to be stored. 3 | 0 | Disabled')
+    syslog = PublicWritableAttribute(
+        'SysLog configuration. /path/to/syslog/pype | syslog.host:port')
+    enabled_groups = PublicWritableAttribute(
+        'List of groups for which logs are emitted.')
