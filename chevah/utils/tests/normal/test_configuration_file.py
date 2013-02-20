@@ -617,7 +617,7 @@ class DummyLeafConfigurationSection(ConfigurationSectionMixin):
 
 class MissingPropertyConfigurationSection(ConfigurationSectionMixin):
     """
-    A configurartion section used for testing properties behavior
+    A configuration section used for testing properties behavior
     when properties are not implemented.
     """
 
@@ -629,7 +629,7 @@ class MissingPropertyConfigurationSection(ConfigurationSectionMixin):
 
 class MissingSectionConfigurationSection(ConfigurationSectionMixin):
     """
-    A configurartion section used for testing section behavior
+    A configuration section used for testing section behavior
     when section is not implemented.
     """
 
@@ -645,7 +645,7 @@ class MissingSectionConfigurationSection(ConfigurationSectionMixin):
 class DummyNodeConfigurationSection(ConfigurationSectionMixin):
     """
     A dummy configuration section used to help with testing.
-    It contains properties and sections
+    It contains properties and sections.
     """
 
     implements(IDummyNodeSection)

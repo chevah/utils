@@ -304,7 +304,7 @@ class WithConfigurationPropertyMixin(object):
     """
     See `_IWithPropertiesMixin`.
 
-    Mixing for object exporting configuration properties.
+    Mixin for object exporting configuration properties.
     """
 
     def _getAttributeNames(self, kind):

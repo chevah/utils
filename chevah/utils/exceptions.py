@@ -48,7 +48,7 @@ class NoSuchSectionError(UtilsError):
 
 class MissingPropertyError(UtilsError):
     """
-    Error raised when the configuration object does not implements a property.
+    Error raised when the configuration object does not implement a property.
     """
 
     def __init__(self, message=''):
@@ -59,7 +59,7 @@ class MissingPropertyError(UtilsError):
 
 class MissingSectionError(UtilsError):
     """
-    Error raised when the configuration object does not implements a section.
+    Error raised when the configuration object does not implement a section.
     """
 
     def __init__(self, message=''):

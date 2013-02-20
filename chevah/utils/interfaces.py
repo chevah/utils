@@ -71,11 +71,12 @@ class _IWithPropertiesMixin(Interface):
     """
 
     def getAllProperties():
-        '''Return a dictionary for all section properties.
+        """
+        Return a dictionary for all section properties.
 
         It should read all property members and return them as key-value.
-        {property_name1: property1_value, property_name2: property2_value}
-        '''
+        {property1_name: property1_value, property2_name: property2_value}
+        """
 
     def setProperty(property_path, value):
         """
@@ -327,7 +328,7 @@ class IIdleTimeoutProtocol(Interface):
 
 class ILogConfigurationSection(Interface):
     """
-    Section stroting configurtions for the logger.
+    Section storing configurations for the logger.
     """
     file = PublicWritableAttribute(
         'Path to file where logs are stored.')
