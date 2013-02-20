@@ -91,6 +91,8 @@ class IConfigurationSection(_IWithPropertiesMixin):
     A section from the configuration file.
     """
 
+    _proxy = Attribute('Proxy used for persisting the configurations.')
+
 
 class IConfiguration(_IWithPropertiesMixin):
     '''Root configuration.'''
