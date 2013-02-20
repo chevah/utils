@@ -34,10 +34,10 @@ class TestLogger(UtilsTestCase):
             content=content, defaults=defaults)
         return manufacture.makeLogConfigurationSection(proxy=proxy)
 
-    def test_configure_no_services_account(self):
+    def test_configure_no_account(self):
         """
         Integration test that logger will raise an exception if
-        services_account does not exists.
+        account does not exists.
         """
         config = self._getConfiguration()
         account = u'no-such-account'

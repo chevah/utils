@@ -91,10 +91,6 @@ class IConfigurationSection(_IWithPropertiesMixin):
     A section from the configuration file.
     """
 
-    _section_name = Attribute('Name of the section')
-    _prefix = Attribute('Prefix appended to all options. Without trailing _')
-    _proxy = Attribute('Proxy used for persisting the configurations.')
-
 
 class IConfiguration(_IWithPropertiesMixin):
     '''Root configuration.'''
