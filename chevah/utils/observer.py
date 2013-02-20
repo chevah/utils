@@ -19,7 +19,7 @@ class Signal(object):
             setattr(self, key, value)
 
 
-class HasObserver(object):
+class ObserverMixin(object):
     """
     A base class for implementing observers.
 

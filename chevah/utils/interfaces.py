@@ -5,6 +5,25 @@
 from zope.interface import Interface, Attribute
 
 
+class PublicAttribute(Attribute):
+    """
+    An public atribute which can only be read.
+    """
+
+
+class PublicWritableAttribute(PublicAttribute):
+    """
+    An public atribute which can be read and written.
+    """
+
+
+class PublicSectionAttribute(Attribute):
+    """
+    An public section atribute. This is a collection of attributes and
+    can not be written.
+    """
+
+
 class IConfigurationProxy(Interface):
     '''Interface for configurations objects.'''
 
@@ -39,30 +58,51 @@ class IConfigurationProxy(Interface):
         '''Return the Float value for `option` from `section`.'''
 
 
-class IConfiguration(Interface):
-    '''Main configuration for a Chevah service.'''
+class _IWithPropertiesMixin(Interface):
+    """
+    Private interface use to share attributed related to properties
+    handling.
+
+    The class implementing this interface should also define one of the
+    following properties to allow exporting them:
+    * PublicAttribute
+    * PublicWritableAttribute
+    * PublicSectionAttribute
+    """
+
+    def getAllProperties():
+        """
+        Return a dictionary for all section properties.
+
+        It should read all property members and return them as key-value.
+        {property1_name: property1_value, property2_name: property2_value}
+        """
+
+    def setProperty(property_path, value):
+        """
+        Set property denoted by `property_path`.
+
+        property_path is in the format section/subsection/property.
+        """
+
+
+class IConfigurationSection(_IWithPropertiesMixin):
+    """
+    A section from the configuration file.
+    """
+
+    _section_name = Attribute('Name of the section')
+    _prefix = Attribute('Prefix appended to all options. Without trailing _')
+    _proxy = Attribute('Proxy used for persisting the configurations.')
+
+
+class IConfiguration(_IWithPropertiesMixin):
+    '''Root configuration.'''
 
     def __init__(configuration_path, configuration_file):
         '''Initialize the IConfiguration.
 
         configuration_path and configuration_file are mutually exclusive.
-        '''
-
-    def getAllProperties():
-        '''Return a dictionary for properties from all sections.
-
-        { section_name : { property_name: property_value}}
-        '''
-
-
-class IConfigurationSection(Interface):
-    '''A section from the configuration file.'''
-
-    def getAllProperties():
-        '''Return a dictionary for all section properties.
-
-        It should read all property members and return them as key-value.
-        {property_name1: property1_value, property_name2: property2_value}
         '''
 
 
@@ -284,3 +324,24 @@ class IIdleTimeoutProtocol(Interface):
 
         Override to define behavior other than dropping the connection.
         """
+
+
+class ILogConfigurationSection(Interface):
+    """
+    Section storing configurations for the logger.
+    """
+    file = PublicWritableAttribute(
+        'Path to file where logs are stored.')
+    file_rotate_external = PublicWritableAttribute(
+        'Should be enabled when an external log rotation is enabled. '
+        'Yes | No')
+    file_rotate_at_size = PublicWritableAttribute(
+        'Trigger rotation when file reaches this size. 0 | Disabled')
+    file_rotate_each = PublicWritableAttribute(
+        '1 hour | 2 seconds | 2 midnight | 3 Monday | Disabled')
+    file_rotate_count = PublicWritableAttribute(
+        'How many rotated file to be stored. 3 | 0 | Disabled')
+    syslog = PublicWritableAttribute(
+        'SysLog configuration. /path/to/syslog/pype | syslog.host:port')
+    enabled_groups = PublicWritableAttribute(
+        'List of groups for which logs are emitted.')

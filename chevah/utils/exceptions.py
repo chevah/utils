@@ -24,6 +24,50 @@ class UtilsError(Exception):
             str(self.event_id), self.message.encode('utf-8'), str(self.data))
 
 
+class NoSuchPropertyError(UtilsError):
+    """
+    Error raised when the configuration does not have a requested property.
+    """
+
+    def __init__(self, message=''):
+        self.event_id = u'1032'
+        self.message = "No such property %s" % (message)
+        self.data = None
+
+
+class NoSuchSectionError(UtilsError):
+    """
+    Error raised when the configuration does not have a requested section.
+    """
+
+    def __init__(self, message=''):
+        self.event_id = u'1033'
+        self.message = "No such section %s" % (message)
+        self.data = None
+
+
+class MissingPropertyError(UtilsError):
+    """
+    Error raised when the configuration object does not implement a property.
+    """
+
+    def __init__(self, message=''):
+        self.event_id = u'1034'
+        self.message = "Property not implemented %s" % (message)
+        self.data = None
+
+
+class MissingSectionError(UtilsError):
+    """
+    Error raised when the configuration object does not implement a section.
+    """
+
+    def __init__(self, message=''):
+        self.event_id = u'1035'
+        self.message = "Section not implemented %s" % (message)
+        self.data = None
+
+
 class UtilsException(Exception):
     """
     Generic exception used by Chevah components.
