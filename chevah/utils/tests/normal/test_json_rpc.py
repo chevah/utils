@@ -473,10 +473,11 @@ class TestHelpers(UtilsTestCase):
 
         self.assertIsNone(session)
 
-        self.request.setRequestHeader('authorization',
+        request = manufacture.makeTwistedWebRequest()
+        request.setRequestHeader('authorization',
             manufacture.getUniqueString())
 
-        session = json_rpc._get_session(self.request)
+        session = json_rpc._get_session(request)
 
         self.assertIsNone(session)
 
