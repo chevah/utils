@@ -8,6 +8,7 @@ from twisted.internet import defer
 from twisted.web import server
 import simplejson as json
 
+from chevah.utils import json_rpc
 from chevah.utils.json_rpc import JSONRPCResource, JSONRPCError
 from chevah.utils.testing import manufacture, UtilsTestCase
 
@@ -453,33 +454,40 @@ class TestHelpers(UtilsTestCase):
     """
     Test JSON RPC helper methods.
     """
+    def setUp(self):
+        super(TestHelpers, self).setUp()
+        self.request = manufacture.makeTwistedWebRequest()
+        self.session = self.request.site.makeSession()
+
+    def tearDown(self):
+        if self.session:
+            self.session.expire()
+        super(TestHelpers, self).tearDown()
 
     def test_getSession_no_session(self):
         """
         None is returned if the request does not contain session
         information or the information is not valid.
         """
-        from chevah.utils import json_rpc
-        request = manufacture.makeTwistedWebRequest()
+        session = json_rpc._get_session(self.request)
 
-        self.assertIsNone(json_rpc._get_session(request))
+        self.assertIsNone(session)
 
-        request.setRequestHeader('authorization',
+        self.request.setRequestHeader('authorization',
             manufacture.getUniqueString())
 
-        self.assertIsNone(json_rpc._get_session(request))
+        session = json_rpc._get_session(self.request)
+
+        self.assertIsNone(session)
 
     def test_getSession_valid_session(self):
         """
         The session instance is returned if the request header contains
         valid session information.
         """
-        from chevah.utils import json_rpc
-        request = manufacture.makeTwistedWebRequest()
-        session = request.site.makeSession()
-        request.setRequestHeader('authorization', session.uid)
-        value = json_rpc._get_session(request)
-        session.expire()
+        self.request.setRequestHeader('authorization', self.session.uid)
+
+        value = json_rpc._get_session(self.request)
 
         self.assertIsNotNone(value)
-        self.assertEquals(session.uid, value.uid)
+        self.assertEquals(self.session.uid, value.uid)
