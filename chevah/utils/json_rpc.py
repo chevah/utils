@@ -113,7 +113,7 @@ class JSONRPCResource(resource.Resource, object):
     def _renderJSONRPCOverHTTP(self, request, json_content):
         '''Execute the method and return a response for the HTTP request.
 
-        Returns the JSON-RPC response or a defered with NOT_DONE_YET.
+        Returns the JSON-RPC response or a deferred with NOT_DONE_YET.
         '''
         # Check if we have a request id.
         # Notifications have no ID.
@@ -153,7 +153,7 @@ class JSONRPCResource(resource.Resource, object):
 
         def _ebRenderJSONRPCError(failure, request):
             '''Send the error response or do nothing if the request is a
-            notifcation.'''
+            notification.'''
             failure.trap(JSONRPCError)
 
             if request.id is None:
@@ -169,7 +169,7 @@ class JSONRPCResource(resource.Resource, object):
 
         def _ebRenderInternalError(failure, request):
             '''Send the error response or do nothing if the request is a
-            notifcation.'''
+            notification.'''
 
             if request.id is None:
                 # Do nothing for notifications.
@@ -187,7 +187,7 @@ class JSONRPCResource(resource.Resource, object):
                 }
             _cbRender(result, request)
 
-        # The deferred called is stored in the resourse so that we can
+        # The deferred called is stored in the resource so that we can
         # use it in tests.
         self._deferred = defer.maybeDeferred(
             _triggerRequest, request, json_content)
@@ -237,7 +237,7 @@ class JSONRPCResource(resource.Resource, object):
                 raise JSONRPCError(
                     _invalidArguments(u'"params" must be list or dict.'))
         except JSONRPCError:
-            # Reraise specific JSONRPC error as otherwise it will be
+            # Re-raise specific JSONRPC error as otherwise it will be
             # converted into internal server error.
             raise
         except:
@@ -257,10 +257,11 @@ class JSONRPCResource(resource.Resource, object):
 
 
 def _getHTTPResponse(result, request):
-    '''Return the JSON-RPC result for an HTTP request.
+    """
+    Return the JSON-RPC result for an HTTP request.
 
-    If 'jsonprc_result' is None it returns an empty result.
-    '''
+    If 'jsonrpc_result' is None it returns an empty result.
+    """
     if result is None:
         response_content = ''
     else:
@@ -276,7 +277,9 @@ def _getHTTPResponse(result, request):
 
 
 def _get_session(request):
-    '''Return session or none if there is no session.'''
+    """
+    Return session or None if there is no session.
+    """
     for key, value in request.requestHeaders.getAllRawHeaders():
         if key.lower() == 'authorization':
             if not value:
@@ -284,12 +287,17 @@ def _get_session(request):
             # The session is obtained from the site, and not the request,
             # since the request is using an HTTP cookie to retrieve the
             # session.
-            return request.site.getSession(value[-1])
+            try:
+                return request.site.getSession(value[-1])
+            except KeyError:
+                return None
     return None
 
 
 def _check_arguments(method, arguments):
-    '''Check that arguments are valid to be called with method.'''
+    """
+    Check that arguments are valid to be called with method.
+    """
     method_arguments_spec = inspect.getargspec(method)
     argument_names = method_arguments_spec[0]
     default_values = method_arguments_spec[3]
@@ -319,7 +327,7 @@ def _check_arguments(method, arguments):
 
 
 def _get_result(method, request, *args, **kvargs):
-    '''Simple wraper for formating an result.'''
+    '''Simple wrapper for formatting a result.'''
     result = method(request, *args, **kvargs)
     return result
 

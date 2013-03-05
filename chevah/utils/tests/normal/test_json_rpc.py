@@ -8,6 +8,7 @@ from twisted.internet import defer
 from twisted.web import server
 import simplejson as json
 
+from chevah.utils import json_rpc
 from chevah.utils.json_rpc import JSONRPCResource, JSONRPCError
 from chevah.utils.testing import manufacture, UtilsTestCase
 
@@ -97,7 +98,7 @@ class TestJSONRPC(UtilsTestCase):
 
     def test_POST_invalid_json(self):
         """
-        An error is returned when posting a wrong formated json.
+        An error is returned when posting a wrong formatted json.
         """
         data = '{bad-json,}'
         resource = ImplementedJSONRPCResource()
@@ -407,7 +408,7 @@ class TestJSONRPC(UtilsTestCase):
         request = manufacture.makeTwistedWebRequest(resource=resource)
         request.postpath = ['method_name']
         # We monkey patch the renderJSONRPCOverHTTP since here we only
-        # care about how a GET reqeust is converted into a JSON-RPC
+        # care about how a GET request is converted into a JSON-RPC
         # request. We don't really care about how it is process since
         # it will be checked in POST tests.
         resource._renderJSONRPCOverHTTP = lambda resource, json: json
@@ -426,7 +427,7 @@ class TestJSONRPC(UtilsTestCase):
         request.postpath = ['']
 
         # We monkey patch the renderJSONRPCOverHTTP since here we only
-        # care about how a GET reqeust is converted into a JSON-RPC
+        # care about how a GET request is converted into a JSON-RPC
         # request. We don't really care about how it is process since
         # it will be checked in POST tests.
         resource._renderJSONRPCOverHTTP = lambda resource, json: json
@@ -438,7 +439,7 @@ class TestJSONRPC(UtilsTestCase):
 
     def test_POST_with_deferred(self):
         """
-        JSON-RCP methods can return deferreds.
+        JSON-RCP methods can return deferred(s).
         """
         data = (
             '{"jsonrpc": "2.0", "id": 1, "params": [], '
@@ -447,3 +448,47 @@ class TestJSONRPC(UtilsTestCase):
         self.assertIsNotNone(response['result'])
         self.assertEqual(u'ok', response['result'])
         self.assertEqual(1, response['id'])
+
+
+class TestHelpers(UtilsTestCase):
+    """
+    Test JSON RPC helper methods.
+    """
+    def setUp(self):
+        super(TestHelpers, self).setUp()
+        self.request = manufacture.makeTwistedWebRequest()
+        self.session = self.request.site.makeSession()
+
+    def tearDown(self):
+        if self.session:
+            self.session.expire()
+        super(TestHelpers, self).tearDown()
+
+    def test_getSession_no_session(self):
+        """
+        None is returned if the request does not contain session
+        information or the information is not valid.
+        """
+        session = json_rpc._get_session(self.request)
+
+        self.assertIsNone(session)
+
+        request = manufacture.makeTwistedWebRequest()
+        request.setRequestHeader(
+            'authorization', manufacture.getUniqueString())
+
+        session = json_rpc._get_session(request)
+
+        self.assertIsNone(session)
+
+    def test_getSession_valid_session(self):
+        """
+        The session instance is returned if the request header contains
+        valid session information.
+        """
+        self.request.setRequestHeader('authorization', self.session.uid)
+
+        value = json_rpc._get_session(self.request)
+
+        self.assertIsNotNone(value)
+        self.assertEquals(self.session.uid, value.uid)
