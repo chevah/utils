@@ -83,7 +83,7 @@ class _IWithPropertiesMixin(Interface):
     * PublicSectionAttribute
     """
 
-    def getPulicAttributeNames(self):
+    def getPulicAttributeNames():
         """
         Retrun the list of all names of public read attributes.
         """

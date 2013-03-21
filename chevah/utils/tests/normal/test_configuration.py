@@ -120,6 +120,8 @@ class DummyNodeConfigurationSection(ConfigurationSectionMixin):
     implements(IDummyNodeSection)
 
     def __init__(self):
+        # _proxy is here for ConfigurationSection
+        self._proxy = None
         self.prop_section = DummyLeafConfigurationSection()
         self.prop_section_normal = DummyLeafConfigurationSection()
         self.prop_node_normal = u'prop_node_normal'
@@ -136,6 +138,12 @@ class TestWithConfigurationPropertyMixin(UtilsTestCase):
     def setUp(self):
         super(TestWithConfigurationPropertyMixin, self).setUp()
         self.config = DummyNodeConfigurationSection()
+
+    def test_interface(self):
+        """
+        Check that interface defintion is ok.
+        """
+        self.assertProvides(IConfigurationSection, self.config)
 
     def test_getProperty_root_no_branch(self):
         """
@@ -242,7 +250,7 @@ class TestWithConfigurationPropertyMixin(UtilsTestCase):
         An error is raised when trying to write a property which is
         not writable.
 
-        The error is `NoSuchPropertyError` since setProperty only looks
+        The error is `NoSuchAttributeError` since setProperty only looks
         for writable properties.
         """
         with self.assertRaises(NoSuchAttributeError):
@@ -253,7 +261,7 @@ class TestWithConfigurationPropertyMixin(UtilsTestCase):
         An error is raised when trying to write a property which is a
         section.
 
-        The error is `NoSuchPropertyError` since setProperty only looks
+        The error is `NoSuchAttributeError` since setProperty only looks
         for writable properties and sections are not writable.
         """
         with self.assertRaises(NoSuchAttributeError):
