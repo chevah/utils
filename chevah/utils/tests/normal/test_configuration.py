@@ -209,8 +209,20 @@ class TestWithConfigurationPropertyMixin(UtilsTestCase):
         """
         result = self.config.getProperty('prop_node_ro')
 
-        self.assertEqual(1, len(result))
-        self.assertEqual(u'prop_node_ro', result['prop_node_ro'])
+        self.assertEqual(u'prop_node_ro', result)
+
+    def test_getProperty_brach(self):
+        """
+        A specific property from subsectoins is returned when asked.
+        """
+        result = self.config.getProperty('prop_section')
+
+        self.assertEqual({
+            'prop_ro': u'prop_ro',
+            'prop_rw': u'prop_rw',
+            'enabled': True,
+            },
+            result)
 
     def test_getProperty_brach_leaf(self):
         """
@@ -218,23 +230,7 @@ class TestWithConfigurationPropertyMixin(UtilsTestCase):
         """
         result = self.config.getProperty('prop_section/prop_ro')
 
-        self.assertEqual(1, len(result))
-        self.assertEqual({'prop_ro': u'prop_ro'}, result['prop_section'])
-
-    def test_getProperty_branch(self):
-        """
-        The whole section is returned when asked.
-        """
-        result = self.config.getProperty('prop_section')
-
-        self.assertEqual(1, len(result))
-        self.assertEqual({
-            'prop_ro': u'prop_ro',
-            'prop_rw': u'prop_rw',
-            'enabled': True,
-            },
-            result['prop_section'],
-            )
+        self.assertEqual(u'prop_ro', result)
 
     def test_setProperty_non_existent(self):
         """

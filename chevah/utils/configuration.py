@@ -113,21 +113,23 @@ class WithConfigurationPropertyMixin(object):
 
         # Look for direct attributes.
         for name in self.getPulicAttributeNames():
-            # Filter properties.
-            if head and head != name:
-                continue
-
             value = self.getAttribute(name)
+
+            # Return direct property.
+            if head and head == name:
+                return value
+
             result.update({name: value})
 
         # Then for sections.
         for name in self.getPublicSectionNames():
-            # Filter subsections.
-            if head and head != name:
-                continue
-
             value = self.getSection(name)
             section_properties = value.getProperty(tail)
+
+            # Retrun direct subsections.
+            if head and head == name:
+                return section_properties
+
             result.update({name: section_properties})
 
         return result
