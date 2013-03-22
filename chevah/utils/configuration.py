@@ -79,10 +79,10 @@ class WithConfigurationPropertyMixin(object):
         """
         Set value for attribute with name.
         """
-        if not hasattr(self, name):
+        try:
+            setattr(self, name, value)
+        except AttributeError:
             raise NoSuchAttributeError(name)
-
-        setattr(self, name, value)
 
     def getSection(self, name):
         """
