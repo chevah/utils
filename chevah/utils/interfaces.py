@@ -109,7 +109,7 @@ class _IWithPropertiesMixin(Interface):
         """
         Set value for attribute with name.
 
-        Raise NoSuchPropertyException.
+        Raise NoSuchAttributeError when attribute does not exists..
         """
 
     def getSection(name):
@@ -138,16 +138,13 @@ class _IWithPropertiesMixin(Interface):
         When a property_path is specified, it will return only the properties
         for that path.
 
-        For example for `sec1/sec2` it will return"
+        For example for `sec1/sec2` it will return:
         {
-            'sec1': {
-                'sec2' : {
-                    'pro2': value1,
-                    'prop2': value2,
-                }
-            }
-
+            'prop1': value1,
+            'prop2': value2,
         }
+
+        For example for `sec1/sec2/prop1` it will return `value1`.
         """
 
     def setProperty(property_path, value):
