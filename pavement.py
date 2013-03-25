@@ -7,17 +7,17 @@ from __future__ import with_statement
 import sys
 
 # This value is pavers by bash. Use a strict format.
-BRINK_VERSION = '0.11.3'
+BRINK_VERSION = '0.16.0'
+PYTHON_VERSION = '2.7'
 
 EXTRA_PACKAGES = [
     # FIXME:1022:
     # For new we need to update it by hand.
-    'chevah-compat==0.5.1',
-    'chevah-empirical==0.5.1',
+    'chevah-compat==0.6.0',
+    'chevah-empirical==0.11.1',
     ]
 
 from brink.pavement_commons import (
-    _p,
     buildbot_list,
     buildbot_try,
     default,
@@ -90,7 +90,7 @@ def build():
     """
     Copy new source code to build folder.
     """
-    build_target = _p([pave.path.build, 'setup-build'])
+    build_target = pave.fs.join([pave.path.build, 'setup-build'])
     sys.argv = ['setup.py', 'build', '--build-base', build_target]
     print "Building in " + build_target
     import setup

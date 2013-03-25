@@ -7,7 +7,7 @@ import re
 
 from zope.interface import implements
 
-from chevah.utils.configuration_file import ConfigurationSectionMixin
+from chevah.utils.configuration import ConfigurationSectionMixin
 from chevah.utils.constants import (
     CONFIGURATION_SECTION_LOG,
     )
