@@ -83,6 +83,8 @@ class _IWithPropertiesMixin(Interface):
     * PublicSectionAttribute
     """
 
+    parent = Attribute('The parent section.')
+
     def getPulicAttributeNames():
         """
         Retrun the list of all names of public read attributes.

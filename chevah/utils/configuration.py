@@ -46,6 +46,13 @@ class WithConfigurationPropertyMixin(object):
                     continue
                 yield name
 
+    @property
+    def parent(self):
+        """
+        See: `_IWithPropertiesMixin`.
+        """
+        return self._parent
+
     def getPulicAttributeNames(self):
         """
         Retrun the list of all names of public attributes.
