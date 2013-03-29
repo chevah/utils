@@ -71,6 +71,7 @@ class DummyLeafConfigurationSection(ConfigurationSectionMixin):
     _prefix = 'sec'
 
     def __init__(self):
+        self._parent = None
         self._proxy = manufacture.makeFileConfigurationProxy(
             content='[section1]\nsec_enabled: True\n')
         self.prop_normal = u'prop_normal'
@@ -122,6 +123,7 @@ class DummyNodeConfigurationSection(ConfigurationSectionMixin):
     def __init__(self):
         # _proxy is here for ConfigurationSection
         self._proxy = None
+        self._parent = None
         self.prop_section = DummyLeafConfigurationSection()
         self.prop_section_normal = DummyLeafConfigurationSection()
         self.prop_node_normal = u'prop_node_normal'
