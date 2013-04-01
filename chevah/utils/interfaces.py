@@ -63,6 +63,19 @@ class _IWithPropertiesMixin(Interface):
     Private interface use to share attributed related to properties
     handling.
 
+    This defined a CRUD interface for managing configuration:
+    * create
+    * get (read)
+    * set (update)
+    * delete
+
+    All methods receive a `property_path` is in the format
+    `section/property` or `section/subsection`.
+
+    Configuration values are passed as primitive data
+    (string/integer/None/boolean) and complex objects are not supported.
+    Primitive data can be grouped in arrays or dictionaries.
+
     The class implementing this interface should also define one of the
     following properties to allow exporting them:
     * PublicAttribute
@@ -70,19 +83,80 @@ class _IWithPropertiesMixin(Interface):
     * PublicSectionAttribute
     """
 
-    def getAllProperties():
-        """
-        Return a dictionary for all section properties.
+    parent = Attribute('The parent section.')
 
-        It should read all property members and return them as key-value.
-        {property1_name: property1_value, property2_name: property2_value}
+    def getPulicAttributeNames():
+        """
+        Retrun the list of all names of public read attributes.
+        """
+
+    def getPulicWritableAttributeNames():
+        """
+        Retrun the list of all names of public writable attributes.
+        """
+
+    def getPublicSectionNames():
+        """
+        Return the list of all names for public sections.
+        """
+
+    def getAttribute(name):
+        """
+        Return the value of attribute with `name`.
+
+        Raise NoSuchAttributeError if attribute does not exists.
+        """
+
+    def setAttribute(name, value):
+        """
+        Set value for attribute with name.
+
+        Raise NoSuchAttributeError when attribute does not exists..
+        """
+
+    def getSection(name):
+        """
+        Return the section with `name`.
+
+        Raise NoSuchSectionError if section does not exists.
+        """
+
+    def createProperty(property_path, value):
+        """
+        Add property denoted by `property_path`.
+        """
+
+    def getProperty(property_path=None):
+        """
+        Return a dictionary for properties matching property_path.
+
+        When property_path is None returns all property members as key-value.
+        {
+            property1_name: property1_value,
+            property2_name: property2_value,
+            sub_section1: { prop1: value2 },
+        }
+
+        When a property_path is specified, it will return only the properties
+        for that path.
+
+        For example for `sec1/sec2` it will return:
+        {
+            'prop1': value1,
+            'prop2': value2,
+        }
+
+        For example for `sec1/sec2/prop1` it will return `value1`.
         """
 
     def setProperty(property_path, value):
         """
-        Set property denoted by `property_path`.
+        Set property value denoted by `property_path`.
+        """
 
-        property_path is in the format section/subsection/property.
+    def deleteProperty(property_path):
+        """
+        Delete property denoted by `property_path`.
         """
 
 

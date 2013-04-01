@@ -24,9 +24,9 @@ class UtilsError(Exception):
             str(self.event_id), self.message.encode('utf-8'), str(self.data))
 
 
-class NoSuchPropertyError(UtilsError):
+class NoSuchAttributeError(UtilsError):
     """
-    Error raised when the configuration does not have a requested property.
+    Error raised when the configuration does not have a requested attribute.
     """
 
     def __init__(self, message=''):
@@ -46,25 +46,27 @@ class NoSuchSectionError(UtilsError):
         self.data = None
 
 
-class MissingPropertyError(UtilsError):
+class CreateNotSupportedError(UtilsError):
     """
-    Error raised when the configuration object does not implement a property.
+    Error raised when trying to create a property for which create
+    is not supported.
     """
 
     def __init__(self, message=''):
         self.event_id = u'1034'
-        self.message = "Property not implemented %s" % (message)
+        self.message = "Create not supported for %s" % (message)
         self.data = None
 
 
-class MissingSectionError(UtilsError):
+class DeleteNotSupportedError(UtilsError):
     """
-    Error raised when the configuration object does not implement a section.
+    Error raised when trying to delete a property for which delete
+    is not supported.
     """
 
     def __init__(self, message=''):
         self.event_id = u'1035'
-        self.message = "Section not implemented %s" % (message)
+        self.message = "Delete not supported for %s" % (message)
         self.data = None
 
 
