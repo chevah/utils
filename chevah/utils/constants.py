@@ -39,7 +39,6 @@ LOG_SECTION_DEFAULTS = {
     'log_file_rotate_each': 'Disabled',
     'log_file_rotate_count': 'Disabled',
     'log_syslog': u'None',
-    'log_webadmin': u'None',
     'log_enabled_groups': CONFIGURATION_ALL_LOG_ENABLED_GROUPS,
 }
 
