@@ -76,7 +76,6 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         self.assertEqual(new_value, section.file)
 
-
     def test_file_rotate_external_true(self):
         """
         Check reading log_file_rotate_external.
