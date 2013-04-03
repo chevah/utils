@@ -174,6 +174,8 @@ if os.name == 'nt':
     class WindowsEventLogHandler(NTEventLogHandler):
         """
         Custom NTEventLogger for logging Chevah events.
+
+        For now we don't use any special category or level.
         """
 
         def getMessageID(self, log_entry):
@@ -311,20 +313,19 @@ class _Logger(object):
                 _(u'Could not initialize the logging file. %s' % (
                     unicode(error))))
 
-    def addDefaultHandlers(self):
-        '''Add default handlers.
+    def addDefaultStdOutHandler(self):
+        """
+        Add default handler for standrd output.
+        """
+        self._log_stdout_handler = StdOutHandler()
+        self.addHandler(self._log_stdout_handler, patch_format=True)
 
-        This is not called in init to enable re-routing logs in tests.
-        It is not called in debug mode.
-        '''
-        nt_service = getattr(self, '_svc_name_', None)
-        if nt_service:
-            from logging.handlers import NTEventLogHandler
-            self._log_ntevent_handler = NTEventLogHandler(nt_service)
-            self.addHandler(self._log_ntevent_handler, patch_format=True)
-        else:
-            self._log_stdout_handler = StdOutHandler()
-            self.addHandler(self._log_stdout_handler, patch_format=True)
+    def addDefaultWindowsEventLogHandler(self, source_name):
+        """
+        Add default handlers for windows event log.
+        """
+        self._log_ntevent_handler = WindowsEventLogHandler(source_name)
+        self.addHandler(self._log_ntevent_handler, patch_format=True)
 
     def removeDefaultHandlers(self):
         '''Remove all default handlers.'''

@@ -7,14 +7,14 @@ from __future__ import with_statement
 import sys
 
 # This value is pavers by bash. Use a strict format.
-BRINK_VERSION = '0.16.0'
+BRINK_VERSION = '0.18.0'
 PYTHON_VERSION = '2.7'
 
 EXTRA_PACKAGES = [
     # FIXME:1022:
     # For new we need to update it by hand.
     'chevah-compat==0.6.0',
-    'chevah-empirical==0.11.1',
+    'chevah-empirical==0.11.2',
     ]
 
 from brink.pavement_commons import (

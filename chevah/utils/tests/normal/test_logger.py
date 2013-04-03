@@ -17,6 +17,7 @@ import random
 
 from chevah.utils.logger import (
     LogEntry,
+    StdOutHandler,
     WatchedFileHandler,
     WindowsEventLogHandler,
     )
@@ -335,6 +336,50 @@ class TestLoggerHandlers(UtilsTestCase):
         self.logger.removeAllHandlers()
 
         self.assertIsEmpty(self.logger.getHandlers())
+
+    def test_addDefaultStdOutHandler(self):
+        """
+        addDefaultStdOutHandler will add a StdOutHandler.
+        """
+        self.logger.addDefaultStdOutHandler()
+
+        handlers = self.logger.getHandlers()
+
+        self.assertEqual(1, len(handlers))
+        self.assertIsInstance(StdOutHandler, handlers[0])
+        self.assertEqual(
+            handlers[0], self.logger._log_stdout_handler)
+
+    def test_addDefaultWindowsEventLogHandlers(self):
+        """
+        addDefaultWindowsEventLogHandler will add a WindowsEventLogHandler.
+        """
+        if self.os_name != 'nt':
+            raise self.skipTest()
+
+        self.logger.addDefaultWindowsEventLogHandler('some-name')
+
+        handlers = self.logger.getHandlers()
+
+        self.assertEqual(1, len(handlers))
+        self.assertIsInstance(WindowsEventLogHandler, handlers[0])
+        self.assertEqual(
+            handlers[0], self.logger._log_ntevent_handler)
+
+    def test_removeDefaultHandlers(self):
+        """
+        removeDefaultHandlers will remove all configured default handlers.
+        """
+        self.logger.addDefaultStdOutHandler()
+
+        if self.os_name == 'nt':
+            self.logger.addDefaultWindowsEventLogHandler('some-name')
+
+        self.logger.removeDefaultHandlers()
+
+        handlers = self.logger.getHandlers()
+
+        self.assertIsEmpty(handlers)
 
 
 class TestWindowsEventLogHandler(UtilsTestCase):
