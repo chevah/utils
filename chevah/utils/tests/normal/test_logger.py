@@ -20,6 +20,16 @@ from chevah.utils.logger import (
     )
 from chevah.utils.testing import manufacture, UtilsTestCase
 
+LOGGER_DEFAULTS = {
+    'log_file': 'Disabled',
+    'log_file_rotate_external': 'No',
+    'log_file_rotate_at_size': 'Disabled',
+    'log_file_rotate_each': 'Disabled',
+    'log_file_rotate_count': 'Disabled',
+    'log_syslog': 'Disabled',
+    'log_windows_eventlog': 'Disabled',
+    }
+
 
 class TestLogEntry(UtilsTestCase):
     '''LogEntry tests.'''
@@ -85,16 +95,9 @@ class TestLoggerFile(UtilsTestCase):
     """
 
     def _getConfiguration(self, content):
-        defaults = {
-            'log_file': 'Disabled',
-            'log_file_rotate_external': 'No',
-            'log_file_rotate_at_size': 'Disabled',
-            'log_file_rotate_each': 'Disabled',
-            'log_file_rotate_count': 'Disabled',
-            'log_syslog': 'Disabled',
-            }
+
         proxy = manufacture.makeFileConfigurationProxy(
-            content=content, defaults=defaults)
+            content=content, defaults=LOGGER_DEFAULTS)
         return manufacture.makeLogConfigurationSection(proxy=proxy)
 
     def test_configure_log_file_disabled(self):
@@ -231,6 +234,67 @@ class TestLoggerFile(UtilsTestCase):
             logger.removeAllHandlers()
         finally:
             manufacture.fs.deleteFile(segments)
+
+
+class TestLoggerWindowsEventLog(UtilsTestCase):
+    """
+    Integration tests for Logger using windows event logger.
+    """
+
+    def _getConfiguration(self, content):
+        proxy = manufacture.makeFileConfigurationProxy(
+            content=content, defaults=LOGGER_DEFAULTS)
+        return manufacture.makeLogConfigurationSection(proxy=proxy)
+
+    def test_configure_disabled(self):
+        """
+        When windows event log is disabled it will not be added by
+        logger.configure.
+        """
+        content = (
+            '[log]\n'
+            'log_windows_eventlog: Disabled\n')
+        configuration = self._getConfiguration(content=content)
+        logger = manufacture.makeLogger()
+
+        logger.configure(configuration)
+
+        self.assertIsEmpty(logger.getHandlers())
+
+    def test_configure_ignored_on_unix(self):
+        """
+        When windows event log is disabled it will not be added by
+        logger.configure.
+        """
+        if self.os_name != 'posix':
+            raise self.skipTest()
+        content = (
+            '[log]\n'
+            'log_windows_eventlog: something\n')
+        configuration = self._getConfiguration(content=content)
+        logger = manufacture.makeLogger()
+
+        logger.configure(configuration)
+
+        self.assertIsEmpty(logger.getHandlers())
+
+    def test_configure_enabled(self):
+        """
+        On Windows, when windows_eventlog is enabled, a handler is created.
+
+        Logs are emited using the source defined in windows_eventlog.
+        """
+        if self.os_name != 'nt':
+            raise self.skipTest()
+        content = (
+            '[log]\n'
+            'log_windows_eventlog: something\n')
+        configuration = self._getConfiguration(content=content)
+        logger = manufacture.makeLogger()
+
+        logger.configure(configuration)
+
+        self.assertIsEmpty(logger.getHandlers())
 
 
 class TestLoggerHandlers(UtilsTestCase):

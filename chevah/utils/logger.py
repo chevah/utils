@@ -168,9 +168,28 @@ class StdOutHandler(StreamHandler, object):
         except:
             self.handleError(record)
 
+if os.name == 'nt':
+    from logging.handlers import NTEventLogHandler
+
+    class WindowsEventLogHandler(NTEventLogHandler):
+        """
+        Custom NTEventLogger for logging Chevah events.
+        """
+
+        def getMessageID(self, log_entry):
+            try:
+                return int(log_entry.message_id)
+            except:
+                return 1
+else:
+    WindowsEventLogHandler = None
+
 
 class _Logger(object):
     '''This class is supposed to be a singleton logger.'''
+
+    NT_EVENTLOG_DDL = None
+    NT_EVENTLOG_TYPE = 'Application'
 
     def __call__(self):
         '''Call method for implementing the singleton.'''
@@ -203,6 +222,7 @@ class _Logger(object):
             """
             self.configureLogFile()
             self.configureSyslog()
+            self.configureWindowsEventLog()
 
         self._configuration = configuration
 
@@ -229,6 +249,25 @@ class _Logger(object):
             return
         handler = SysLogHandler(
             self._configuration.syslog, facility=SysLogHandler.LOG_DAEMON)
+        self.addHandler(handler, patch_format=True)
+
+    def configureWindowsEventLog(self):
+        """
+        Configure Windows Event logger if we are on Windows and it is enabled.
+        """
+        if not WindowsEventLogHandler:
+            return
+
+        source_name = self._configuration.windows_eventlog
+
+        if not source_name:
+            return
+
+        handler = WindowsEventLogHandler(
+            appname=source_name,
+            dllname=self.NT_EVENTLOG_DDL,
+            logtype=self.NT_EVENTLOG_TYPE,
+            )
         self.addHandler(handler, patch_format=True)
 
     def configureLogFile(self):
