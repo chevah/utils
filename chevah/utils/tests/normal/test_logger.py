@@ -13,10 +13,12 @@ from logging.handlers import (
     )
 from StringIO import StringIO
 from time import time
+import random
 
 from chevah.utils.logger import (
     LogEntry,
     WatchedFileHandler,
+    WindowsEventLogHandler,
     )
 from chevah.utils.testing import manufacture, UtilsTestCase
 
@@ -236,67 +238,6 @@ class TestLoggerFile(UtilsTestCase):
             manufacture.fs.deleteFile(segments)
 
 
-class TestLoggerWindowsEventLog(UtilsTestCase):
-    """
-    Integration tests for Logger using windows event logger.
-    """
-
-    def _getConfiguration(self, content):
-        proxy = manufacture.makeFileConfigurationProxy(
-            content=content, defaults=LOGGER_DEFAULTS)
-        return manufacture.makeLogConfigurationSection(proxy=proxy)
-
-    def test_configure_disabled(self):
-        """
-        When windows event log is disabled it will not be added by
-        logger.configure.
-        """
-        content = (
-            '[log]\n'
-            'log_windows_eventlog: Disabled\n')
-        configuration = self._getConfiguration(content=content)
-        logger = manufacture.makeLogger()
-
-        logger.configure(configuration)
-
-        self.assertIsEmpty(logger.getHandlers())
-
-    def test_configure_ignored_on_unix(self):
-        """
-        When windows event log is disabled it will not be added by
-        logger.configure.
-        """
-        if self.os_name != 'posix':
-            raise self.skipTest()
-        content = (
-            '[log]\n'
-            'log_windows_eventlog: something\n')
-        configuration = self._getConfiguration(content=content)
-        logger = manufacture.makeLogger()
-
-        logger.configure(configuration)
-
-        self.assertIsEmpty(logger.getHandlers())
-
-    def test_configure_enabled(self):
-        """
-        On Windows, when windows_eventlog is enabled, a handler is created.
-
-        Logs are emited using the source defined in windows_eventlog.
-        """
-        if self.os_name != 'nt':
-            raise self.skipTest()
-        content = (
-            '[log]\n'
-            'log_windows_eventlog: something\n')
-        configuration = self._getConfiguration(content=content)
-        logger = manufacture.makeLogger()
-
-        logger.configure(configuration)
-
-        self.assertIsEmpty(logger.getHandlers())
-
-
 class TestLoggerHandlers(UtilsTestCase):
     """
     Basic tests for handler(s) management.
@@ -394,3 +335,209 @@ class TestLoggerHandlers(UtilsTestCase):
         self.logger.removeAllHandlers()
 
         self.assertIsEmpty(self.logger.getHandlers())
+
+
+class TestWindowsEventLogHandler(UtilsTestCase):
+    """
+    Tests for WindowsEventLogHandler.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """
+        These are windows specific tests, so skip all.
+        """
+        if cls.os_name != 'nt':
+            raise cls.skipTest()
+
+    def test_init(self):
+        """
+        Check hanlder initialization.
+        """
+        source_name = manufacture.getUniqueString()
+        handler = WindowsEventLogHandler(source_name)
+
+        self.assertEqual(source_name, handler.appname)
+
+    def test_getMessageID_no_integer(self):
+        """
+        1 is returned if log_entry/record does not have a valid integer ID.
+        """
+        source_name = manufacture.getUniqueString()
+        handler = WindowsEventLogHandler(source_name)
+        record = LogEntry('no_int', 'don-t care')
+
+        result = handler.getMessageID(record)
+
+        self.assertEqual(1, result)
+
+    def test_getMessageID_no_id(self):
+        """
+        1 is returned if log_entry/record does not have an id.
+        """
+        source_name = manufacture.getUniqueString()
+        handler = WindowsEventLogHandler(source_name)
+        record = self.Bunch()
+
+        result = handler.getMessageID(record)
+
+        self.assertEqual(1, result)
+
+    def test_getMessageID_valid(self):
+        """
+        1 is returned if log_entry/record does not have an id.
+        """
+        source_name = manufacture.getUniqueString()
+        handler = WindowsEventLogHandler(source_name)
+        record = self.Bunch(message_id='2')
+
+        result = handler.getMessageID(record)
+
+        self.assertEqual(2, result)
+
+        # Let's try with an int.
+        record = self.Bunch(message_id=3)
+        result = handler.getMessageID(record)
+        self.assertEqual(3, result)
+
+    def test_emit_system(self):
+        """
+        This is a system test to check that handler.emit() reached
+        windows event log.
+        """
+        # Source name is static to know where to look at.
+        # We will use event_id and content to identity an emited log.
+        source_name = 'chevah-server-test-suite'
+        # Unique string/number are only unique inside a single test run.
+        # Since we interact with external system we need to generate
+        # some more random values.
+        event_id = random.randint(0, 50000)
+        text = unicode(manufacture.uuid4())
+
+        handler = WindowsEventLogHandler(source_name)
+        record = LogEntry(event_id, text)
+
+        handler.emit(record)
+
+        event = self.getWindowsEvent(
+            source_name=source_name, event_id=event_id)
+
+        # We got an event from our static source with a random ID.
+        # Now check that content is right.
+        self.assertEqual(1, len(event.StringInserts))
+        self.assertEqual(text, event.StringInserts[0])
+
+    def getWindowsEvent(self, source_name, event_id):
+        """
+        Search Windows Event logger for localhost and return event for
+        source_name with event_id.
+        """
+        import win32evtlog
+        hand = win32evtlog.OpenEventLog(None, 'Application')
+        flags = (
+            win32evtlog.EVENTLOG_BACKWARDS_READ |  # New events firsts.
+            win32evtlog.EVENTLOG_SEQUENTIAL_READ
+            )
+        try:
+            events = True
+            while events:
+                events = win32evtlog.ReadEventLog(hand, flags, 0)
+                for event in events:
+                    if (event.EventID == event_id and
+                            event.SourceName == source_name):
+                        return event
+        finally:
+            win32evtlog.CloseEventLog(hand)
+
+        return None
+
+
+class TestLoggerWindowsEventLog(UtilsTestCase):
+    """
+    Integration tests for Logger using windows event logger.
+    """
+
+    def _getConfiguration(self, content):
+        proxy = manufacture.makeFileConfigurationProxy(
+            content=content, defaults=LOGGER_DEFAULTS)
+        return manufacture.makeLogConfigurationSection(proxy=proxy)
+
+    def test_configure_disabled(self):
+        """
+        When windows event log is disabled it will not be added by
+        logger.configure.
+        """
+        content = (
+            '[log]\n'
+            'log_windows_eventlog: Disabled\n')
+        configuration = self._getConfiguration(content=content)
+        logger = manufacture.makeLogger()
+
+        logger.configure(configuration)
+
+        self.assertIsEmpty(logger.getHandlers())
+
+    def test_configure_ignored_on_unix(self):
+        """
+        When windows event log is disabled it will not be added by
+        logger.configure.
+        """
+        if self.os_name != 'posix':
+            raise self.skipTest()
+        content = (
+            '[log]\n'
+            'log_windows_eventlog: something\n')
+        configuration = self._getConfiguration(content=content)
+        logger = manufacture.makeLogger()
+
+        logger.configure(configuration)
+
+        self.assertIsEmpty(logger.getHandlers())
+
+    def test_configure_enabled(self):
+        """
+        On Windows, when windows_eventlog is enabled, a handler is created.
+
+        Logs are emited using the source defined in windows_eventlog.
+        """
+        if self.os_name != 'nt':
+            raise self.skipTest()
+        from chevah.utils.logger import WindowsEventLogHandler
+
+        content = (
+            '[log]\n'
+            'log_windows_eventlog: something\n')
+        configuration = self._getConfiguration(content=content)
+        logger = manufacture.makeLogger()
+
+        logger.configure(configuration)
+
+        # A list is used to make sure a single call is made.
+        windows_handler_present = []
+        for handler in logger.getHandlers():
+            if isinstance(handler, WindowsEventLogHandler):
+                windows_handler_present.append(True)
+
+        self.assertEquals([True], windows_handler_present)
+
+    def test_emit_event_id(self):
+        """
+        Logger will call emit on the configured handler.
+        """
+        if self.os_name != 'nt':
+            raise self.skipTest()
+
+        event_id = manufacture.getUniqueInteger()
+        event_text = manufacture.getUniqueString()
+        content = (
+            '[log]\n'
+            'log_windows_eventlog: something\n')
+        configuration = self._getConfiguration(content=content)
+        logger = manufacture.makeLogger()
+        logger.configure(configuration)
+        handler = logger.getHandlers()[0]
+        handler.emit = manufacture.makeMock()
+
+        logger.log(message_id=event_id, text=event_text)
+
+        handler.emit.assert_called_once()
