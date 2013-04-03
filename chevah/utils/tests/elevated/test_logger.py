@@ -4,10 +4,9 @@
 
 from __future__ import with_statement
 
+from chevah.utils.constants import LOG_SECTION_DEFAULTS
 from chevah.utils.testing import UtilsTestCase, manufacture
 from chevah.utils.exceptions import UtilsError
-
-from chevah.utils.tests.normal.test_logger import LOGGER_DEFAULTS
 
 
 class TestLogger(UtilsTestCase):
@@ -23,7 +22,7 @@ class TestLogger(UtilsTestCase):
                 'log_file: Disabled\n'
                 )
         proxy = manufacture.makeFileConfigurationProxy(
-            content=content, defaults=LOGGER_DEFAULTS)
+            content=content, defaults=LOG_SECTION_DEFAULTS)
         return manufacture.makeLogConfigurationSection(proxy=proxy)
 
     def test_configure_no_account(self):

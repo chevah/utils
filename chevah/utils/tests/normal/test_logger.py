@@ -15,6 +15,7 @@ from StringIO import StringIO
 from time import time
 import random
 
+from chevah.utils.constants import LOG_SECTION_DEFAULTS
 from chevah.utils.logger import (
     LogEntry,
     StdOutHandler,
@@ -22,16 +23,6 @@ from chevah.utils.logger import (
     WindowsEventLogHandler,
     )
 from chevah.utils.testing import manufacture, UtilsTestCase
-
-LOGGER_DEFAULTS = {
-    'log_file': 'Disabled',
-    'log_file_rotate_external': 'No',
-    'log_file_rotate_at_size': 'Disabled',
-    'log_file_rotate_each': 'Disabled',
-    'log_file_rotate_count': 'Disabled',
-    'log_syslog': 'Disabled',
-    'log_windows_eventlog': 'Disabled',
-    }
 
 
 class TestLogEntry(UtilsTestCase):
@@ -100,7 +91,7 @@ class TestLoggerFile(UtilsTestCase):
     def _getConfiguration(self, content):
 
         proxy = manufacture.makeFileConfigurationProxy(
-            content=content, defaults=LOGGER_DEFAULTS)
+            content=content, defaults=LOG_SECTION_DEFAULTS)
         return manufacture.makeLogConfigurationSection(proxy=proxy)
 
     def test_configure_log_file_disabled(self):
@@ -504,7 +495,7 @@ class TestLoggerWindowsEventLog(UtilsTestCase):
 
     def _getConfiguration(self, content):
         proxy = manufacture.makeFileConfigurationProxy(
-            content=content, defaults=LOGGER_DEFAULTS)
+            content=content, defaults=LOG_SECTION_DEFAULTS)
         return manufacture.makeLogConfigurationSection(proxy=proxy)
 
     def test_configure_disabled(self):

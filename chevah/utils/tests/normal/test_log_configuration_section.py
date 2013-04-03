@@ -2,7 +2,7 @@
 # See LICENSE for details.
 from __future__ import with_statement
 
-
+from chevah.utils.constants import LOG_SECTION_DEFAULTS
 from chevah.utils.exceptions import UtilsError
 from chevah.utils.interfaces import ILogConfigurationSection
 from chevah.utils.testing import manufacture, UtilsTestCase
@@ -11,29 +11,31 @@ from chevah.utils.testing import manufacture, UtilsTestCase
 class TestLogConfigurationSection(UtilsTestCase):
 
     def _getSection(self, content):
-        proxy = manufacture.makeFileConfigurationProxy(content=content)
+        proxy = manufacture.makeFileConfigurationProxy(
+            content=content, defaults=LOG_SECTION_DEFAULTS)
         return manufacture.makeLogConfigurationSection(proxy=proxy)
 
-    def test_init(self):
+    def test_init_empty(self):
         """
-        LogConfigurationSection
+        Check default values for log configuration section.
         """
         content = (
             '[log]\n'
-            'log_file: None\n'
-            'log_file_rotate_external: Yes\n'
-            'log_file_rotate_at_size: 0\n'
-            'log_file_rotate_each: 2 seconds\n'
-            'log_file_rotate_count: Disabled\n'
-            'log_enabled_groups: all\n'
-            'log_syslog: Disabled\n'
-            'log_windows_eventlog: Disabled\n'
             )
         section = self._getSection(content)
 
         self.assertProvides(ILogConfigurationSection, section)
         self.assertEqual(u'log', section._section_name)
         self.assertEqual(u'log', section._prefix)
+
+        self.assertIsNone(section.file)
+        self.assertFalse(section.file_rotate_external)
+        self.assertEqual(0, section.file_rotate_at_size)
+        self.assertIsNone(section.file_rotate_each)
+        self.assertEqual(0, section.file_rotate_count)
+        self.assertIsNone(section.syslog)
+        self.assertIsNone(section.windows_eventlog)
+        self.assertEqual([u'all'], section.enabled_groups)
 
     def test_file_disabled_as_none(self):
         """
