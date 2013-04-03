@@ -27,6 +27,7 @@ class TestLogConfigurationSection(UtilsTestCase):
             'log_file_rotate_count: Disabled\n'
             'log_enabled_groups: all\n'
             'log_syslog: Disabled\n'
+            'log_windows_eventlog: Disabled\n'
             )
         section = self._getSection(content)
 
@@ -60,6 +61,22 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         self.assertIsNone(section.file)
 
+    def test_file_update(self):
+        """
+        log_file can be updated at runtime.
+        """
+        new_value = manufacture.getUniqueString()
+        content = (
+            '[log]\n'
+            'log_file: Disable\n'
+            )
+        section = self._getSection(content)
+
+        section.file = new_value
+
+        self.assertEqual(new_value, section.file)
+
+
     def test_file_rotate_external_true(self):
         """
         Check reading log_file_rotate_external.
@@ -85,6 +102,21 @@ class TestLogConfigurationSection(UtilsTestCase):
         section = self._getSection(content)
 
         self.assertFalse(section.file_rotate_external)
+
+    def test_file_rotate_external_update(self):
+        """
+        og_file_rotate_external can be updated at runtime.
+        """
+        content = (
+            '[log]\n'
+            'log_file_rotate_external: No\n'
+            )
+
+        section = self._getSection(content)
+
+        section.file_rotate_external = True
+
+        self.assertTrue(section.file_rotate_external)
 
     def test_file_rotate_count_disabled(self):
         """
@@ -112,6 +144,21 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         self.assertEqual(7, section.file_rotate_count)
 
+    def test_file_rotate_count_update(self):
+        """
+        log_file_rotate_count can be updated at runtime.
+        """
+        new_value = manufacture.getUniqueInteger()
+        content = (
+            '[log]\n'
+            'log_file_rotate_count: 7\n'
+            )
+        section = self._getSection(content)
+
+        section.file_rotate_count = new_value
+
+        self.assertEqual(new_value, section.file_rotate_count)
+
     def test_file_rotate_at_size_disabled(self):
         """
         Check reading log_file_rotate_at_size.
@@ -137,6 +184,21 @@ class TestLogConfigurationSection(UtilsTestCase):
         section = self._getSection(content)
 
         self.assertEqual(7, section.file_rotate_at_size)
+
+    def test_file_rotate_at_size_update(self):
+        """
+        log_file_rotate_at_size can be updated at runtime
+        """
+        new_value = manufacture.getUniqueInteger()
+        content = (
+            '[log]\n'
+            'log_file_rotate_at_size: 7\n'
+            )
+        section = self._getSection(content)
+
+        section.file_rotate_at_size = new_value
+
+        self.assertEqual(new_value, section.file_rotate_at_size)
 
     def test_file_rotate_each_disabled(self):
         """
@@ -380,6 +442,31 @@ class TestLogConfigurationSection(UtilsTestCase):
         self.assertEqual(4, interval)
         self.assertEqual('w6', when)
 
+    def test_file_rotate_each_update(self):
+        """
+        file_rotate_each can be updated at runtime as string and the
+        parsed value is returned.
+
+        When set to Disabled or None, will return none.
+        """
+        content = (
+            '[log]\n'
+            'log_file_rotate_each: Disabled\n'
+            )
+        section = self._getSection(content)
+
+        section.file_rotate_each = '5 monday'
+
+        (interval, when) = section.file_rotate_each
+        self.assertEqual(5, interval)
+        self.assertEqual('w0', when)
+
+        section.file_rotate_each = 'Disabled'
+        self.assertIsNone(section.file_rotate_each)
+
+        section.file_rotate_each = None
+        self.assertIsNone(section.file_rotate_each)
+
     def test_syslog_disabled(self):
         """
         Check reading log_syslog as disabled value.
@@ -419,6 +506,21 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         self.assertEqual(u'/dev/log', section.syslog)
 
+    def test_syslog_change(self):
+        """
+        log_syslog can be changed at runtime
+        """
+        new_path = manufacture.getUniqueString()
+        content = (
+            '[log]\n'
+            'log_syslog: /dev/log\n'
+            )
+        section = self._getSection(content)
+
+        section.syslog = new_path
+
+        self.assertEqual(new_path, section.syslog)
+
     def test_enabled_groups_empty(self):
         """
         When no group is defined, enabled_groups is empty.
@@ -454,3 +556,44 @@ class TestLogConfigurationSection(UtilsTestCase):
         # Updating to new list.
         section.enabled_groups = [u'new', u'LiSt']
         self.assertEqual([u'new', u'list'], section.enabled_groups)
+
+    def test_windows_eventlog_disabled(self):
+        """
+        None is returned when windows_eventlog is disabled.
+        """
+        content = (
+            '[log]\n'
+            'log_windows_eventlog: Disabled\n'
+            )
+
+        section = self._getSection(content)
+
+        self.assertIsNone(section.windows_eventlog)
+
+    def test_windows_eventlog_value(self):
+        """
+        The source name is returned for defiend windows_eventlog.
+        """
+        content = (
+            '[log]\n'
+            'log_windows_eventlog: something\n'
+            )
+
+        section = self._getSection(content)
+
+        self.assertEqual(u'something', section.windows_eventlog)
+
+    def test_windows_eventlog_change(self):
+        """
+        windows_eventlog can be changed at runtime.
+        """
+        new_value = manufacture.getUniqueString()
+        content = (
+            '[log]\n'
+            'log_windows_eventlog: something\n'
+            )
+        section = self._getSection(content)
+
+        section.windows_eventlog = new_value
+
+        self.assertEqual(new_value, section.windows_eventlog)

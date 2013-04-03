@@ -32,6 +32,7 @@ class LogConfigurationSection(ConfigurationSectionMixin):
     log_file_rotate_count: 3 | 0 | Disabled
     log_syslog: /path/to/syslog/pype | syslog.host:port
     log_enabled_groups: all
+    log_windows_eventlog: sftpplus-server
     '''
 
     implements(ILogConfigurationSection)
@@ -48,7 +49,7 @@ class LogConfigurationSection(ConfigurationSectionMixin):
         server_log_syslog can be a path to a file or a host:port address.
         '''
         syslog = self._proxy.getStringOrNone(
-                self._section_name, self._section_name + '_syslog')
+                self._section_name, self._prefix + '_syslog')
         if syslog is None:
             return None
 
@@ -61,38 +62,70 @@ class LogConfigurationSection(ConfigurationSectionMixin):
         else:
             return syslog
 
+    @syslog.setter
+    def syslog(self, value):
+        self._proxy.setStringOrNone(
+                self._section_name, self._prefix + '_syslog', value)
+
     @property
     def file(self):
         '''Return the file path where logs are sent.'''
         return self._proxy.getStringOrNone(
                 self._section_name, self._section_name + '_file')
 
+    @file.setter
+    def file(self, value):
+        self._proxy.setStringOrNone(
+                self._section_name, self._prefix + '_file', value)
+
     @property
     def file_rotate_external(self):
         '''Return log_file_rotate_external.'''
         return self._proxy.getBoolean(
                 self._section_name,
-                self._section_name + '_file_rotate_external')
+                self._prefix + '_file_rotate_external')
+
+    @file_rotate_external.setter
+    def file_rotate_external(self, value):
+        self._proxy.setBoolean(
+                self._section_name,
+                self._prefix + '_file_rotate_external', value)
 
     @property
     def file_rotate_count(self):
         '''Return log_file_rotate_count.'''
         value = self._proxy.getIntegerOrNone(
                 self._section_name,
-                self._section_name + '_file_rotate_count')
+                self._prefix + '_file_rotate_count')
         if value is None:
             value = 0
         return value
+
+    @file_rotate_count.setter
+    def file_rotate_count(self, value):
+        self._proxy.setIntegerOrNone(
+                self._section_name,
+                self._prefix + '_file_rotate_count',
+                value,
+                )
 
     @property
     def file_rotate_at_size(self):
         '''Return log_file_rotate_at_size.'''
         value = self._proxy.getIntegerOrNone(
                 self._section_name,
-                self._section_name + '_file_rotate_at_size')
+                self._prefix + '_file_rotate_at_size')
         if value is None:
             value = 0
         return value
+
+    @file_rotate_at_size.setter
+    def file_rotate_at_size(self, value):
+        self._proxy.setIntegerOrNone(
+                self._section_name,
+                self._prefix + '_file_rotate_at_size',
+                value,
+                )
 
     @property
     def file_rotate_each(self):
@@ -104,7 +137,7 @@ class LogConfigurationSection(ConfigurationSectionMixin):
         '''
         value = self._proxy.getStringOrNone(
                 self._section_name,
-                self._section_name + '_file_rotate_each')
+                self._prefix + '_file_rotate_each')
         if value is None:
             return value
 
@@ -154,6 +187,13 @@ class LogConfigurationSection(ConfigurationSectionMixin):
                 _(u'Unknown interval type. Got: "%s"' % (tokens[1])))
         return (interval, when)
 
+    @file_rotate_each.setter
+    def file_rotate_each(self, value):
+        self._proxy.setStringOrNone(
+                self._section_name,
+                self._prefix + '_file_rotate_each',
+                value)
+
     def _sendNotify(self, option, initial_value, current_value):
         '''Generic notifier when a log section value changed.'''
         signal = Signal(
@@ -181,3 +221,21 @@ class LogConfigurationSection(ConfigurationSectionMixin):
             self._prefix + '_enabled_groups',
             ', '.join(value),
             )
+
+    @property
+    def windows_eventlog(self):
+        """
+        Name of source used to log into Windows Event log.
+
+        Returns None if event log is not enabled.
+        """
+        return self._proxy.getStringOrNone(
+                self._section_name, self._prefix + '_windows_eventlog')
+
+    @windows_eventlog.setter
+    def windows_eventlog(self, value):
+        return self._proxy.setStringOrNone(
+                self._section_name,
+                self._prefix + '_windows_eventlog',
+                value,
+                )
