@@ -168,9 +168,30 @@ class StdOutHandler(StreamHandler, object):
         except:
             self.handleError(record)
 
+if os.name == 'nt':
+    from logging.handlers import NTEventLogHandler
+
+    class WindowsEventLogHandler(NTEventLogHandler):
+        """
+        Custom NTEventLogger for logging Chevah events.
+
+        For now we don't use any special category or level.
+        """
+
+        def getMessageID(self, log_entry):
+            try:
+                return int(log_entry.message_id)
+            except:
+                return 1
+else:
+    WindowsEventLogHandler = None
+
 
 class _Logger(object):
     '''This class is supposed to be a singleton logger.'''
+
+    NT_EVENTLOG_DDL = None
+    NT_EVENTLOG_TYPE = 'Application'
 
     def __call__(self):
         '''Call method for implementing the singleton.'''
@@ -203,6 +224,7 @@ class _Logger(object):
             """
             self.configureLogFile()
             self.configureSyslog()
+            self.configureWindowsEventLog()
 
         self._configuration = configuration
 
@@ -229,6 +251,25 @@ class _Logger(object):
             return
         handler = SysLogHandler(
             self._configuration.syslog, facility=SysLogHandler.LOG_DAEMON)
+        self.addHandler(handler, patch_format=True)
+
+    def configureWindowsEventLog(self):
+        """
+        Configure Windows Event logger if we are on Windows and it is enabled.
+        """
+        if not WindowsEventLogHandler:
+            return
+
+        source_name = self._configuration.windows_eventlog
+
+        if not source_name:
+            return
+
+        handler = WindowsEventLogHandler(
+            appname=source_name,
+            dllname=self.NT_EVENTLOG_DDL,
+            logtype=self.NT_EVENTLOG_TYPE,
+            )
         self.addHandler(handler, patch_format=True)
 
     def configureLogFile(self):
@@ -272,20 +313,19 @@ class _Logger(object):
                 _(u'Could not initialize the logging file. %s' % (
                     unicode(error))))
 
-    def addDefaultHandlers(self):
-        '''Add default handlers.
+    def addDefaultStdOutHandler(self):
+        """
+        Add default handler for standrd output.
+        """
+        self._log_stdout_handler = StdOutHandler()
+        self.addHandler(self._log_stdout_handler, patch_format=True)
 
-        This is not called in init to enable re-routing logs in tests.
-        It is not called in debug mode.
-        '''
-        nt_service = getattr(self, '_svc_name_', None)
-        if nt_service:
-            from logging.handlers import NTEventLogHandler
-            self._log_ntevent_handler = NTEventLogHandler(nt_service)
-            self.addHandler(self._log_ntevent_handler, patch_format=True)
-        else:
-            self._log_stdout_handler = StdOutHandler()
-            self.addHandler(self._log_stdout_handler, patch_format=True)
+    def addDefaultWindowsEventLogHandler(self, source_name):
+        """
+        Add default handlers for windows event log.
+        """
+        self._log_ntevent_handler = WindowsEventLogHandler(source_name)
+        self.addHandler(self._log_ntevent_handler, patch_format=True)
 
     def removeDefaultHandlers(self):
         '''Remove all default handlers.'''

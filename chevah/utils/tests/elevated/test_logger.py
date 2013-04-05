@@ -4,6 +4,7 @@
 
 from __future__ import with_statement
 
+from chevah.utils.constants import LOG_SECTION_DEFAULTS
 from chevah.utils.testing import UtilsTestCase, manufacture
 from chevah.utils.exceptions import UtilsError
 
@@ -20,18 +21,8 @@ class TestLogger(UtilsTestCase):
                 '[log]\n'
                 'log_file: Disabled\n'
                 )
-        defaults = {
-            'log_file': 'Disabled',
-            'log_file_rotate_external': 'No',
-            'log_file_rotate_at_size': 'Disabled',
-            'log_file_rotate_each': 'Disabled',
-            'log_file_rotate_count': 'Disabled',
-            'log_syslog': 'Disabled',
-            'log_sqlite': 'Disabled',
-            'log_webadmin': 'Disabled',
-            }
         proxy = manufacture.makeFileConfigurationProxy(
-            content=content, defaults=defaults)
+            content=content, defaults=LOG_SECTION_DEFAULTS)
         return manufacture.makeLogConfigurationSection(proxy=proxy)
 
     def test_configure_no_account(self):
