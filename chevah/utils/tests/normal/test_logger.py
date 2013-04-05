@@ -362,14 +362,12 @@ class TestLoggerHandlers(UtilsTestCase):
         removeDefaultHandlers will remove all configured default handlers.
         """
         self.logger.addDefaultStdOutHandler()
-
         if self.os_name == 'nt':
             self.logger.addDefaultWindowsEventLogHandler('some-name')
 
         self.logger.removeDefaultHandlers()
 
         handlers = self.logger.getHandlers()
-
         self.assertIsEmpty(handlers)
 
 
@@ -421,7 +419,7 @@ class TestWindowsEventLogHandler(UtilsTestCase):
 
     def test_getMessageID_valid(self):
         """
-        1 is returned if log_entry/record does not have an id.
+        The event id is returned if log_entry/record has a valid id.
         """
         source_name = manufacture.getUniqueString()
         handler = WindowsEventLogHandler(source_name)
@@ -515,8 +513,8 @@ class TestLoggerWindowsEventLog(UtilsTestCase):
 
     def test_configure_ignored_on_unix(self):
         """
-        When windows event log is disabled it will not be added by
-        logger.configure.
+        On Unix, event if windows event log is enabled it will not be added by
+        logger.configure, since it is not supported on Unix.
         """
         if self.os_name != 'posix':
             raise self.skipTest()
@@ -532,9 +530,11 @@ class TestLoggerWindowsEventLog(UtilsTestCase):
 
     def test_configure_enabled(self):
         """
-        On Windows, when windows_eventlog is enabled, a handler is created.
+        On Windows, when windows_eventlog is enabled, a handler is enabled
+        using the configured source name.
 
-        Logs are emited using the source defined in windows_eventlog.
+        Logs are emited using the source defined by the
+        log_windows_eventlog configuration option.
         """
         if self.os_name != 'nt':
             raise self.skipTest()
@@ -549,12 +549,13 @@ class TestLoggerWindowsEventLog(UtilsTestCase):
         logger.configure(configuration)
 
         # A list is used to make sure a single call is made.
-        windows_handler_present = []
+        windows_handlers = []
         for handler in logger.getHandlers():
             if isinstance(handler, WindowsEventLogHandler):
-                windows_handler_present.append(True)
+                windows_handlers.append(handler)
 
-        self.assertEquals([True], windows_handler_present)
+        self.assertEqual(1, len(windows_handlers))
+        self.assertEqual(u'something', windows_handlers[0].appname)
 
     def test_emit_event_id(self):
         """
