@@ -235,15 +235,14 @@ class ConfigurationSectionMixin(
     @property
     def enabled(self):
         '''Return True if service is enabled.'''
-        return self._proxy.getBoolean(
-            self._section_name, self._prefix + '_enabled')
+        return self._proxy.getBoolean(self._section_name, 'enabled')
 
     @enabled.setter
     def enabled(self, value):
         '''Set value for enable.'''
         initial = self.enabled
         self._proxy.setBoolean(
-            self._section_name, self._prefix + '_enabled', value)
+            self._section_name, 'enabled', value)
         signal = Signal(
             self, initial_value=initial, current_value=self.enabled)
         self.notify('enabled', signal)
