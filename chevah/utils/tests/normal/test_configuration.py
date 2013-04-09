@@ -73,7 +73,7 @@ class DummyLeafConfigurationSection(ConfigurationSectionMixin):
     def __init__(self):
         self._parent = None
         self._proxy = manufacture.makeFileConfigurationProxy(
-            content='[section1]\nsec_enabled: True\n')
+            content='[section1]\nenabled: True\n')
         self.prop_normal = u'prop_normal'
         self.prop_ro = u'prop_ro'
         self.prop_rw = u'prop_rw'
@@ -397,7 +397,7 @@ class TestConfigurationSectionMixin(UtilsTestCase):
         def __init__(self, proxy=None):
             if proxy is None:
                 self._proxy = manufacture.makeFileConfigurationProxy(
-                    content='[section1]\nsec_enabled: True\n')
+                    content='[section1]\nenabled: True\n')
             else:
                 self._proxy = proxy
 
