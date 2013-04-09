@@ -85,6 +85,13 @@ class _IWithPropertiesMixin(Interface):
 
     parent = Attribute('The parent section.')
 
+    def traversePath(property_path):
+        """
+        Parse property_path and return head and tail.
+
+        None is returned for head for tail if they don't exists.
+        """
+
     def getPulicAttributeNames():
         """
         Retrun the list of all names of public read attributes.
