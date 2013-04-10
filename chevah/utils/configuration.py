@@ -55,13 +55,13 @@ class WithConfigurationPropertyMixin(object):
 
     def getPulicAttributeNames(self):
         """
-        Retrun the list of all names of public attributes.
+        Return the list of all names of public attributes.
         """
         return self._getAttributeNames(PublicAttribute)
 
     def getPulicWritableAttributeNames(self):
         """
-        Retrun the list of all names of public attributes.
+        Return the list of all names of public attributes.
         """
         return self._getAttributeNames(PublicWritableAttribute)
 
@@ -102,9 +102,9 @@ class WithConfigurationPropertyMixin(object):
         except AttributeError:
             raise NoSuchSectionError(name)
 
-    def getProperty(self, property_path=None):
+    def traversePath(self, property_path):
         """
-        See `_IWithPropertiesMixin`.
+        Parse property_path and return head and tail.
         """
         if property_path:
             try:
@@ -115,6 +115,20 @@ class WithConfigurationPropertyMixin(object):
         else:
             head = None
             tail = None
+
+        if head == '':
+            head = None
+
+        if tail == '':
+            tail = None
+
+        return (head, tail)
+
+    def getProperty(self, property_path=None):
+        """
+        See `_IWithPropertiesMixin`.
+        """
+        head, tail = self.traversePath(property_path)
 
         result = {}
 
@@ -133,7 +147,7 @@ class WithConfigurationPropertyMixin(object):
             value = self.getSection(name)
             section_properties = value.getProperty(tail)
 
-            # Retrun direct subsections.
+            # Return direct subsections.
             if head and head == name:
                 return section_properties
 
@@ -145,11 +159,7 @@ class WithConfigurationPropertyMixin(object):
         """
         See `_IWithPropertiesMixin`.
         """
-        try:
-            head, tail = property_path.split('/', 1)
-        except ValueError:
-            head = property_path
-            tail = None
+        head, tail = self.traversePath(property_path)
 
         if tail is None:
             for name in self.getPulicWritableAttributeNames():
@@ -182,11 +192,7 @@ class WithConfigurationPropertyMixin(object):
         if property_path is None:
             raise DeleteNotSupportedError()
 
-        try:
-            head, tail = property_path.split('/', 1)
-        except ValueError:
-            head = property_path
-            tail = None
+        head, tail = self.traversePath(property_path)
 
         # Right now only sections support delete operation.
         for name in self.getPublicSectionNames():
@@ -206,11 +212,7 @@ class WithConfigurationPropertyMixin(object):
         if property_path is None:
             raise CreateNotSupportedError()
 
-        try:
-            head, tail = property_path.split('/', 1)
-        except ValueError:
-            head = property_path
-            tail = None
+        head, tail = self.traversePath(property_path)
 
         # Right now only sections support add operations.
         for name in self.getPublicSectionNames():

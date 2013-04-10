@@ -37,6 +37,7 @@ from chevah.utils.logger import (
 from chevah.utils.log_configuration_section import (
     LogConfigurationSection,
     )
+from chevah.utils.observer import Signal
 
 
 class UtilsManufacture(CompatManufacture):
@@ -44,6 +45,12 @@ class UtilsManufacture(CompatManufacture):
 
     It is designed to help with the tests and creating 'mock' objects.
     '''
+
+    def makeSignal(self, *args, **kwargs):
+        """
+        Create a signal.
+        """
+        return Signal(*args, **kwargs)
 
     def _makeGenericPasswordCredentials(self,
             credentials_class,

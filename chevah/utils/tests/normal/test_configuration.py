@@ -147,6 +147,18 @@ class TestWithConfigurationPropertyMixin(UtilsTestCase):
         """
         self.assertProvides(IConfigurationSection, self.config)
 
+    def test_traversePath(self):
+        """
+        traversePath will parse the property_path and return head and tail.
+        """
+
+        self.assertEqual((None, None), self.config.traversePath(None))
+        self.assertEqual((None, None), self.config.traversePath(''))
+        self.assertEqual(('bla', None), self.config.traversePath('bla'))
+        self.assertEqual(('bla', None), self.config.traversePath('bla/'))
+        self.assertEqual(('bla', 'tra'), self.config.traversePath('bla/tra'))
+        self.assertEqual(('bl', 'tra/'), self.config.traversePath('bl/tra/'))
+
     def test_getProperty_root_no_branch(self):
         """
         All public properties are exported for a top level section.
