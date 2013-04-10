@@ -116,10 +116,10 @@ class WithConfigurationPropertyMixin(object):
             head = None
             tail = None
 
-        if not head:
+        if head == '':
             head = None
 
-        if not tail:
+        if tail == '':
             tail = None
 
         return (head, tail)
