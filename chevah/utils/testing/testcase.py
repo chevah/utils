@@ -90,8 +90,9 @@ class UtilsTestCase(ChevahTestCase):
         """
         Helper for checking None values for a string.
         """
-        raw_config = u'%s: Disabled\n' % (key)
-        config = config_factory(raw_config=raw_config)
+        value = {}
+        value[key] = 'Disabled'
+        config = config_factory(value=value)
         option = getattr(config, key)
         self.assertIsNone(option)
 
