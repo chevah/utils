@@ -142,7 +142,7 @@ class TestLoggerFile(UtilsTestCase):
 
             # Check that file exists and it has the right content.
             self.assertTrue(manufacture.fs.exists(segments))
-            log_content = manufacture.fs.getFileContent(segments)
+            log_content = manufacture.fs.getFileLines(segments)
             self.assertEqual(2, len(log_content))
             self.assertStartsWith(str(log_id), log_content[0])
             self.assertEndsWith(log_message, log_content[0])
