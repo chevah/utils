@@ -5,7 +5,7 @@ Module for working with JSON files.
 """
 from __future__ import with_statement
 
-import simplejson as json
+import json
 
 from chevah.utils.constants import (
     CONFIGURATION_DISABLED_VALUES,
@@ -86,15 +86,16 @@ class JSONFile(object):
 
         try:
             result = json.load(self._file)
-        except json.JSONDecodeError, error:
-            if not error.doc:
-                # If file is empty, just initialize an empty data structure.
+        except ValueError, error:
+            if not self._file.len:
+                # We have an empty file, so just ignore the error and
+                # initialize an empty JSON structure.
                 result = {}
             else:
                 data = {
                     'path': self._path,
                     'details': str(error),
-                }
+                    }
                 raise UtilsError(u'1028',
                     u'Bad format for JSON file "%(path)s". %(details)s' % (
                         data),

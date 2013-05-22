@@ -6,7 +6,7 @@ from __future__ import with_statement
 
 from twisted.internet import defer
 from twisted.web import server
-import simplejson as json
+import json
 
 from chevah.utils import json_rpc
 from chevah.utils.json_rpc import JSONRPCResource, JSONRPCError

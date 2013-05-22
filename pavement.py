@@ -17,6 +17,8 @@ RUN_PACKAGES = [
     'chevah-empirical==0.13.0',
     'zope.interface==3.8.0',
     'twisted==12.1.0-chevah3',
+    'pyasn1',
+    'jinja2',
     ]
 
 BUILD_PACKAGES = [

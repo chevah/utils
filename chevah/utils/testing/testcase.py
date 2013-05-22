@@ -4,8 +4,7 @@
 '''TestCase factories for Chevah server.'''
 from collections import deque
 import re
-
-import simplejson as json
+import json
 
 from chevah.empirical.testcase import ChevahTestCase
 from chevah.utils.constants import (
