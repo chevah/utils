@@ -197,7 +197,7 @@ class TestJSONRPC(UtilsTestCase):
             '"method": "private_method", "params": {}}')
         response = self._getDeferredResponse(data)
         self.assertIsNone(response['result'])
-        self.assertEqual(20100, response['error']['code'])
+        self.assertEqual(50000, response['error']['code'])
         self.assertEqual(1, response['id'])
 
     def test_POST_with_private_method(self):
