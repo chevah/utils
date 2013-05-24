@@ -22,7 +22,7 @@ from chevah.utils.interfaces import (
     IConfigurationProxy,
     )
 
-from chevah.utils.configuration import WithConfigurationPropertyMixin
+from chevah.utils.property import PropertyMixin
 
 
 class FileConfigurationProxy(object):
@@ -283,7 +283,7 @@ class FileConfigurationProxy(object):
             self._raw_config.getfloat, section, option, 'floating number')
 
 
-class ConfigurationFileMixin(WithConfigurationPropertyMixin):
+class ConfigurationFileMixin(PropertyMixin):
     """
     Basic code for all configuration files.
 
