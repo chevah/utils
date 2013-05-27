@@ -94,12 +94,12 @@ class IPropertyMixin(Interface):
         None is returned for head for tail if they don't exists.
         """
 
-    def getPulicAttributeNames():
+    def getPublicAttributeNames():
         """
         Retrun the list of all names of public read attributes.
         """
 
-    def getPulicWritableAttributeNames():
+    def getPublicWritableAttributeNames():
         """
         Retrun the list of all names of public writable attributes.
         """

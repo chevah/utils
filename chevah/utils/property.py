@@ -46,13 +46,13 @@ class PropertyMixin(object):
         """
         return self._parent
 
-    def getPulicAttributeNames(self):
+    def getPublicAttributeNames(self):
         """
         Return the list of all names of public attributes.
         """
         return self._getAttributeNames(PublicAttribute)
 
-    def getPulicWritableAttributeNames(self):
+    def getPublicWritableAttributeNames(self):
         """
         Return the list of all names of public attributes.
         """
