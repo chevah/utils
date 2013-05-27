@@ -11,7 +11,7 @@ __metaclass__ = type
 __all__ = []
 
 import inspect
-import simplejson as json
+import json
 from twisted.internet import defer
 from twisted.web import resource, server
 
@@ -55,7 +55,7 @@ def _noSessionError():
     # FIXME:698:
     # Move this out of commons as this is an server id.
     return {
-        'code': 20100,
+        'code': 50000,
         'message': 'No session exists.',
         'data': None,
         }
@@ -104,7 +104,7 @@ class JSONRPCResource(resource.Resource, object):
         try:
             content = request.content.getvalue()
             json_content = json.loads(content)
-        except json.decoder.JSONDecodeError:
+        except ValueError:
             response = {'id': None, 'result': None, 'error': _parseError()}
             return json.dumps(response)
 

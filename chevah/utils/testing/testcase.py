@@ -4,8 +4,7 @@
 '''TestCase factories for Chevah server.'''
 from collections import deque
 import re
-
-import simplejson as json
+import json
 
 from chevah.empirical.testcase import ChevahTestCase
 from chevah.utils.constants import (
@@ -90,8 +89,9 @@ class UtilsTestCase(ChevahTestCase):
         """
         Helper for checking None values for a string.
         """
-        raw_config = u'%s: Disabled\n' % (key)
-        config = config_factory(raw_config=raw_config)
+        value = {}
+        value[key] = 'Disabled'
+        config = config_factory(value=value)
         option = getattr(config, key)
         self.assertIsNone(option)
 

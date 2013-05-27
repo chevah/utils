@@ -3,7 +3,7 @@
 '''Unit tests for observer module.'''
 from __future__ import with_statement
 
-from unittest2 import TestCase
+from chevah.empirical.testcase import TestCase
 from chevah.utils.observer import ObserverMixin, Signal
 
 

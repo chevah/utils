@@ -25,13 +25,6 @@ from chevah.utils.interfaces import (
 from chevah.utils.configuration import WithConfigurationPropertyMixin
 
 
-class ChevahConfigParser(object, ConfigParser.ConfigParser):
-    '''Chevah .ini format parser.'''
-
-    def __init__(self, defaults):
-        super(ChevahConfigParser, self).__init__(defaults)
-
-
 class FileConfigurationProxy(object):
     '''Config parser for Chevah projects.'''
 
@@ -39,7 +32,7 @@ class FileConfigurationProxy(object):
 
     def __init__(self, configuration_path=None, configuration_file=None,
                  defaults=None):
-        self._raw_config = ConfigParser.SafeConfigParser(defaults)
+        self._raw_config = ConfigParser.RawConfigParser(defaults)
         self._configuration_path = configuration_path
         if configuration_path:
             configuration_segments = local_filesystem.getSegmentsFromRealPath(
@@ -96,12 +89,12 @@ class FileConfigurationProxy(object):
                                  unicode(value).replace(u'\n', u'\n\t')))
                 store_file.write('\n')
             store_file.close()
-            # We delete the file first to work arround windows problems.
+            # We delete the file first to work around windows problems.
             local_filesystem.deleteFile(real_segments)
             local_filesystem.rename(tmp_segments, real_segments)
         else:
             raise AssertionError(
-                'Trying to save a configration that was not loaded from '
+                'Trying to save a configuration that was not loaded from '
                 ' a file')
 
     def get(self, section, option):
@@ -137,12 +130,9 @@ class FileConfigurationProxy(object):
         '''See `IConfigurationProxy`.'''
         return self._raw_config.sections()
 
-    def _call(self, method, section, option, type_string='', raw=False):
+    def _call(self, method, section, option, type_string=''):
         try:
-            if raw:
-                return method(section, option, raw=True)
-            else:
-                return method(section, option)
+            return method(section, option)
         except ValueError, error:
             raise UtilsError(u'1000', _(
                 u'Wrong %(type)s value for option "%(option)s" in '
@@ -174,13 +164,13 @@ class FileConfigurationProxy(object):
                     })
             raise AssertionError(error_message.encode('utf-8'))
         raise AssertionError(
-            u'All exceptions should have been previously catched for '
+            u'All exceptions should have been previously catch for '
             'section:%s option:%s.' % (section, option))
 
     def getString(self, section, option):
         '''See `IConfigurationProxy`.'''
         value = self._call(
-            self._raw_config.get, section, option, 'string', raw=True)
+            self._raw_config.get, section, option, 'string')
         if type(value) is not unicode:
             value = value.decode('utf-8')
         if value.startswith("'") and value.endswith("'"):

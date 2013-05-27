@@ -27,31 +27,6 @@ def _(string):
     return string
 
 
-def open_local_admin_webpage(address, port):
-    '''Open the local web admin using the defaul browser.'''
-    import webbrowser
-    from urllib2 import urlopen
-    url = 'http://%s:%d' % (address, port)
-    exit_code = 0
-    message = ''
-    try:
-        urlopen(url)
-        result = webbrowser.open_new_tab(url)
-        message = 'Opening the local web administrator from: %s' % (url)
-        if not result:
-            exit_code = 2
-            message = (
-                'Failed to open the web browser at "%s". '
-                'Please open the web page manually.'
-                ) % (url)
-    except:
-        exit_code = 1
-        message = 'The local web administrator from %s is not started.' % (
-            url)
-
-    return (exit_code, message)
-
-
 def generate_ssh_key(options):
     '''Generate a SSH RSA or DSA key.
 

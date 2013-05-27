@@ -23,6 +23,8 @@ from chevah.utils.exceptions import (
 class TestFileConfigurationProxy(UtilsTestCase):
     '''FileConfigurationProxy tests.'''
 
+    special_characters = u'~`!@#$%^&*()_\\/-+="\''
+
     def test_init_with_no_arguments(self):
         """
         An error is raised when initializing with no arguments.
@@ -342,7 +344,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
 
     def test_setString_with_python_formating(self):
         """
-        A string configuration can be set to a python string formating
+        A string configuration can be set to a python string formatting
         expressions.
         """
         config_file = StringIO(
@@ -358,6 +360,42 @@ class TestFileConfigurationProxy(UtilsTestCase):
 
         self.assertEqual(
             u'do %(some)s value',
+            config.getString(u'section', u'value'))
+
+    def test_getString_with_wild_charactes(self):
+        """
+        A string configuration can hold any character and it does not
+        require any special escaping.
+        """
+        config_file = StringIO((
+            u'[section]\n'
+            u'value: %s\n'
+            u'') % (self.special_characters)
+            )
+        config = FileConfigurationProxy(
+            configuration_file=config_file)
+        config.load()
+        self.assertEqual(
+            self.special_characters,
+            config.getString(u'section', u'value'))
+
+    def test_setString_with_wild_charactes(self):
+        """
+        A string configuration can be set to text containing any characters.
+        """
+        config_file = StringIO(
+            u'[section]\n'
+            u'value: value\n'
+            u'',
+            )
+        config = FileConfigurationProxy(
+            configuration_file=config_file)
+        config.load()
+
+        config.setString(u'section', u'value', self.special_characters)
+
+        self.assertEqual(
+            self.special_characters,
             config.getString(u'section', u'value'))
 
     def check_getStringOrNone(self, getter_name):
