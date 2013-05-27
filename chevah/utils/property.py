@@ -1,7 +1,10 @@
 # Copyright (c) 2011-2013 Adi Roiban.
 # See LICENSE for details.
 """
-P
+Properties and sections module.
+
+Sections are group of properties and could also contain other sections.
+Sections are exposing a read / write CRUD interface.
 """
 from zope.interface import implements
 
