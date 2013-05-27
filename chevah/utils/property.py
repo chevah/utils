@@ -126,7 +126,7 @@ class PropertyMixin(object):
         result = {}
 
         # Look for direct attributes.
-        for name in self.getPulicAttributeNames():
+        for name in self.getPublicAttributeNames():
             value = self.getAttribute(name)
 
             # Return direct property.
@@ -155,7 +155,7 @@ class PropertyMixin(object):
         head, tail = self.traversePath(property_path)
 
         if tail is None:
-            for name in self.getPulicWritableAttributeNames():
+            for name in self.getPublicWritableAttributeNames():
                 if name != head:
                     continue
 
