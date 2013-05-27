@@ -58,12 +58,13 @@ class IConfigurationProxy(Interface):
         '''Return the Float value for `option` from `section`.'''
 
 
-class _IWithPropertiesMixin(Interface):
+class IPropertyMixin(Interface):
     """
     Private interface use to share attributed related to properties
     handling.
 
     This defined a CRUD interface for managing configuration:
+    * traverse
     * create
     * get (read)
     * set (update)
@@ -83,7 +84,8 @@ class _IWithPropertiesMixin(Interface):
     * PublicSectionAttribute
     """
 
-    parent = Attribute('The parent section.')
+    parent = Attribute(
+        u'The parent of these properties. None if this is root.')
 
     def traversePath(property_path):
         """
@@ -92,12 +94,12 @@ class _IWithPropertiesMixin(Interface):
         None is returned for head for tail if they don't exists.
         """
 
-    def getPulicAttributeNames():
+    def getPublicAttributeNames():
         """
         Retrun the list of all names of public read attributes.
         """
 
-    def getPulicWritableAttributeNames():
+    def getPublicWritableAttributeNames():
         """
         Retrun the list of all names of public writable attributes.
         """
@@ -167,7 +169,7 @@ class _IWithPropertiesMixin(Interface):
         """
 
 
-class IConfigurationSection(_IWithPropertiesMixin):
+class IConfigurationSection(IPropertyMixin):
     """
     A section from the configuration file.
     """
@@ -175,7 +177,7 @@ class IConfigurationSection(_IWithPropertiesMixin):
     _proxy = Attribute('Proxy used for persisting the configurations.')
 
 
-class IConfiguration(_IWithPropertiesMixin):
+class IConfiguration(IPropertyMixin):
     '''Root configuration.'''
 
     def __init__(configuration_path, configuration_file):
