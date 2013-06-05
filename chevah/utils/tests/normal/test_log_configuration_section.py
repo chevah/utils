@@ -445,7 +445,7 @@ class TestLogConfigurationSection(UtilsTestCase):
 
     def test_file_rotate_each_update(self):
         """
-        file_rotate_each can be updated at runtime as tuple and the
+        file_rotate_each can be updated at runtime as tuple or list and the
         parsed value is returned.
 
         When set to empty string, Disabled or None, will return `None`.
@@ -461,6 +461,12 @@ class TestLogConfigurationSection(UtilsTestCase):
         (interval, when) = section.file_rotate_each
         self.assertEqual(5, interval)
         self.assertEqual(u'w0', when)
+
+        section.file_rotate_each = [6, 'w1']
+
+        (interval, when) = section.file_rotate_each
+        self.assertEqual(6, interval)
+        self.assertEqual(u'w1', when)
 
     def test_file_rotate_each_update_disabled(self):
         """
