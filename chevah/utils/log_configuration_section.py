@@ -50,7 +50,7 @@ class LogConfigurationSection(ConfigurationSectionMixin):
         '''
         syslog = self._proxy.getStringOrNone(
                 self._section_name, self._prefix + '_syslog')
-        if syslog is None:
+        if not syslog:
             return None
 
         # See if we can make an IP address out of the value.
@@ -129,70 +129,142 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @property
     def file_rotate_each(self):
-        '''Return log_file_rotate_at_size.
+        """
+        Return log_file_rotate_at_each.
 
         Returns a tuple of (interval_count, inteval_type).
-
-        1 hour | 2 seconds | 2 midnight | 3 Monday | Disabled
-        '''
+        """
         value = self._proxy.getStringOrNone(
                 self._section_name,
                 self._prefix + '_file_rotate_each')
-        if value is None:
-            return value
+        return self._fileRoteateEachToMachineReadable(value)
+
+    @file_rotate_each.setter
+    def file_rotate_each(self, value):
+        if not value:
+            update_value = None
+        elif (isinstance(value, basestring) and
+                self._proxy.isDisabledValue(value)
+            ):
+            update_value = None
+        else:
+            update_value = self._fileRotateEachToHumanReadable(value)
+
+        self._proxy.setStringOrNone(
+                self._section_name,
+                self._prefix + '_file_rotate_each',
+                update_value)
+
+    def _fileRoteateEachToMachineReadable(self, value):
+        """
+        Return the machine readable format for `value`.
+
+        Inside the configuration file, the value is stored as a human
+        readable format like::
+
+            1 hour | 2 seconds | 2 midnight | 3 Monday | Disabled
+
+        When reading the value, it will return::
+
+            (1, 'h') | (2, 's') | (2, 'midnight') | (3, 'w0') | None
+        """
+
+        mapping = {
+            u'second': u's',
+            u'seconds': u's',
+            u'minute': u'm',
+            u'minutes': u'm',
+            u'hour': u'h',
+            u'hours': u'h',
+            u'day': u'd',
+            u'days': u'd',
+            u'midnight': u'midnight',
+            u'midnights': u'midnight',
+            u'monday': u'w0',
+            u'mondays': u'w0',
+            u'tuesday': u'w1',
+            u'tuesdays': u'w1',
+            u'wednesday': u'w2',
+            u'wednesdays': u'w2',
+            u'thursday': u'w3',
+            u'thursdays': u'w3',
+            u'friday': u'w4',
+            u'fridays': u'w4',
+            u'saturday': u'w5',
+            u'saturdays': u'w5',
+            u'sunday': u'w6',
+            u'sundays': u'w6',
+            }
+
+        if not value:
+            return None
 
         tokens = re.split('\W+', value)
 
-        def get_rotate_each_error(details):
-            return UtilsError(u'1023',
-                _(u'Wrong value for logger rotation based on time interval. '
-                  u'%s' % (details)))
-
         if len(tokens) != 2:
-            raise get_rotate_each_error(_(u'Got: "%s"' % (value)))
+            raise self._fileRotateEachError(_(u'Got: "%s"' % (value)))
 
         try:
             interval = int(tokens[0])
         except ValueError:
-            raise get_rotate_each_error(
+            raise self._fileRotateEachError(
                 _(u'Interval is not an integer. Got: "%s"' % (tokens[0])))
 
+        if interval < 0:
+            raise self._fileRotateEachError(
+                _(u'Interval should not be less than 0'))
+
         when = tokens[1].lower()
-        if when in ['second', 'seconds']:
-            when = 's'
-        elif when in ['minute', 'minutes']:
-            when = 'm'
-        elif when in ['hour', 'hours']:
-            when = 'h'
-        elif when in ['day', 'days']:
-            when = 'd'
-        elif when in ['midnight', 'midnights']:
-            when = 'midnight'
-        elif when in ['monday', 'mondays']:
-            when = 'w0'
-        elif when in ['tuesday', 'tuesdays']:
-            when = 'w1'
-        elif when in ['wednesday', 'wednesdays']:
-            when = 'w2'
-        elif when in ['thursday', 'thursdays']:
-            when = 'w3'
-        elif when in ['friday', 'friday']:
-            when = 'w4'
-        elif when in ['saturday', 'saturdays']:
-            when = 'w5'
-        elif when in ['sunday', 'sundays']:
-            when = 'w6'
-        else:
-            raise get_rotate_each_error(
+        try:
+            when = mapping[when]
+        except KeyError:
+            raise self._fileRotateEachError(
                 _(u'Unknown interval type. Got: "%s"' % (tokens[1])))
         return (interval, when)
 
-    @file_rotate_each.setter
-    def file_rotate_each(self, value):
-        self._proxy.setStringOrNone(
-                self._section_name,
-                self._prefix + '_file_rotate_each',
-                value)
+    def _fileRotateEachToHumanReadable(self, value):
+        """
+        Return the human readable representation for file_rotate_each
+        tuple provided as `value'.
+
+        (2, 's') returns 2 seconds
+        """
+        mapping = {
+            u's': u'second',
+            u'm': u'minute',
+            u'h': u'hour',
+            u'd': u'day',
+            u'midnight': u'midnight',
+            u'w0': u'monday',
+            u'w1': u'tuesday',
+            u'w2': u'wednesday',
+            u'w3': u'thursday',
+            u'w4': u'friday',
+            u'w5': u'saturday',
+            u'w6': u'sunday',
+            }
+        try:
+            frequency = int(value[0])
+        except ValueError:
+            raise self._fileRotateEachError(
+                _(u'Bad interval count. Got: "%s"' % (value[0])))
+
+        if frequency < 0:
+            raise self._fileRotateEachError(
+                _(u'Interval should not be less than 0'))
+
+        try:
+            when = mapping[value[1]]
+        except KeyError:
+            raise self._fileRotateEachError(
+                _(u'Unknown interval type. Got: "%s"' % (value[1])))
+
+        return u'%s %s' % (frequency, when)
+
+    def _fileRotateEachError(self, details):
+        return UtilsError(u'1023',
+            _(u'Wrong value for logger rotation based on time interval. '
+              u'%s' % (details)))
 
     def _sendNotify(self, option, initial_value, current_value):
         '''Generic notifier when a log section value changed.'''

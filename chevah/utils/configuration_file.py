@@ -182,10 +182,22 @@ class FileConfigurationProxy(object):
     def getStringOrNone(self, section, option):
         '''See `IConfigurationProxy`.'''
         value = self.getString(section, option)
-        if value.lower() in CONFIGURATION_DISABLED_VALUES:
+
+        if not value:
+            return None
+        if self.isDisabledValue(value):
             return None
         else:
             return value
+
+    def isDisabledValue(self, value):
+        """
+        Return True if value is one of the disabled values.
+        """
+        if value.lower() in CONFIGURATION_DISABLED_VALUES:
+            return True
+        else:
+            return False
 
     def getStringOrInherit(self, section, option):
         value = self.getString(section, option)
@@ -196,7 +208,7 @@ class FileConfigurationProxy(object):
 
     def getStringSpecial(self, section, option):
         value = self.getString(section, option)
-        if value.lower() in CONFIGURATION_DISABLED_VALUES:
+        if self.isDisabledValue(value):
             return None
 
         if value.lower() in CONFIGURATION_INHERIT:
@@ -236,7 +248,7 @@ class FileConfigurationProxy(object):
     def getIntegerOrNone(self, section, option):
         '''See `IConfigurationProxy`.'''
         value = self.getString(section, option)
-        if value.lower() in CONFIGURATION_DISABLED_VALUES:
+        if self.isDisabledValue(value):
             return None
         else:
             return self.getInteger(section, option)

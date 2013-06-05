@@ -1,6 +1,14 @@
 Release notes for chevah.utils
 ==============================
 
+0.16.0 - 05/06/2013
+-------------------
+
+* Add FileConfigurationProxy.isDisabledValue().
+* Allow saving LogConfigurationSection.log_rotate_each using the same
+  format returned by it.
+
+
 0.15.0 - 24/05/2013
 -------------------
 

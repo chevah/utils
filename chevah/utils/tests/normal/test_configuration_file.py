@@ -398,6 +398,19 @@ class TestFileConfigurationProxy(UtilsTestCase):
             self.special_characters,
             config.getString(u'section', u'value'))
 
+    def test_isDisabledValue(self):
+        """
+        Return `True` if value is one of the disabled values or `False`
+        otherwise.
+        """
+        config = FileConfigurationProxy(configuration_file=StringIO())
+
+        self.assertFalse(config.isDisabledValue(u'some-value'))
+
+        self.assertTrue(config.isDisabledValue('disable'))
+        self.assertTrue(config.isDisabledValue('Disable'))
+        self.assertTrue(config.isDisabledValue('disabled'))
+
     def check_getStringOrNone(self, getter_name):
         """
         Helper for retrieving strings which can be disabled.

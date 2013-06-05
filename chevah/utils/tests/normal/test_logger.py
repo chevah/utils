@@ -223,7 +223,7 @@ class TestLoggerFile(UtilsTestCase):
             self.assertTrue(
                 isinstance(logger._file_handler, TimedRotatingFileHandler))
             self.assertEqual(0, logger._file_handler.backupCount)
-            self.assertEqual('H', logger._file_handler.when)
+            self.assertEqual(u'H', logger._file_handler.when)
             self.assertEqual(2 * 60 * 60, logger._file_handler.interval)
             logger.removeAllHandlers()
         finally:
