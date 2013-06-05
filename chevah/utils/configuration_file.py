@@ -185,7 +185,7 @@ class FileConfigurationProxy(object):
 
         if not value:
             return None
-        if self.isDisabledValue(value):
+        elif self.isDisabledValue(value):
             return None
         else:
             return value
