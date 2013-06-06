@@ -42,6 +42,7 @@ from chevah.utils.exceptions import (
     UtilsError,
     )
 from chevah.utils.helpers import _
+from chevah.utils.observer import ObserverMixin, Signal
 
 if os.name == 'nt':
     END_OF_LINE = '\r\n'
@@ -187,7 +188,7 @@ else:
     WindowsEventLogHandler = None
 
 
-class _Logger(object):
+class _Logger(ObserverMixin):
     '''This class is supposed to be a singleton logger.'''
 
     NT_EVENTLOG_DDL = None
@@ -250,6 +251,14 @@ class _Logger(object):
         Configure all handlers.
         """
         self._configuration.subscribe('file', self._reconfigureFile)
+        self._configuration.subscribe(
+            'file_rotate_external', self._reconfigureFile)
+        self._configuration.subscribe(
+            'file_rotate_count', self._reconfigureFile)
+        self._configuration.subscribe(
+            'file_rotate_at_size', self._reconfigureFile)
+        self._configuration.subscribe(
+            'file_rotate_each', self._reconfigureFile)
         self._active_handlers['file'] = self._addFile()
 
         self._configuration.subscribe('syslog', self._reconfigureSyslog)
@@ -307,8 +316,13 @@ class _Logger(object):
         if not self._configuration.syslog:
             return None
 
-        handler = SysLogHandler(
-            self._configuration.syslog, facility=SysLogHandler.LOG_DAEMON)
+        try:
+            handler = SysLogHandler(
+                self._configuration.syslog, facility=SysLogHandler.LOG_DAEMON)
+        except Exception, error:
+            raise UtilsError(u'1013',
+                _(u'Failed to start the Syslog logger. %s' % (error)))
+
         self.addHandler(handler, patch_format=True)
 
         return handler
@@ -327,11 +341,15 @@ class _Logger(object):
         if not source_name:
             return
 
-        handler = WindowsEventLogHandler(
-            appname=source_name,
-            dllname=self.NT_EVENTLOG_DDL,
-            logtype=self.NT_EVENTLOG_TYPE,
-            )
+        try:
+            handler = WindowsEventLogHandler(
+                appname=source_name,
+                dllname=self.NT_EVENTLOG_DDL,
+                logtype=self.NT_EVENTLOG_TYPE,
+                )
+        except Exception, error:
+            raise UtilsError(u'1014',
+                _(u'Failed to start the Windows Event logger. %s' % (error)))
         self.addHandler(handler, patch_format=True)
         return handler
 
@@ -376,9 +394,9 @@ class _Logger(object):
                 handler = FileHandler(log_path, encoding='utf-8')
 
             self.addHandler(handler, patch_format=True)
-        except IOError, error:
+        except Exception, error:
             raise UtilsError(u'1010',
-                _(u'Could not initialize the logging file. %s' % (
+                _(u'Failed to start the log file. %s' % (
                     unicode(error))))
         return handler
 
@@ -400,11 +418,8 @@ class _Logger(object):
         """
         Remove all default handlers.
         """
-        if self._log_stdout_handler:
-            self.removeHandler(self._log_stdout_handler)
-
-        if self._log_ntevent_handler:
-            self.removeHandler(self._log_ntevent_handler)
+        self.removeHandler(self._log_stdout_handler)
+        self.removeHandler(self._log_ntevent_handler)
 
     def log(self, message_id, text, avatar=None, peer=None, data=None):
         '''Log a message.'''
@@ -463,6 +478,8 @@ class _Logger(object):
         """
         Remove specified handler from the logger and close it.
         """
+        if not handler:
+            return
         self._log.removeHandler(handler)
         handler.close()
 

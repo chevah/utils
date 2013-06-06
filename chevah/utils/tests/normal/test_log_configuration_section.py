@@ -79,7 +79,7 @@ class TestLogConfigurationSection(UtilsTestCase):
         section.file = new_value
 
         self.assertEqual(new_value, section.file)
-        callback.assert_called_once()
+        self.assertEqual(1, callback.call_count)
         signal = callback.call_args[0][0]
         self.assertEqual(new_value, signal.current_value)
 
@@ -117,12 +117,16 @@ class TestLogConfigurationSection(UtilsTestCase):
             '[log]\n'
             'log_file_rotate_external: No\n'
             )
-
+        callback = self.Mock()
         section = self._getSection(content)
+        section.subscribe('file_rotate_external', callback)
 
         section.file_rotate_external = True
 
         self.assertTrue(section.file_rotate_external)
+        self.assertEqual(1, callback.call_count)
+        signal = callback.call_args[0][0]
+        self.assertEqual(True, signal.current_value)
 
     def test_file_rotate_count_disabled(self):
         """
@@ -159,11 +163,16 @@ class TestLogConfigurationSection(UtilsTestCase):
             '[log]\n'
             'log_file_rotate_count: 7\n'
             )
+        callback = self.Mock()
         section = self._getSection(content)
+        section.subscribe('file_rotate_count', callback)
 
         section.file_rotate_count = new_value
 
         self.assertEqual(new_value, section.file_rotate_count)
+        self.assertEqual(1, callback.call_count)
+        signal = callback.call_args[0][0]
+        self.assertEqual(new_value, signal.current_value)
 
     def test_file_rotate_at_size_disabled(self):
         """
@@ -200,11 +209,16 @@ class TestLogConfigurationSection(UtilsTestCase):
             '[log]\n'
             'log_file_rotate_at_size: 7\n'
             )
+        callback = self.Mock()
         section = self._getSection(content)
+        section.subscribe('file_rotate_at_size', callback)
 
         section.file_rotate_at_size = new_value
 
         self.assertEqual(new_value, section.file_rotate_at_size)
+        self.assertEqual(1, callback.call_count)
+        signal = callback.call_args[0][0]
+        self.assertEqual(new_value, signal.current_value)
 
     def test_file_rotate_each_disabled(self):
         """
@@ -459,13 +473,18 @@ class TestLogConfigurationSection(UtilsTestCase):
             '[log]\n'
             'log_file_rotate_each: Disabled\n'
             )
+        callback = self.Mock()
         section = self._getSection(content)
+        section.subscribe('file_rotate_each', callback)
 
         section.file_rotate_each = (5, 'w0')
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(5, interval)
         self.assertEqual(u'w0', when)
+        self.assertEqual(1, callback.call_count)
+        signal = callback.call_args[0][0]
+        self.assertEqual((5, 'w0'), signal.current_value)
 
         section.file_rotate_each = [6, 'w1']
 
@@ -575,7 +594,7 @@ class TestLogConfigurationSection(UtilsTestCase):
         section.syslog = new_path
 
         self.assertEqual(new_path, section.syslog)
-        callback.assert_called_once()
+        self.assertEqual(1, callback.call_count)
         signal = callback.call_args[0][0]
         self.assertEqual(new_path, signal.current_value)
 
@@ -657,6 +676,6 @@ class TestLogConfigurationSection(UtilsTestCase):
         section.windows_eventlog = new_value
 
         self.assertEqual(new_value, section.windows_eventlog)
-        callback.assert_called_once()
+        self.assertEqual(1, callback.call_count)
         signal = callback.call_args[0][0]
         self.assertEqual(new_value, signal.current_value)
