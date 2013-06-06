@@ -31,13 +31,14 @@ class InMemoryHandler(NullHandler, object):
     """
     Handlers that stores logged record in memory.
     """
-    _name = None
 
     def __init__(self):
-        self._log = []
+        super(InMemoryHandler, self).__init__()
+        self.history = []
+        self.name = 'in-memory'
 
     def emit(self, record):
-        self._log.append(record)
+        self.history.append(record)
 
     def handle(self, record):
         self.emit(record)
@@ -420,20 +421,38 @@ class TestLogger(LoggerTestCase):
         finally:
             manufacture.fs.deleteFile(segments)
 
-    def test_addHandler(self):
+    def test_addHandler_with_name(self):
         """
-        A LogHandler can be added to the logger and after that is called on
-        all log events.
+        It adds the handler and sends a notification.
+
+        After that the handler is called on all log events.
         """
-        log_output = StringIO()
-        log_handler = StreamHandler(log_output)
+        log_handler = InMemoryHandler()
         log_entry_id = manufacture.getUniqueInteger()
         log_entry = manufacture.getUniqueString()
+        callback = self.Mock()
+        self.logger.subscribe('add-handler', callback)
 
         self.logger.addHandler(log_handler)
         self.logger.log(log_entry_id, log_entry)
 
-        self.assertEqual(log_entry + u'\n', log_output.getvalue())
+        self.assertEqual(log_entry, log_handler.history[0].text)
+        self.assertEqual(1, callback.call_count)
+        signal = callback.call_args[0][0]
+        self.assertEqual(log_handler._name, signal.name)
+
+    def test_addHandler_without_name(self):
+        """
+        It adds the handler and does not sends a notification.
+        """
+        log_handler = InMemoryHandler()
+        log_handler.name = None
+        callback = self.Mock()
+        self.logger.subscribe('add-handler', callback)
+
+        self.logger.addHandler(log_handler)
+
+        self.assertFalse(callback.called)
 
     def test_getHandlers_initially_empty(self):
         """
@@ -456,23 +475,58 @@ class TestLogger(LoggerTestCase):
         self.assertEqual(len(handlers), 1)
         self.assertContains(log_handler, handlers)
 
-    def test_removeHandlers(self):
+    def test_removeHandler_success(self):
         """
-        Handler is removed and not called on further log events.
+        It removes and closes the handler, sending a notification.
+
+        Handler is not called on further log events.
         """
-        log_output = StringIO()
-        log_handler = StreamHandler(log_output)
+        log_handler = InMemoryHandler()
         log_entry_id = manufacture.getUniqueInteger()
         log_entry = manufacture.getUniqueString()
-
         self.logger.addHandler(log_handler)
-        self.logger.removeHandler(log_handler)
-        self.logger.log(log_entry_id, log_entry)
-        handlers = self.logger.getHandlers()
+        callback = self.Mock()
+        self.logger.subscribe('remove-handler', callback)
+        self.assertIsNotEmpty(self.logger.getHandlers())
 
-        self.assertNotContains(log_handler, handlers)
-        self.assertIsEmpty(handlers)
-        self.assertIsEmpty(log_output.getvalue())
+        self.logger.removeHandler(log_handler)
+
+        # No entry is recorded by the handler.
+        self.logger.log(log_entry_id, log_entry)
+        self.assertIsEmpty(log_handler.history)
+
+        # No handlers are there.
+        self.assertIsEmpty(self.logger.getHandlers())
+
+        self.assertEqual(1, callback.call_count)
+        signal = callback.call_args[0][0]
+        self.assertEqual(log_handler._name, signal.name)
+
+    def test_removeHandler_none(self):
+        """
+        When `None` is requested to be removed, nothing happens.
+        """
+        callback = self.Mock()
+        self.logger.subscribe('remove-handler', callback)
+
+        self.logger.removeHandler(None)
+
+        self.assertFalse(callback.called)
+
+    def test_removeHandler_without_name(self):
+        """
+        When handler has no name, it is just removed without sending
+        a notification.
+        """
+        log_handler = InMemoryHandler()
+        log_handler.name = None
+        self.logger.addHandler(log_handler)
+        callback = self.Mock()
+        self.logger.subscribe('remove-handler', callback)
+
+        self.logger.removeHandler(log_handler)
+
+        self.assertFalse(callback.called)
 
     def test_removeHandler_closes_handler(self):
         """

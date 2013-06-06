@@ -136,6 +136,8 @@ class StdOutHandler(StreamHandler, object):
     Logs are not persisted.
     """
 
+    _name = 'Standard output'
+
     def __init__(self):
         super(StdOutHandler, self).__init__()
 
@@ -178,6 +180,8 @@ if os.name == 'nt':
 
         For now we don't use any special category or level.
         """
+
+        _name = 'Windows Eventlog'
 
         def getMessageID(self, log_entry):
             try:
@@ -319,6 +323,7 @@ class _Logger(ObserverMixin):
         try:
             handler = SysLogHandler(
                 self._configuration.syslog, facility=SysLogHandler.LOG_DAEMON)
+            handler._name = 'Syslog'
         except Exception, error:
             raise UtilsError(u'1013',
                 _(u'Failed to start the Syslog logger. %s' % (error)))
@@ -393,6 +398,7 @@ class _Logger(ObserverMixin):
             else:
                 handler = FileHandler(log_path, encoding='utf-8')
 
+            handler._name = 'File'
             self.addHandler(handler, patch_format=True)
         except Exception, error:
             raise UtilsError(u'1010',
@@ -473,6 +479,8 @@ class _Logger(ObserverMixin):
 
         self._log.addHandler(handler)
         self._new_handler_added = True
+        if handler._name:
+            self.notify('add-handler', Signal(self, name=handler._name))
 
     def removeHandler(self, handler):
         """
@@ -482,6 +490,8 @@ class _Logger(ObserverMixin):
             return
         self._log.removeHandler(handler)
         handler.close()
+        if handler._name:
+            self.notify('remove-handler', Signal(self, name=handler._name))
 
     def removeAllHandlers(self):
         """
