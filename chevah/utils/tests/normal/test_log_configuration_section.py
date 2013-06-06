@@ -214,22 +214,6 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         self.assertIsNone(section.file_rotate_each)
 
-    def test_file_rotate_each_bad_format(self):
-        """
-        Check reading log_file_rotate_each.
-        """
-        content = (
-            '[log]\n'
-            'log_file_rotate_each: every 2 hours\n'
-            )
-
-        section = self._getSection(content)
-
-        with self.assertRaises(UtilsError) as context:
-            section.file_rotate_each
-
-        self.assertEqual(u'1023', context.exception.event_id)
-
     def test_file_rotate_each_bad_interval(self):
         """
         Check reading log_file_rotate_each.
@@ -263,6 +247,22 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         self.assertEqual(u'1023', context.exception.event_id)
 
+    def test_file_rotate_each_negative_internal(self):
+        """
+        An error is raised when a interval is a negative value.
+        """
+        content = (
+            '[log]\n'
+            'log_file_rotate_each: -4 days\n'
+            )
+
+        section = self._getSection(content)
+
+        with self.assertRaises(UtilsError) as context:
+            section.file_rotate_each
+
+        self.assertEqual(u'1023', context.exception.event_id)
+
     def test_file_rotate_each_second(self):
         """
         Check reading log_file_rotate_each for second.
@@ -276,7 +276,7 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(4, interval)
-        self.assertEqual('s', when)
+        self.assertEqual(u's', when)
 
     def test_file_rotate_each_minute(self):
         """
@@ -291,7 +291,7 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(0, interval)
-        self.assertEqual('m', when)
+        self.assertEqual(u'm', when)
 
     def test_file_rotate_each_hour(self):
         """
@@ -306,7 +306,7 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(1, interval)
-        self.assertEqual('h', when)
+        self.assertEqual(u'h', when)
 
     def test_file_rotate_each_day(self):
         """
@@ -321,7 +321,7 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(5, interval)
-        self.assertEqual('d', when)
+        self.assertEqual(u'd', when)
 
     def test_file_rotate_each_midnight(self):
         """
@@ -336,7 +336,7 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(2, interval)
-        self.assertEqual('midnight', when)
+        self.assertEqual(u'midnight', when)
 
     def test_file_rotate_each_monday(self):
         """
@@ -351,7 +351,7 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(2, interval)
-        self.assertEqual('w0', when)
+        self.assertEqual(u'w0', when)
 
     def test_file_rotate_each_tuesday(self):
         """
@@ -366,7 +366,7 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(2, interval)
-        self.assertEqual('w1', when)
+        self.assertEqual(u'w1', when)
 
     def test_file_rotate_each_wednesday(self):
         """
@@ -381,7 +381,7 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(2, interval)
-        self.assertEqual('w2', when)
+        self.assertEqual(u'w2', when)
 
     def test_file_rotate_each_thursday(self):
         """
@@ -396,7 +396,7 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(4, interval)
-        self.assertEqual('w3', when)
+        self.assertEqual(u'w3', when)
 
     def test_file_rotate_each_friday(self):
         """
@@ -411,7 +411,7 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(4, interval)
-        self.assertEqual('w4', when)
+        self.assertEqual(u'w4', when)
 
     def test_file_rotate_each_saturday(self):
         """
@@ -426,7 +426,7 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(4, interval)
-        self.assertEqual('w5', when)
+        self.assertEqual(u'w5', when)
 
     def test_file_rotate_each_sunday(self):
         """
@@ -441,14 +441,14 @@ class TestLogConfigurationSection(UtilsTestCase):
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(4, interval)
-        self.assertEqual('w6', when)
+        self.assertEqual(u'w6', when)
 
     def test_file_rotate_each_update(self):
         """
-        file_rotate_each can be updated at runtime as string and the
+        file_rotate_each can be updated at runtime as tuple or list and the
         parsed value is returned.
 
-        When set to Disabled or None, will return none.
+        When set to empty string, Disabled or None, will return `None`.
         """
         content = (
             '[log]\n'
@@ -456,17 +456,64 @@ class TestLogConfigurationSection(UtilsTestCase):
             )
         section = self._getSection(content)
 
-        section.file_rotate_each = '5 monday'
+        section.file_rotate_each = (5, 'w0')
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(5, interval)
-        self.assertEqual('w0', when)
+        self.assertEqual(u'w0', when)
+
+        section.file_rotate_each = [6, 'w1']
+
+        (interval, when) = section.file_rotate_each
+        self.assertEqual(6, interval)
+        self.assertEqual(u'w1', when)
+
+    def test_file_rotate_each_update_disabled(self):
+        """
+        It can be updated to disabled values and it will return `None`.
+        """
+        content = (
+            '[log]\n'
+            'log_file_rotate_each: 1 day\n'
+            )
+        section = self._getSection(content)
 
         section.file_rotate_each = 'Disabled'
         self.assertIsNone(section.file_rotate_each)
 
+        section.file_rotate_each = ''
+        self.assertIsNone(section.file_rotate_each)
+
         section.file_rotate_each = None
         self.assertIsNone(section.file_rotate_each)
+
+    def test_file_rotate_each_failure(self):
+        """
+        An error is raised when trying to set an invalid option.
+        """
+        content = (
+            '[log]\n'
+            'log_file_rotate_each: Disabled\n'
+            )
+        section = self._getSection(content)
+
+        # Check unknown interval type.
+        with self.assertRaises(UtilsError) as context:
+            section.file_rotate_each = (5, 'unknown')
+
+        self.assertExceptionID(u'1023', context.exception)
+
+        # Check non-string value.
+        with self.assertRaises(UtilsError) as context:
+            section.file_rotate_each = ('bla', 'w0')
+
+        self.assertExceptionID(u'1023', context.exception)
+
+        # Check negative value.
+        with self.assertRaises(UtilsError) as context:
+            section.file_rotate_each = (-1, 'w0')
+
+        self.assertExceptionID(u'1023', context.exception)
 
     def test_syslog_disabled(self):
         """
