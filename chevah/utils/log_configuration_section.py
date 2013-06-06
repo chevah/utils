@@ -146,7 +146,7 @@ class LogConfigurationSection(ConfigurationSectionMixin):
         value = self._proxy.getStringOrNone(
                 self._section_name,
                 self._prefix + '_file_rotate_each')
-        return self._fileRoteateEachToMachineReadable(value)
+        return self._fileRotateEachToMachineReadable(value)
 
     @file_rotate_each.setter
     def file_rotate_each(self, value):
@@ -164,7 +164,7 @@ class LogConfigurationSection(ConfigurationSectionMixin):
                 self._prefix + '_file_rotate_each',
                 update_value)
 
-    def _fileRoteateEachToMachineReadable(self, value):
+    def _fileRotateEachToMachineReadable(self, value):
         """
         Return the machine readable format for `value`.
 
