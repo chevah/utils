@@ -65,18 +65,23 @@ class TestLogConfigurationSection(UtilsTestCase):
 
     def test_file_update(self):
         """
-        log_file can be updated at runtime.
+        log_file can be updated at runtime and it will notify the change.
         """
         new_value = manufacture.getUniqueString()
         content = (
             '[log]\n'
             'log_file: Disable\n'
             )
+        callback = self.Mock()
         section = self._getSection(content)
+        section.subscribe('file', callback)
 
         section.file = new_value
 
         self.assertEqual(new_value, section.file)
+        callback.assert_called_once()
+        signal = callback.call_args[0][0]
+        self.assertEqual(new_value, signal.current_value)
 
     def test_file_rotate_external_true(self):
         """
@@ -556,18 +561,23 @@ class TestLogConfigurationSection(UtilsTestCase):
 
     def test_syslog_change(self):
         """
-        log_syslog can be changed at runtime
+        It can be changed at runtime
         """
         new_path = manufacture.getUniqueString()
         content = (
             '[log]\n'
             'log_syslog: /dev/log\n'
             )
+        callback = self.Mock()
         section = self._getSection(content)
+        section.subscribe('syslog', callback)
 
         section.syslog = new_path
 
         self.assertEqual(new_path, section.syslog)
+        callback.assert_called_once()
+        signal = callback.call_args[0][0]
+        self.assertEqual(new_path, signal.current_value)
 
     def test_enabled_groups_empty(self):
         """
@@ -633,15 +643,20 @@ class TestLogConfigurationSection(UtilsTestCase):
 
     def test_windows_eventlog_change(self):
         """
-        windows_eventlog can be changed at runtime.
+        It can be updated at runtime.
         """
         new_value = manufacture.getUniqueString()
         content = (
             '[log]\n'
             'log_windows_eventlog: something\n'
             )
+        callback = self.Mock()
         section = self._getSection(content)
+        section.subscribe('windows_eventlog', callback)
 
         section.windows_eventlog = new_value
 
         self.assertEqual(new_value, section.windows_eventlog)
+        callback.assert_called_once()
+        signal = callback.call_args[0][0]
+        self.assertEqual(new_value, signal.current_value)

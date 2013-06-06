@@ -20,9 +20,6 @@ from chevah.utils.observer import Signal
 class LogConfigurationSection(ConfigurationSectionMixin):
     '''Configurations for the log section.
 
-    It also contains the 'enabled' property for consistency, but right now
-    it does nothting.
-
     [log]
     log_file: /path/to/file
     log_file_rotate_external: Yes | No
@@ -30,7 +27,7 @@ class LogConfigurationSection(ConfigurationSectionMixin):
     log_file_rotate_each:
         1 hour | 2 seconds | 2 midnight | 3 Monday | Disabled
     log_file_rotate_count: 3 | 0 | Disabled
-    log_syslog: /path/to/syslog/pype | syslog.host:port
+    log_syslog: /path/to/syslog/pipe | syslog.host:port
     log_enabled_groups: all
     log_windows_eventlog: sftpplus-server
     '''
@@ -64,8 +61,14 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @syslog.setter
     def syslog(self, value):
+        initial_value = self.syslog
         self._proxy.setStringOrNone(
                 self._section_name, self._prefix + '_syslog', value)
+        self._notify(
+            option='syslog',
+            initial_value=initial_value,
+            current_value=self.syslog,
+            )
 
     @property
     def file(self):
@@ -75,8 +78,14 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @file.setter
     def file(self, value):
+        initial_value = self.file
         self._proxy.setStringOrNone(
                 self._section_name, self._prefix + '_file', value)
+        self._notify(
+            option='file',
+            initial_value=initial_value,
+            current_value=self.file,
+            )
 
     @property
     def file_rotate_external(self):
@@ -266,8 +275,10 @@ class LogConfigurationSection(ConfigurationSectionMixin):
             _(u'Wrong value for logger rotation based on time interval. '
               u'%s' % (details)))
 
-    def _sendNotify(self, option, initial_value, current_value):
-        '''Generic notifier when a log section value changed.'''
+    def _notify(self, option, initial_value, current_value):
+        """
+        Generic notifier for a log change signal.
+        """
         signal = Signal(
               self, initial_value=initial_value, current_value=current_value)
         self.notify(option, signal)
@@ -306,8 +317,14 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @windows_eventlog.setter
     def windows_eventlog(self, value):
-        return self._proxy.setStringOrNone(
+        initial_value = self.windows_eventlog
+        self._proxy.setStringOrNone(
                 self._section_name,
                 self._prefix + '_windows_eventlog',
                 value,
                 )
+        self._notify(
+            option='windows_eventlog',
+            initial_value=initial_value,
+            current_value=self.windows_eventlog,
+            )

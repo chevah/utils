@@ -13,8 +13,8 @@ PYTHON_VERSION = '2.7'
 RUN_PACKAGES = [
     # FIXME:1022:
     # For new we need to update it by hand.
-    'chevah-compat==0.6.0',
-    'chevah-empirical==0.13.0',
+    'chevah-compat==0.8.2',
+    'chevah-empirical==0.14.0',
     'zope.interface==3.8.0',
     'twisted==12.1.0-chevah3',
     'pyasn1',

@@ -204,8 +204,12 @@ class _Logger(object):
         self._log_stdout_handler = None
         self._log_ntevent_handler = None
         self._new_handler_added = False
-        self._file_handler = None
         self._configuration = None
+        self._active_handlers = {
+            'file': None,
+            'syslog': None,
+            'windows_eventlog': None,
+            }
 
     def configure(self, configuration, account=None):
         """
@@ -217,14 +221,9 @@ class _Logger(object):
         All handler specific settings/configuration is passed via the settings
         parameter.
         """
-
-        def configureHandlers():
-            """
-            Configure all handlers.
-            """
-            self.configureLogFile()
-            self.configureSyslog()
-            self.configureWindowsEventLog()
+        if self._configuration is not None:
+            raise AssertionError(
+                'For now, configure can only be called once.')
 
         self._configuration = configuration
 
@@ -232,30 +231,93 @@ class _Logger(object):
             try:
                 from chevah.compat import system_users
                 with system_users.executeAsUser(username=account):
-                    configureHandlers()
+                    self._configureHandlers()
             # FIXME:1050:
             # system_users.executeAsUser should raise a CompatError
-            # insted of ChangeUserException.
+            # instead of ChangeUserException.
             except ChangeUserException, error:
                 raise UtilsError(u'1026', _(
                     u'Failed to initialize logger as account "%s". %s.)' % (
                         account, error.message)))
         else:
-            configureHandlers()
+            self._configureHandlers()
 
         if self._new_handler_added:
-            self.removeDefaultHandlers()
+            self._removeDefaultHandlers()
 
-    def configureSyslog(self):
+    def _configureHandlers(self):
+        """
+        Configure all handlers.
+        """
+        self._configuration.subscribe('file', self._reconfigureFile)
+        self._active_handlers['file'] = self._addFile()
+
+        self._configuration.subscribe('syslog', self._reconfigureSyslog)
+        self._active_handlers['syslog'] = self._addSyslog()
+
+        self._configuration.subscribe(
+            'windows_eventlog', self._reconfigureWindowsEventLog)
+        self._active_handlers['windows_eventlog'] = self._addWindowsEventLog
+
+    def _reconfigureHandler(self, name, setter):
+        """
+        Reconfigure handler with `name` using `setter` method.
+
+        If adding the new handler fails, it will keep the previous
+        handler.
+
+        After successfully adding the handler, the previous handler is
+        closed.
+        """
+        new_handler = None
+        previous_handler = self._active_handlers[name]
+        try:
+            new_handler = setter()
+        except:
+            raise
+
+        self._active_handlers[name] = new_handler
+        self.removeHandler(previous_handler)
+
+    def _reconfigureFile(self, signal):
+        """
+        Reconfigure the file handler.
+        """
+        self._reconfigureHandler(name='file', setter=self._addFile)
+
+    def _reconfigureSyslog(self, signal):
+        """
+        Reconfigure the syslog handler.
+        """
+        self._reconfigureHandler(name='syslog', setter=self._addSyslog)
+
+    def _reconfigureWindowsEventLog(self, signal):
+        """
+        Reconfigure the syslog handler.
+        """
+        self._reconfigureHandler(
+            name='windows_eventlog', setter=self._addWindowsEventLog)
+
+    def _addSyslog(self):
+        """
+        Add sending logs to Syslog using the configured value.
+
+        Return the added handler, or `None.
+        """
         if not self._configuration.syslog:
-            return
+            return None
+
         handler = SysLogHandler(
             self._configuration.syslog, facility=SysLogHandler.LOG_DAEMON)
         self.addHandler(handler, patch_format=True)
 
-    def configureWindowsEventLog(self):
+        return handler
+
+    def _addWindowsEventLog(self):
         """
-        Configure Windows Event logger if we are on Windows and it is enabled.
+        Add Windows Event handler if we are on Windows and it is enabled.
+
+        Return the added handler, or `None`.
         """
         if not WindowsEventLogHandler:
             return
@@ -271,8 +333,14 @@ class _Logger(object):
             logtype=self.NT_EVENTLOG_TYPE,
             )
         self.addHandler(handler, patch_format=True)
+        return handler
 
-    def configureLogFile(self):
+    def _addFile(self):
+        """
+        Add the a file logger using the configured value.
+
+        Returns the added handler or `None` if no hander was added.
+        """
         if not self._configuration.file:
             return
 
@@ -286,11 +354,11 @@ class _Logger(object):
             each = self._configuration.file_rotate_each
 
             if self._configuration.file_rotate_external:
-                self._file_handler = WatchedFileHandler(
+                handler = WatchedFileHandler(
                     log_path, encoding='utf-8')
             elif each:
                 interval_count, interval_type = each
-                self._file_handler = TimedRotatingFileHandler(
+                handler = TimedRotatingFileHandler(
                     log_path,
                     when=interval_type,
                     interval=interval_count,
@@ -298,24 +366,25 @@ class _Logger(object):
                     encoding='utf-8',
                     )
             elif bytes:
-                self._file_handler = RotatingFileHandler(
+                handler = RotatingFileHandler(
                     log_path,
                     maxBytes=bytes,
                     backupCount=count,
                     encoding='utf-8',
                     )
             else:
-                self._file_handler = FileHandler(log_path, encoding='utf-8')
+                handler = FileHandler(log_path, encoding='utf-8')
 
-            self.addHandler(self._file_handler, patch_format=True)
+            self.addHandler(handler, patch_format=True)
         except IOError, error:
             raise UtilsError(u'1010',
                 _(u'Could not initialize the logging file. %s' % (
                     unicode(error))))
+        return handler
 
     def addDefaultStdOutHandler(self):
         """
-        Add default handler for standrd output.
+        Add default handler for standard output.
         """
         self._log_stdout_handler = StdOutHandler()
         self.addHandler(self._log_stdout_handler, patch_format=True)
@@ -327,15 +396,15 @@ class _Logger(object):
         self._log_ntevent_handler = WindowsEventLogHandler(source_name)
         self.addHandler(self._log_ntevent_handler, patch_format=True)
 
-    def removeDefaultHandlers(self):
-        '''Remove all default handlers.'''
+    def _removeDefaultHandlers(self):
+        """
+        Remove all default handlers.
+        """
         if self._log_stdout_handler:
-            self._log.removeHandler(self._log_stdout_handler)
-            self._log_stdout_handler = None
+            self.removeHandler(self._log_stdout_handler)
 
         if self._log_ntevent_handler:
-            self._log.removeHandler(self._log_ntevent_handler)
-            self._log_ntevent_handler = None
+            self.removeHandler(self._log_ntevent_handler)
 
     def log(self, message_id, text, avatar=None, peer=None, data=None):
         '''Log a message.'''
@@ -411,13 +480,6 @@ class _Logger(object):
         Return a list with the active handlers.
         """
         return self._log.handlers
-
-    def getAllOpenFileHandlers(self):
-        '''Return a list of all open file handlers used by the logger.'''
-        handlers = []
-        if self._file_handler:
-            handlers.append(self._file_handler.stream)
-        return handlers
 
     @staticmethod
     def shutdown():

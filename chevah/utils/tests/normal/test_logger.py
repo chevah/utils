@@ -5,10 +5,12 @@
 from __future__ import with_statement
 from logging import (
     FileHandler,
+    NullHandler,
     StreamHandler,
     )
 from logging.handlers import (
     RotatingFileHandler,
+    SysLogHandler,
     TimedRotatingFileHandler,
     )
 from StringIO import StringIO
@@ -23,6 +25,42 @@ from chevah.utils.logger import (
     WindowsEventLogHandler,
     )
 from chevah.utils.testing import manufacture, UtilsTestCase
+
+
+class InMemoryHandler(NullHandler, object):
+    """
+    Handlers that stores logged record in memory.
+    """
+    _name = None
+
+    def __init__(self):
+        self._log = []
+
+    def emit(self, record):
+        self._log.append(record)
+
+    def handle(self, record):
+        self.emit(record)
+
+
+class LoggerTestCase(UtilsTestCase):
+    """
+    TestCase for the logger.
+    """
+
+    def getConfiguration(self, content=None):
+        """
+        Return logger configuration object.
+        """
+        if content is None:
+            content = (
+                '[log]\n'
+                'log_file: Disabled\n'
+                )
+
+        proxy = manufacture.makeFileConfigurationProxy(
+            content=content, defaults=LOG_SECTION_DEFAULTS)
+        return manufacture.makeLogConfigurationSection(proxy=proxy)
 
 
 class TestLogEntry(UtilsTestCase):
@@ -83,57 +121,209 @@ class TestLogEntry(UtilsTestCase):
         self.assertEqual(expected_peer_string, entry.peer_hr)
 
 
-class TestLoggerFile(UtilsTestCase):
+class TestLoggerHandlers(LoggerTestCase):
     """
-    Integration tests for Logger using log files.
+    Basic tests for handler(s) management.
     """
+    def setUp(self):
+        super(TestLoggerHandlers, self).setUp()
+        log_name = manufacture.getUniqueString()
+        self.config = self.getConfiguration()
+        self.logger = manufacture.makeLogger(log_name=log_name)
 
-    def _getConfiguration(self, content):
+    def tearDown(self):
+        self.logger.removeAllHandlers()
+        super(TestLoggerHandlers, self).tearDown()
 
-        proxy = manufacture.makeFileConfigurationProxy(
-            content=content, defaults=LOG_SECTION_DEFAULTS)
-        return manufacture.makeLogConfigurationSection(proxy=proxy)
-
-    def test_configure_log_file_disabled(self):
+    def test_configure_all(self):
         """
-        Integration test for initializing the logger with a disabled file.
+        It will add all handlers as store them in `_active_handlers`.
         """
-        content = (
-            '[log]\n'
-            'log_file: Disabled\n')
-        configuration = self._getConfiguration(content=content)
-        logger = manufacture.makeLogger()
-        self.assertIsNone(logger._file_handler)
+        self.config.file = manufacture.string()
+        self.config.syslog = manufacture.string()
+        self.config.windows_eventlog = manufacture.string()
+        file_handler = object()
+        syslog_handler = object()
+        windows_eventlog_handler = object()
+        self.logger._addFile = self.Mock(return_value=file_handler)
+        self.logger._addSyslog = self.Mock(return_value=syslog_handler)
+        self.logger._addWindowsEventLog = self.Mock(
+            return_value=windows_eventlog_handler)
 
-        logger.configure(configuration)
+        self.logger.configure(configuration=self.config)
 
-        self.assertIsNone(logger._file_handler)
+        self.logger._addFile.assert_called_once_with()
+        self.assertEqual(
+            self.logger._active_handlers['file'], file_handler)
+        self.assertEqual(
+            self.logger._active_handlers['syslog'], syslog_handler)
 
-    def _getTempFilePath(self):
-        segments = manufacture.fs.temp_segments
-        segments.append(manufacture.getUniqueString())
-        file_path = manufacture.fs.getRealPathFromSegments(segments)
-        return (file_path, segments)
+        if self.os_name == 'nt':
+            self.assertEqual(
+                self.logger._active_handlers['windows_eventlog'],
+                windows_eventlog_handler,
+                )
+
+    def test_configure_multiple_times(self):
+        """
+        An error is raised when trying to configure the logger more
+        than once.
+        """
+        self.logger.configure(configuration=self.config)
+
+        with self.assertRaises(AssertionError):
+            self.logger.configure(configuration=self.config)
+
+    def test_configure_subscribers(self):
+        """
+        Configure will subscribe to changes on the configuration.
+        """
+        self.logger.configure(configuration=self.config)
+        self.logger._reconfigureHandler = self.Mock()
+
+        self.config.file = manufacture.string()
+        self.logger._reconfigureHandler.assert_called_once_with(
+            name=u'file', setter=self.logger._addFile)
+
+        self.logger._reconfigureHandler = self.Mock()
+        self.config.syslog = manufacture.string()
+        self.logger._reconfigureHandler.assert_called_once_with(
+            name=u'syslog', setter=self.logger._addSyslog)
+
+        self.logger._reconfigureHandler = self.Mock()
+        self.config.windows_eventlog = manufacture.string()
+        self.logger._reconfigureHandler.assert_called_once_with(
+            name=u'windows_eventlog', setter=self.logger._addWindowsEventLog)
+
+    def test_reconfigureHandler_new(self):
+        """
+        It will set the new handler and remove the old one.
+        """
+        old_handler = InMemoryHandler()
+        new_handler = InMemoryHandler()
+        old_handler.close = self.Mock()
+        self.logger.addHandler(old_handler)
+        self.logger._active_handlers['file'] = old_handler
+
+        def setter():
+            self.logger.addHandler(new_handler)
+            return new_handler
+
+        self.logger._reconfigureHandler(name='file', setter=setter)
+
+        self.assertEqual(new_handler, self.logger._active_handlers['file'])
+        old_handler.close.assert_called_once_with()
+        handlers = self.logger.getHandlers()
+        self.assertEqual(1, len(handlers))
+        self.assertEqual(new_handler, handlers[0])
+
+    def test_reconfigureHandler_failure(self):
+        """
+        On failure, It will keep the existing handler and propagate the error.
+        """
+        old_handler = InMemoryHandler()
+        old_handler.close = self.Mock()
+        self.logger.addHandler(old_handler)
+        self.logger._active_handlers['file'] = old_handler
+
+        def setter():
+            raise AssertionError('fail-mark')
+
+        with self.assertRaises(AssertionError) as context:
+            self.logger._reconfigureHandler(name='file', setter=setter)
+
+        self.assertEqual('fail-mark', context.exception.message)
+        self.assertEqual(old_handler, self.logger._active_handlers['file'])
+        self.assertFalse(old_handler.close.called)
+
+    def test_addSyslog_disabled(self):
+        """
+        It does nothing when syslog is not enabled.
+        """
+        self.config.syslog = None
+        self.logger._configuration = self.config
+
+        result = self.logger._addSyslog()
+
+        self.assertIsNone(result)
+
+    def test_addSyslog_enabled(self):
+        """
+        When syslog is enabled it will be added and returned.
+        """
+        # We just set a local TCP port, since it will initialize without
+        # errors.
+        self.config.syslog = '127.0.0.1:10000'
+        self.logger._configuration = self.config
+
+        result = self.logger._addSyslog()
+
+        self.assertIsInstance(result, SysLogHandler)
+        handlers = self.logger.getHandlers()
+        self.assertEqual(1, len(handlers))
+        self.assertEqual(result, handlers[0])
+
+    def test_addWindowsEventLog_disabled(self):
+        """
+        It does nothing when windows_eventlog is not enabled.
+        """
+        self.config.windows_eventlog = None
+        self.logger._configuration = self.config
+
+        result = self.logger._addWindowsEventLog()
+
+        self.assertIsNone(result)
+
+    def test_addWindowsEventLog_enabled(self):
+        """
+        When windows_eventlog is enabled it will be added and returned.
+        """
+        self.config.windows_eventlog = manufacture.ascii()
+        self.logger._configuration = self.config
+
+        result = self.logger._addWindowsEventLog()
+
+        if self.os_name != 'nt':
+            self.assertIsNone(result)
+        else:
+            self.assertIsInstance(WindowsEventLogHandler, result)
+            self.assertEqual(
+                self.config.windows_eventlog, result.appname)
+            handlers = self.logger.getHandlers()
+            self.assertEqual(1, len(handlers))
+            self.assertEqual(result, handlers[0])
+
+    def test_addFile_disabled(self):
+        """
+        It does nothing if log file is not enabled.
+        """
+        self.config.file = None
+        self.logger._configuration = self.config
+
+        result = self.logger._addFile()
+
+        self.assertIsNone(result)
 
     def test_configure_log_file_normal(self):
         """
         System test for using a file.
         """
-        file_name, segments = self._getTempFilePath()
+        file_name, segments = manufacture.fs.makePathInTemp()
         content = (
             u'[log]\n'
             u'log_file: %s\n' % (file_name))
         log_id = manufacture.getUniqueInteger()
         log_message = manufacture.getUniqueString()
 
-        configuration = self._getConfiguration(content=content)
+        configuration = self.getConfiguration(content=content)
         logger = manufacture.makeLogger()
         try:
             logger.configure(configuration)
 
             # Check logger configuration.
-            self.assertIsNotNone(logger._file_handler)
-            self.assertTrue(isinstance(logger._file_handler, FileHandler))
+            self.assertIsNotNone(logger._active_handlers['file'])
+            self.assertIsInstance(
+                FileHandler, logger._active_handlers['file'])
 
             # Add two log entries and close the logger.
             logger.log(log_id, log_message)
@@ -154,22 +344,22 @@ class TestLoggerFile(UtilsTestCase):
         """
         Check file rotation.
         """
-        file_name, segments = self._getTempFilePath()
+        file_name, segments = manufacture.fs.makePathInTemp()
         content = (
             u'[log]\n'
             u'log_file: %s\n'
             u'log_file_rotate_external: Yes\n'
              ) % (file_name)
 
-        configuration = self._getConfiguration(content=content)
+        configuration = self.getConfiguration(content=content)
         logger = manufacture.makeLogger()
 
         try:
             logger.configure(configuration)
 
-            self.assertIsNotNone(logger._file_handler)
-            self.assertTrue(
-                isinstance(logger._file_handler, WatchedFileHandler))
+            self.assertIsNotNone(logger._active_handlers['file'])
+            self.assertIsInstance(
+                WatchedFileHandler, logger._active_handlers['file'])
             logger.removeAllHandlers()
         finally:
             manufacture.fs.deleteFile(segments)
@@ -178,7 +368,7 @@ class TestLoggerFile(UtilsTestCase):
         """
         Check file rotation at size.
         """
-        file_name, segments = self._getTempFilePath()
+        file_name, segments = manufacture.fs.makePathInTemp()
         content = (
             u'[log]\n'
             u'log_file: %s\n'
@@ -187,16 +377,16 @@ class TestLoggerFile(UtilsTestCase):
             u'log_file_rotate_count: 10\n'
              ) % (file_name)
 
-        configuration = self._getConfiguration(content=content)
+        configuration = self.getConfiguration(content=content)
         logger = manufacture.makeLogger()
 
         try:
             logger.configure(configuration)
 
-            self.assertIsNotNone(logger._file_handler)
-            self.assertTrue(
-                isinstance(logger._file_handler, RotatingFileHandler))
-            self.assertEqual(10, logger._file_handler.backupCount)
+            self.assertIsNotNone(logger._active_handlers['file'])
+            self.assertIsInstance(
+                RotatingFileHandler, logger._active_handlers['file'])
+            self.assertEqual(10, logger._active_handlers['file'].backupCount)
             logger.removeAllHandlers()
         finally:
             manufacture.fs.deleteFile(segments)
@@ -205,7 +395,7 @@ class TestLoggerFile(UtilsTestCase):
         """
         Check file rotation archive keeping.
         """
-        file_name, segments = self._getTempFilePath()
+        file_name, segments = manufacture.fs.makePathInTemp()
         content = (
             u'[log]\n'
             u'log_file: %s\n'
@@ -214,34 +404,21 @@ class TestLoggerFile(UtilsTestCase):
             u'log_file_rotate_count: 0\n'
              ) % (file_name)
 
-        configuration = self._getConfiguration(content=content)
+        configuration = self.getConfiguration(content=content)
         logger = manufacture.makeLogger()
         try:
             logger.configure(configuration)
 
-            self.assertIsNotNone(logger._file_handler)
-            self.assertTrue(
-                isinstance(logger._file_handler, TimedRotatingFileHandler))
-            self.assertEqual(0, logger._file_handler.backupCount)
-            self.assertEqual(u'H', logger._file_handler.when)
-            self.assertEqual(2 * 60 * 60, logger._file_handler.interval)
+            self.assertIsNotNone(logger._active_handlers['file'])
+            self.assertIsInstance(
+                TimedRotatingFileHandler, logger._active_handlers['file'])
+            self.assertEqual(0, logger._active_handlers['file'].backupCount)
+            self.assertEqual(u'H', logger._active_handlers['file'].when)
+            self.assertEqual(
+                2 * 60 * 60, logger._active_handlers['file'].interval)
             logger.removeAllHandlers()
         finally:
             manufacture.fs.deleteFile(segments)
-
-
-class TestLoggerHandlers(UtilsTestCase):
-    """
-    Basic tests for handler(s) management.
-    """
-    def setUp(self):
-        super(TestLoggerHandlers, self).setUp()
-        log_name = manufacture.getUniqueString()
-        self.logger = manufacture.makeLogger(log_name=log_name)
-
-    def tearDown(self):
-        self.logger.removeAllHandlers()
-        super(TestLoggerHandlers, self).tearDown()
 
     def test_addHandler(self):
         """
@@ -365,7 +542,7 @@ class TestLoggerHandlers(UtilsTestCase):
         if self.os_name == 'nt':
             self.logger.addDefaultWindowsEventLogHandler('some-name')
 
-        self.logger.removeDefaultHandlers()
+        self.logger._removeDefaultHandlers()
 
         handlers = self.logger.getHandlers()
         self.assertIsEmpty(handlers)
@@ -486,15 +663,10 @@ class TestWindowsEventLogHandler(UtilsTestCase):
         return None
 
 
-class TestLoggerWindowsEventLog(UtilsTestCase):
+class TestLoggerWindowsEventLog(LoggerTestCase):
     """
     Integration tests for Logger using windows event logger.
     """
-
-    def _getConfiguration(self, content):
-        proxy = manufacture.makeFileConfigurationProxy(
-            content=content, defaults=LOG_SECTION_DEFAULTS)
-        return manufacture.makeLogConfigurationSection(proxy=proxy)
 
     def test_configure_disabled(self):
         """
@@ -504,7 +676,7 @@ class TestLoggerWindowsEventLog(UtilsTestCase):
         content = (
             '[log]\n'
             'log_windows_eventlog: Disabled\n')
-        configuration = self._getConfiguration(content=content)
+        configuration = self.getConfiguration(content=content)
         logger = manufacture.makeLogger()
 
         logger.configure(configuration)
@@ -521,7 +693,7 @@ class TestLoggerWindowsEventLog(UtilsTestCase):
         content = (
             '[log]\n'
             'log_windows_eventlog: something\n')
-        configuration = self._getConfiguration(content=content)
+        configuration = self.getConfiguration(content=content)
         logger = manufacture.makeLogger()
 
         logger.configure(configuration)
@@ -543,7 +715,7 @@ class TestLoggerWindowsEventLog(UtilsTestCase):
         content = (
             '[log]\n'
             'log_windows_eventlog: something\n')
-        configuration = self._getConfiguration(content=content)
+        configuration = self.getConfiguration(content=content)
         logger = manufacture.makeLogger()
 
         logger.configure(configuration)
@@ -569,7 +741,7 @@ class TestLoggerWindowsEventLog(UtilsTestCase):
         content = (
             '[log]\n'
             'log_windows_eventlog: something\n')
-        configuration = self._getConfiguration(content=content)
+        configuration = self.getConfiguration(content=content)
         logger = manufacture.makeLogger()
         logger.configure(configuration)
         handler = logger.getHandlers()[0]
