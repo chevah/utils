@@ -121,19 +121,19 @@ class TestLogEntry(UtilsTestCase):
         self.assertEqual(expected_peer_string, entry.peer_hr)
 
 
-class TestLoggerHandlers(LoggerTestCase):
+class TestLogger(LoggerTestCase):
     """
-    Basic tests for handler(s) management.
+    Basic tests for log handlers management.
     """
     def setUp(self):
-        super(TestLoggerHandlers, self).setUp()
+        super(TestLogger, self).setUp()
         log_name = manufacture.getUniqueString()
         self.config = self.getConfiguration()
         self.logger = manufacture.makeLogger(log_name=log_name)
 
     def tearDown(self):
         self.logger.removeAllHandlers()
-        super(TestLoggerHandlers, self).tearDown()
+        super(TestLogger, self).tearDown()
 
     def test_configure_all(self):
         """
@@ -661,89 +661,3 @@ class TestWindowsEventLogHandler(UtilsTestCase):
             win32evtlog.CloseEventLog(hand)
 
         return None
-
-
-class TestLoggerWindowsEventLog(LoggerTestCase):
-    """
-    Integration tests for Logger using windows event logger.
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        if cls.os_name != 'posix':
-            raise cls.skipTest()
-        super(TestLoggerWindowsEventLog, cls).setUpClass()
-
-    def test_configure_disabled(self):
-        """
-        When windows event log is disabled it will not be added by
-        logger.configure.
-        """
-        content = (
-            '[log]\n'
-            'log_windows_eventlog: Disabled\n')
-        configuration = self.getConfiguration(content=content)
-        logger = manufacture.makeLogger()
-
-        logger.configure(configuration)
-
-        self.assertIsEmpty(logger.getHandlers())
-
-    def test_configure_ignored_on_unix(self):
-        """
-        On Unix, event if windows event log is enabled it will not be added by
-        logger.configure, since it is not supported on Unix.
-        """
-        content = (
-            '[log]\n'
-            'log_windows_eventlog: something\n')
-        configuration = self.getConfiguration(content=content)
-        logger = manufacture.makeLogger()
-
-        logger.configure(configuration)
-
-        self.assertIsEmpty(logger.getHandlers())
-
-    def test_configure_enabled(self):
-        """
-        On Windows, when windows_eventlog is enabled, a handler is enabled
-        using the configured source name.
-
-        Logs are emited using the source defined by the
-        log_windows_eventlog configuration option.
-        """
-        content = (
-            '[log]\n'
-            'log_windows_eventlog: something\n')
-        configuration = self.getConfiguration(content=content)
-        logger = manufacture.makeLogger()
-
-        logger.configure(configuration)
-
-        # A list is used to make sure a single call is made.
-        windows_handlers = []
-        for handler in logger.getHandlers():
-            if isinstance(handler, WindowsEventLogHandler):
-                windows_handlers.append(handler)
-
-        self.assertEqual(1, len(windows_handlers))
-        self.assertEqual(u'something', windows_handlers[0].appname)
-
-    def test_emit_event_id(self):
-        """
-        Logger will call emit on the configured handler.
-        """
-        event_id = manufacture.getUniqueInteger()
-        event_text = manufacture.getUniqueString()
-        content = (
-            '[log]\n'
-            'log_windows_eventlog: something\n')
-        configuration = self.getConfiguration(content=content)
-        logger = manufacture.makeLogger()
-        logger.configure(configuration)
-        handler = logger.getHandlers()[0]
-        handler.emit = manufacture.makeMock()
-
-        logger.log(message_id=event_id, text=event_text)
-
-        handler.emit.assert_called_once()
