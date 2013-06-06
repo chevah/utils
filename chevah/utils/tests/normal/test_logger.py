@@ -668,6 +668,12 @@ class TestLoggerWindowsEventLog(LoggerTestCase):
     Integration tests for Logger using windows event logger.
     """
 
+    @classmethod
+    def setUpClass(cls):
+        if cls.os_name != 'posix':
+            raise cls.skipTest()
+        super(TestLoggerWindowsEventLog, cls).setUpClass()
+
     def test_configure_disabled(self):
         """
         When windows event log is disabled it will not be added by
@@ -688,8 +694,6 @@ class TestLoggerWindowsEventLog(LoggerTestCase):
         On Unix, event if windows event log is enabled it will not be added by
         logger.configure, since it is not supported on Unix.
         """
-        if self.os_name != 'posix':
-            raise self.skipTest()
         content = (
             '[log]\n'
             'log_windows_eventlog: something\n')
@@ -708,10 +712,6 @@ class TestLoggerWindowsEventLog(LoggerTestCase):
         Logs are emited using the source defined by the
         log_windows_eventlog configuration option.
         """
-        if self.os_name != 'nt':
-            raise self.skipTest()
-        from chevah.utils.logger import WindowsEventLogHandler
-
         content = (
             '[log]\n'
             'log_windows_eventlog: something\n')
@@ -733,9 +733,6 @@ class TestLoggerWindowsEventLog(LoggerTestCase):
         """
         Logger will call emit on the configured handler.
         """
-        if self.os_name != 'nt':
-            raise self.skipTest()
-
         event_id = manufacture.getUniqueInteger()
         event_text = manufacture.getUniqueString()
         content = (

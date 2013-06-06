@@ -257,7 +257,7 @@ class _Logger(object):
 
         self._configuration.subscribe(
             'windows_eventlog', self._reconfigureWindowsEventLog)
-        self._active_handlers['windows_eventlog'] = self._addWindowsEventLog
+        self._active_handlers['windows_eventlog'] = self._addWindowsEventLog()
 
     def _reconfigureHandler(self, name, setter):
         """

@@ -4,7 +4,14 @@
 Build script for chevah-compat.
 """
 from __future__ import with_statement
+import os
 import sys
+
+if os.name == 'nt':
+    # Use shorter temp folder on Windows.
+    import tempfile
+    tempfile.tempdir = "c:\\temp"
+
 
 # This value is pavers by bash. Use a strict format.
 BRINK_VERSION = '0.22.0'
@@ -99,7 +106,10 @@ SETUP['product']['name'] = 'chevah-utils'
 SETUP['folders']['source'] = u'chevah/utils'
 SETUP['repository']['name'] = u'utils'
 SETUP['github']['repo'] = u'chevah/utils'
-SETUP['pocket-lint']['include_files'] = ['pavement.py']
+SETUP['pocket-lint']['include_files'] = [
+    'pavement.py',
+    'release-notes.rst',
+    ]
 SETUP['pocket-lint']['include_folders'] = ['chevah/utils']
 SETUP['pocket-lint']['exclude_files'] = []
 SETUP['test']['package'] = 'chevah.utils.tests'
