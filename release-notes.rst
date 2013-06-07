@@ -6,6 +6,7 @@ Release notes for chevah.utils
 -------------------
 
 * `_Logger`: Notify adding and removing of handlers.
+* Add dynamic names for added handler.
 
 
 0.17.1 - 07/06/2013

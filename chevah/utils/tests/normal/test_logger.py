@@ -263,6 +263,8 @@ class TestLogger(LoggerTestCase):
         handlers = self.logger.getHandlers()
         self.assertEqual(1, len(handlers))
         self.assertEqual(result, handlers[0])
+        self.assertEqual(
+            u'Syslog at %s' % str(self.config.syslog), result.name)
 
     def test_addWindowsEventLog_disabled(self):
         """
@@ -293,6 +295,10 @@ class TestLogger(LoggerTestCase):
             handlers = self.logger.getHandlers()
             self.assertEqual(1, len(handlers))
             self.assertEqual(result, handlers[0])
+            self.assertEqual(
+                'Windows Event as %s.' % (self.config.windows_eventlog),
+                result.name,
+                )
 
     def test_addFile_disabled(self):
         """
@@ -305,41 +311,33 @@ class TestLogger(LoggerTestCase):
 
         self.assertIsNone(result)
 
-    def test_configure_log_file_normal(self):
+    def test_addFile_normal(self):
         """
-        System test for using a file.
+        System test for adding a normal non-rotate file handler.
         """
-        file_name, segments = manufacture.fs.makePathInTemp()
-        content = (
-            u'[log]\n'
-            u'log_file: %s\n' % (file_name))
+        file_path, self.test_segments = manufacture.fs.makePathInTemp()
+        self.config.file = file_path
+        self.logger._configuration = self.config
         log_id = manufacture.getUniqueInteger()
         log_message = manufacture.getUniqueString()
 
-        configuration = self.getConfiguration(content=content)
-        logger = manufacture.makeLogger()
-        try:
-            logger.configure(configuration)
+        result = self.logger._addFile()
 
-            # Check logger configuration.
-            self.assertIsNotNone(logger._active_handlers['file'])
-            self.assertIsInstance(
-                FileHandler, logger._active_handlers['file'])
+        self.assertIsInstance(FileHandler, result)
+        self.assertEqual('File %s' % (self.config.file), result.name)
 
-            # Add two log entries and close the logger.
-            logger.log(log_id, log_message)
-            logger.log(log_id + 1, log_message)
-            logger.removeAllHandlers()
+        # Add two log entries and close the logger.
+        self.logger.log(log_id, log_message)
+        self.logger.log(log_id + 1, log_message)
+        self.logger.removeAllHandlers()
 
-            # Check that file exists and it has the right content.
-            self.assertTrue(manufacture.fs.exists(segments))
-            log_content = manufacture.fs.getFileLines(segments)
-            self.assertEqual(2, len(log_content))
-            self.assertStartsWith(str(log_id), log_content[0])
-            self.assertEndsWith(log_message, log_content[0])
-            self.assertStartsWith(str(log_id + 1), log_content[1])
-        finally:
-            manufacture.fs.deleteFile(segments)
+        # Check that file exists and it has the right content.
+        self.assertTrue(manufacture.fs.exists(self.test_segments))
+        log_content = manufacture.fs.getFileLines(self.test_segments)
+        self.assertEqual(2, len(log_content))
+        self.assertStartsWith(str(log_id), log_content[0])
+        self.assertEndsWith(log_message, log_content[0])
+        self.assertStartsWith(str(log_id + 1), log_content[1])
 
     def test_configure_log_file_rotate_external(self):
         """
@@ -358,9 +356,10 @@ class TestLogger(LoggerTestCase):
         try:
             logger.configure(configuration)
 
-            self.assertIsNotNone(logger._active_handlers['file'])
-            self.assertIsInstance(
-                WatchedFileHandler, logger._active_handlers['file'])
+            handler = logger._active_handlers['file']
+            self.assertIsInstance(WatchedFileHandler, handler)
+            self.assertEqual(
+                u'External rotated file %s' % (file_name), handler.name)
             logger.removeAllHandlers()
         finally:
             manufacture.fs.deleteFile(segments)
@@ -384,10 +383,14 @@ class TestLogger(LoggerTestCase):
         try:
             logger.configure(configuration)
 
-            self.assertIsNotNone(logger._active_handlers['file'])
-            self.assertIsInstance(
-                RotatingFileHandler, logger._active_handlers['file'])
-            self.assertEqual(10, logger._active_handlers['file'].backupCount)
+            handler = logger._active_handlers['file']
+            self.assertIsInstance(RotatingFileHandler, handler)
+            self.assertEqual(10, handler.backupCount)
+            self.assertEqual(
+                u'Size base rotated file %s at %s bytes' % (
+                    file_name, 100),
+                handler.name,
+                )
             logger.removeAllHandlers()
         finally:
             manufacture.fs.deleteFile(segments)
@@ -410,13 +413,15 @@ class TestLogger(LoggerTestCase):
         try:
             logger.configure(configuration)
 
-            self.assertIsNotNone(logger._active_handlers['file'])
-            self.assertIsInstance(
-                TimedRotatingFileHandler, logger._active_handlers['file'])
-            self.assertEqual(0, logger._active_handlers['file'].backupCount)
-            self.assertEqual(u'H', logger._active_handlers['file'].when)
+            handler = logger._active_handlers['file']
+            self.assertIsInstance(TimedRotatingFileHandler, handler)
+            self.assertEqual(0, handler.backupCount)
+            self.assertEqual(u'H', handler.when)
+            self.assertEqual(2 * 60 * 60, handler.interval)
             self.assertEqual(
-                2 * 60 * 60, logger._active_handlers['file'].interval)
+                u'Time base rotated file %s at (2, u\'h\')' % (file_name),
+                handler.name,
+                )
             logger.removeAllHandlers()
         finally:
             manufacture.fs.deleteFile(segments)
@@ -452,7 +457,7 @@ class TestLogger(LoggerTestCase):
         self.assertEqual(log_entry, log_handler.history[0].text)
         self.assertEqual(1, callback.call_count)
         signal = callback.call_args[0][0]
-        self.assertEqual(log_handler._name, signal.name)
+        self.assertEqual(log_handler.name, signal.name)
 
     def test_addHandler_without_name(self):
         """
@@ -513,7 +518,7 @@ class TestLogger(LoggerTestCase):
 
         self.assertEqual(1, callback.call_count)
         signal = callback.call_args[0][0]
-        self.assertEqual(log_handler._name, signal.name)
+        self.assertEqual(log_handler.name, signal.name)
 
     def test_removeHandler_none(self):
         """
