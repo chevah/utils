@@ -420,6 +420,19 @@ class TestLogger(LoggerTestCase):
         finally:
             manufacture.fs.deleteFile(segments)
 
+    def test_addFile_file_rotate_each_zero(self):
+        """
+        It is not enabled when interval is zero (or less than zero).
+        """
+        path, self.test_segments = manufacture.fs.makePathInTemp()
+        self.config.file = path
+        self.config.file_rotate_each = (0, 'd')
+        self.logger._configuration = self.config
+
+        result = self.logger._addFile()
+
+        self.assertIsInstance(FileHandler, result)
+
     def test_addHandler(self):
         """
         A LogHandler can be added to the logger and after that is called on
