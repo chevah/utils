@@ -46,7 +46,7 @@ class UtilsManufacture(CompatManufacture):
     It is designed to help with the tests and creating 'mock' objects.
     '''
 
-    def makeSignal(self, *args, **kwargs):
+    def Signal(self, *args, **kwargs):
         """
         Create a signal.
         """

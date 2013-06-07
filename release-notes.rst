@@ -2,6 +2,12 @@ Release notes for chevah.utils
 ==============================
 
 
+0.18.0 - 07/06/2013
+-------------------
+
+* `_Logger`: Notify adding and removing of handlers.
+
+
 0.17.1 - 07/06/2013
 -------------------
 
