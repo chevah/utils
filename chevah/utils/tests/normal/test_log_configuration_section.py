@@ -10,7 +10,15 @@ from chevah.utils.testing import manufacture, UtilsTestCase
 
 class TestLogConfigurationSection(UtilsTestCase):
 
-    def _getSection(self, content):
+    def _getSection(self, content=None):
+        """
+        Return a log configuration section.
+        """
+        if content is None:
+            content = (
+                '[log]\n'
+                'log_file: Disable\n'
+                )
         proxy = manufacture.makeFileConfigurationProxy(
             content=content, defaults=LOG_SECTION_DEFAULTS)
         return manufacture.makeLogConfigurationSection(proxy=proxy)
@@ -79,7 +87,7 @@ class TestLogConfigurationSection(UtilsTestCase):
         section.file = new_value
 
         self.assertEqual(new_value, section.file)
-        callback.assert_called_once()
+        self.assertEqual(1, callback.call_count)
         signal = callback.call_args[0][0]
         self.assertEqual(new_value, signal.current_value)
 
@@ -111,18 +119,22 @@ class TestLogConfigurationSection(UtilsTestCase):
 
     def test_file_rotate_external_update(self):
         """
-        og_file_rotate_external can be updated at runtime.
+        It can be updated at runtime.
         """
         content = (
             '[log]\n'
             'log_file_rotate_external: No\n'
             )
-
+        callback = self.Mock()
         section = self._getSection(content)
+        section.subscribe('file_rotate_external', callback)
 
         section.file_rotate_external = True
 
         self.assertTrue(section.file_rotate_external)
+        self.assertEqual(1, callback.call_count)
+        signal = callback.call_args[0][0]
+        self.assertEqual(True, signal.current_value)
 
     def test_file_rotate_count_disabled(self):
         """
@@ -159,11 +171,16 @@ class TestLogConfigurationSection(UtilsTestCase):
             '[log]\n'
             'log_file_rotate_count: 7\n'
             )
+        callback = self.Mock()
         section = self._getSection(content)
+        section.subscribe('file_rotate_count', callback)
 
         section.file_rotate_count = new_value
 
         self.assertEqual(new_value, section.file_rotate_count)
+        self.assertEqual(1, callback.call_count)
+        signal = callback.call_args[0][0]
+        self.assertEqual(new_value, signal.current_value)
 
     def test_file_rotate_at_size_disabled(self):
         """
@@ -200,11 +217,16 @@ class TestLogConfigurationSection(UtilsTestCase):
             '[log]\n'
             'log_file_rotate_at_size: 7\n'
             )
+        callback = self.Mock()
         section = self._getSection(content)
+        section.subscribe('file_rotate_at_size', callback)
 
         section.file_rotate_at_size = new_value
 
         self.assertEqual(new_value, section.file_rotate_at_size)
+        self.assertEqual(1, callback.call_count)
+        signal = callback.call_args[0][0]
+        self.assertEqual(new_value, signal.current_value)
 
     def test_file_rotate_each_disabled(self):
         """
@@ -459,13 +481,18 @@ class TestLogConfigurationSection(UtilsTestCase):
             '[log]\n'
             'log_file_rotate_each: Disabled\n'
             )
+        callback = self.Mock()
         section = self._getSection(content)
+        section.subscribe('file_rotate_each', callback)
 
         section.file_rotate_each = (5, 'w0')
 
         (interval, when) = section.file_rotate_each
         self.assertEqual(5, interval)
         self.assertEqual(u'w0', when)
+        self.assertEqual(1, callback.call_count)
+        signal = callback.call_args[0][0]
+        self.assertEqual((5, 'w0'), signal.current_value)
 
         section.file_rotate_each = [6, 'w1']
 
@@ -575,7 +602,7 @@ class TestLogConfigurationSection(UtilsTestCase):
         section.syslog = new_path
 
         self.assertEqual(new_path, section.syslog)
-        callback.assert_called_once()
+        self.assertEqual(1, callback.call_count)
         signal = callback.call_args[0][0]
         self.assertEqual(new_path, signal.current_value)
 
@@ -657,6 +684,55 @@ class TestLogConfigurationSection(UtilsTestCase):
         section.windows_eventlog = new_value
 
         self.assertEqual(new_value, section.windows_eventlog)
-        callback.assert_called_once()
+        self.assertEqual(1, callback.call_count)
         signal = callback.call_args[0][0]
         self.assertEqual(new_value, signal.current_value)
+
+    def test_updateWithNotify_valid(self):
+        """
+        When notifications don't raise any error, the value is kept.
+        """
+        section = self._getSection()
+        initial_value = manufacture.string()
+        section.file = initial_value
+        value = manufacture.string()
+        self._callback_called = False
+
+        def callback(signal):
+            self._callback_called = True
+            # Check that during the notification, the new value
+            # is already set.
+            self.assertEqual(value, section.file)
+            # Check signal values.
+            self.assertEqual(section, signal.source)
+            self.assertEqual(initial_value, signal.initial_value)
+            self.assertEqual(value, signal.current_value)
+
+        section.subscribe('file', callback)
+
+        section._updateWithNotify(
+            setter=section._proxy.setStringOrNone, name='file', value=value)
+
+        self.assertEqual(value, section.file)
+        self.assertTrue(self._callback_called)
+
+    def test_updateWithNotify_failed_notification(self):
+        """
+        When notifications fails, the value is restored and error re-raised.
+        """
+        section = self._getSection()
+        initial_value = manufacture.string()
+        section.file = initial_value
+        value = manufacture.string()
+        callback = self.Mock(side_effect=[AssertionError('fail')])
+        section.subscribe('file', callback)
+
+        with self.assertRaises(AssertionError) as context:
+            section._updateWithNotify(
+                setter=section._proxy.setStringOrNone,
+                name='file',
+                value=value,
+                )
+
+        self.assertEqual(initial_value, section.file)
+        self.assertEqual('fail', context.exception.message)
