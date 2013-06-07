@@ -379,7 +379,7 @@ class _Logger(ObserverMixin):
             if self._configuration.file_rotate_external:
                 handler = WatchedFileHandler(
                     log_path, encoding='utf-8')
-            elif each:
+            elif each and each[0] > 0:
                 interval_count, interval_type = each
                 handler = TimedRotatingFileHandler(
                     log_path,

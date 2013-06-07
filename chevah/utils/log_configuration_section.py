@@ -61,9 +61,10 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @syslog.setter
     def syslog(self, value):
-        self._updateWithNotify(name='syslog', value=value)
+        self._updateWithNotify(
+            setter=self._proxy.setStringOrNone, name='syslog', value=value)
 
-    def _updateWithNotify(self, name, value):
+    def _updateWithNotify(self, setter, name, value):
         """
         Update configuration and notify changes.
 
@@ -71,8 +72,7 @@ class LogConfigurationSection(ConfigurationSectionMixin):
         """
         initial_value = getattr(self, name)
         configuration_option_name = self._prefix + '_' + name
-        self._proxy.setStringOrNone(
-                self._section_name, configuration_option_name, value)
+        setter(self._section_name, configuration_option_name, value)
         current_value = getattr(self, name)
 
         signal = Signal(
@@ -80,7 +80,7 @@ class LogConfigurationSection(ConfigurationSectionMixin):
         try:
             self.notify(name, signal)
         except:
-            self._proxy.setStringOrNone(
+            setter(
                 self._section_name, configuration_option_name, initial_value)
             raise
 
@@ -92,7 +92,8 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @file.setter
     def file(self, value):
-        self._updateWithNotify(name='file', value=value)
+        self._updateWithNotify(
+            setter=self._proxy.setStringOrNone, name='file', value=value)
 
     @property
     def file_rotate_external(self):
@@ -103,9 +104,11 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @file_rotate_external.setter
     def file_rotate_external(self, value):
-        self._proxy.setBoolean(
-                self._section_name,
-                self._prefix + '_file_rotate_external', value)
+        self._updateWithNotify(
+            setter=self._proxy.setBoolean,
+            name='file_rotate_external',
+            value=value,
+            )
 
     @property
     def file_rotate_count(self):
@@ -119,11 +122,11 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @file_rotate_count.setter
     def file_rotate_count(self, value):
-        self._proxy.setIntegerOrNone(
-                self._section_name,
-                self._prefix + '_file_rotate_count',
-                value,
-                )
+        self._updateWithNotify(
+            setter=self._proxy.setIntegerOrNone,
+            name='file_rotate_count',
+            value=value,
+            )
 
     @property
     def file_rotate_at_size(self):
@@ -137,11 +140,11 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @file_rotate_at_size.setter
     def file_rotate_at_size(self, value):
-        self._proxy.setIntegerOrNone(
-                self._section_name,
-                self._prefix + '_file_rotate_at_size',
-                value,
-                )
+        self._updateWithNotify(
+            setter=self._proxy.setIntegerOrNone,
+            name='file_rotate_at_size',
+            value=value,
+            )
 
     @property
     def file_rotate_each(self):
@@ -166,10 +169,11 @@ class LogConfigurationSection(ConfigurationSectionMixin):
         else:
             update_value = self._fileRotateEachToHumanReadable(value)
 
-        self._proxy.setStringOrNone(
-                self._section_name,
-                self._prefix + '_file_rotate_each',
-                update_value)
+        self._updateWithNotify(
+            setter=self._proxy.setStringOrNone,
+            name='file_rotate_each',
+            value=update_value,
+            )
 
     def _fileRotateEachToMachineReadable(self, value):
         """
@@ -316,4 +320,8 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @windows_eventlog.setter
     def windows_eventlog(self, value):
-        self._updateWithNotify(name='windows_eventlog', value=value)
+        self._updateWithNotify(
+            setter=self._proxy.setStringOrNone,
+            name='windows_eventlog',
+            value=value,
+            )

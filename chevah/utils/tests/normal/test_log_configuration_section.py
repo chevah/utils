@@ -10,7 +10,15 @@ from chevah.utils.testing import manufacture, UtilsTestCase
 
 class TestLogConfigurationSection(UtilsTestCase):
 
-    def _getSection(self, content):
+    def _getSection(self, content=None):
+        """
+        Return a log configuration section.
+        """
+        if content is None:
+            content = (
+                '[log]\n'
+                'log_file: Disable\n'
+                )
         proxy = manufacture.makeFileConfigurationProxy(
             content=content, defaults=LOG_SECTION_DEFAULTS)
         return manufacture.makeLogConfigurationSection(proxy=proxy)
@@ -111,7 +119,7 @@ class TestLogConfigurationSection(UtilsTestCase):
 
     def test_file_rotate_external_update(self):
         """
-        og_file_rotate_external can be updated at runtime.
+        It can be updated at runtime.
         """
         content = (
             '[log]\n'
@@ -679,3 +687,52 @@ class TestLogConfigurationSection(UtilsTestCase):
         self.assertEqual(1, callback.call_count)
         signal = callback.call_args[0][0]
         self.assertEqual(new_value, signal.current_value)
+
+    def test_updateWithNotify_valid(self):
+        """
+        When notifications don't raise any error, the value is kept.
+        """
+        section = self._getSection()
+        initial_value = manufacture.string()
+        section.file = initial_value
+        value = manufacture.string()
+        self._callback_called = False
+
+        def callback(signal):
+            self._callback_called = True
+            # Check that during the notification, the new value
+            # is already set.
+            self.assertEqual(value, section.file)
+            # Check signal values.
+            self.assertEqual(section, signal.source)
+            self.assertEqual(initial_value, signal.initial_value)
+            self.assertEqual(value, signal.current_value)
+
+        section.subscribe('file', callback)
+
+        section._updateWithNotify(
+            setter=section._proxy.setStringOrNone, name='file', value=value)
+
+        self.assertEqual(value, section.file)
+        self.assertTrue(self._callback_called)
+
+    def test_updateWithNotify_failed_notification(self):
+        """
+        When notifications fails, the value is restored and error re-raised.
+        """
+        section = self._getSection()
+        initial_value = manufacture.string()
+        section.file = initial_value
+        value = manufacture.string()
+        callback = self.Mock(side_effect=[AssertionError('fail')])
+        section.subscribe('file', callback)
+
+        with self.assertRaises(AssertionError) as context:
+            section._updateWithNotify(
+                setter=section._proxy.setStringOrNone,
+                name='file',
+                value=value,
+                )
+
+        self.assertEqual(initial_value, section.file)
+        self.assertEqual('fail', context.exception.message)
