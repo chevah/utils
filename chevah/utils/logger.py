@@ -389,8 +389,10 @@ class _Logger(ObserverMixin):
                     backupCount=count,
                     encoding='utf-8',
                     )
-                handler.name = u'Time base rotated file %s at %s' % (
-                    self._configuration.file, each)
+                handler.name = (
+                    u'Time base rotated file %s at %s keeping %s '
+                    u'rotated archives' % (
+                        self._configuration.file, each, count))
             elif bytes:
                 handler = RotatingFileHandler(
                     log_path,
@@ -398,8 +400,10 @@ class _Logger(ObserverMixin):
                     backupCount=count,
                     encoding='utf-8',
                     )
-                handler.name = u'Size base rotated file %s at %s bytes' % (
-                    self._configuration.file, bytes)
+                handler.name = (
+                    u'Size base rotated file %s at %s bytes '
+                    u'keeping %s rotated archives' % (
+                        self._configuration.file, bytes, count))
             else:
                 handler = FileHandler(log_path, encoding='utf-8')
                 handler.name = u'File %s' % (self._configuration.file)

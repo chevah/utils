@@ -296,7 +296,7 @@ class TestLogger(LoggerTestCase):
             self.assertEqual(1, len(handlers))
             self.assertEqual(result, handlers[0])
             self.assertEqual(
-                'Windows Event as %s.' % (self.config.windows_eventlog),
+                'Windows Event as %s' % (self.config.windows_eventlog),
                 result.name,
                 )
 
@@ -387,8 +387,9 @@ class TestLogger(LoggerTestCase):
             self.assertIsInstance(RotatingFileHandler, handler)
             self.assertEqual(10, handler.backupCount)
             self.assertEqual(
-                u'Size base rotated file %s at %s bytes' % (
-                    file_name, 100),
+                (u'Size base rotated file %s at %s bytes '
+                 u'keeping 10 rotated archives' % (
+                    file_name, 100)),
                 handler.name,
                 )
             logger.removeAllHandlers()
@@ -405,7 +406,7 @@ class TestLogger(LoggerTestCase):
             u'log_file: %s\n'
             u'log_file_rotate_external: No\n'
             u'log_file_rotate_each: 2 hours\n'
-            u'log_file_rotate_count: 0\n'
+            u'log_file_rotate_count: 3\n'
              ) % (file_name)
 
         configuration = self.getConfiguration(content=content)
@@ -415,11 +416,12 @@ class TestLogger(LoggerTestCase):
 
             handler = logger._active_handlers['file']
             self.assertIsInstance(TimedRotatingFileHandler, handler)
-            self.assertEqual(0, handler.backupCount)
+            self.assertEqual(3, handler.backupCount)
             self.assertEqual(u'H', handler.when)
             self.assertEqual(2 * 60 * 60, handler.interval)
             self.assertEqual(
-                u'Time base rotated file %s at (2, u\'h\')' % (file_name),
+                (u'Time base rotated file %s at (2, u\'h\') '
+                 u'keeping 3 rotated archives' % (file_name)),
                 handler.name,
                 )
             logger.removeAllHandlers()
