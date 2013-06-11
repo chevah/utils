@@ -71,7 +71,7 @@ class LogConfigurationSection(ConfigurationSectionMixin):
         Revert configuration on error.
         """
         initial_value = getattr(self, name)
-        configuration_option_name = self._prefix + '_' + name
+        configuration_option_name = '%s_%s' % (self._prefix, name)
         setter(self._section_name, configuration_option_name, value)
         current_value = getattr(self, name)
 
