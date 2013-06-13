@@ -214,9 +214,15 @@ class TestLogger(LoggerTestCase):
 
         self.assertEqual(new_handler, self.logger._active_handlers['file'])
         old_handler.close.assert_called_once_with()
-        handlers = self.logger.getHandlers()
+        self.checkHasOnlyOneHandler(new_handler, self.logger)
+
+    def checkHasOnlyOneHandler(self, handler, logger):
+        """
+        Check that `logger` only contains a single `handler` instance.
+        """
+        handlers = logger.getHandlers()
         self.assertEqual(1, len(handlers))
-        self.assertEqual(new_handler, handlers[0])
+        self.assertEqual(handler, handlers[0])
 
     def test_reconfigureHandler_failure(self):
         """
@@ -260,9 +266,7 @@ class TestLogger(LoggerTestCase):
         result = self.logger._addSyslog()
 
         self.assertIsInstance(result, SysLogHandler)
-        handlers = self.logger.getHandlers()
-        self.assertEqual(1, len(handlers))
-        self.assertEqual(result, handlers[0])
+        self.checkHasOnlyOneHandler(result, self.logger)
         self.assertEqual(
             u'Syslog at %s' % str(self.config.syslog), result.name)
 
@@ -292,9 +296,7 @@ class TestLogger(LoggerTestCase):
             self.assertIsInstance(WindowsEventLogHandler, result)
             self.assertEqual(
                 self.config.windows_eventlog, result.appname)
-            handlers = self.logger.getHandlers()
-            self.assertEqual(1, len(handlers))
-            self.assertEqual(result, handlers[0])
+            self.checkHasOnlyOneHandler(result, self.logger)
             self.assertEqual(
                 'Windows Event as %s' % (self.config.windows_eventlog),
                 result.name,
@@ -430,7 +432,7 @@ class TestLogger(LoggerTestCase):
 
     def test_addFile_file_rotate_each_zero(self):
         """
-        It is not enabled when interval is zero (or less than zero).
+        It is not enabled when interval is zero.
         """
         path, self.test_segments = manufacture.fs.makePathInTemp()
         self.config.file = path

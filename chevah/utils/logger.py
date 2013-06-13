@@ -303,7 +303,7 @@ class _Logger(ObserverMixin):
 
     def _reconfigureWindowsEventLog(self, signal):
         """
-        Reconfigure the syslog handler.
+        Reconfigure the Windows Event handler.
         """
         self._reconfigureHandler(
             name='windows_eventlog', setter=self._addWindowsEventLog)

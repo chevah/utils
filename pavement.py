@@ -14,7 +14,7 @@ if os.name == 'nt':
 
 
 # This value is pavers by bash. Use a strict format.
-BRINK_VERSION = '0.22.0'
+BRINK_VERSION = '0.24.0'
 PYTHON_VERSION = '2.7'
 
 RUN_PACKAGES = [
@@ -79,12 +79,12 @@ from brink.pavement_commons import (
     pave,
     pqm,
     SETUP,
-    test,
+    test_python,
     test_remote,
     test_normal,
     test_super,
     )
-from paver.easy import needs, task
+from paver.easy import consume_args, needs, task
 
 # Make pylint shut up.
 buildbot_list
@@ -97,7 +97,7 @@ lint
 merge_init
 merge_commit
 pqm
-test
+test_python
 test_remote
 test_normal
 test_super
@@ -117,7 +117,15 @@ SETUP['test']['elevated'] = 'elevated'
 
 
 @task
+@needs('deps_testing', 'deps_build')
 def deps():
+    """
+    Install all dependencies.
+    """
+
+
+@task
+def deps_testing():
     """
     Install dependencies for testing environment.
     """
@@ -133,7 +141,7 @@ def deps():
 
 
 @task
-@needs('deps')
+@needs('deps_testing')
 def deps_build():
     """
     Install dependencies for build environment.
@@ -164,3 +172,30 @@ def build():
     print "Building in " + build_target
     import setup
     setup.distribution.run_command('install')
+
+
+@task
+@needs('test_python')
+@consume_args
+def test(args):
+    """
+    Run python tests.
+    """
+
+
+@task
+@needs('deps_testing', 'test')
+@consume_args
+def test_os_dependent(args):
+    """
+    Run OS independent tests.
+    """
+
+
+@task
+@consume_args
+@needs('deps_build', 'lint')
+def test_os_independent(args):
+    """
+    Run OS dependent tests.
+    """
