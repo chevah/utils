@@ -20,9 +20,6 @@ from chevah.utils.observer import Signal
 class LogConfigurationSection(ConfigurationSectionMixin):
     '''Configurations for the log section.
 
-    It also contains the 'enabled' property for consistency, but right now
-    it does nothting.
-
     [log]
     log_file: /path/to/file
     log_file_rotate_external: Yes | No
@@ -30,7 +27,7 @@ class LogConfigurationSection(ConfigurationSectionMixin):
     log_file_rotate_each:
         1 hour | 2 seconds | 2 midnight | 3 Monday | Disabled
     log_file_rotate_count: 3 | 0 | Disabled
-    log_syslog: /path/to/syslog/pype | syslog.host:port
+    log_syslog: /path/to/syslog/pipe | syslog.host:port
     log_enabled_groups: all
     log_windows_eventlog: sftpplus-server
     '''
@@ -64,8 +61,28 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @syslog.setter
     def syslog(self, value):
-        self._proxy.setStringOrNone(
-                self._section_name, self._prefix + '_syslog', value)
+        self._updateWithNotify(
+            setter=self._proxy.setStringOrNone, name='syslog', value=value)
+
+    def _updateWithNotify(self, setter, name, value):
+        """
+        Update configuration and notify changes.
+
+        Revert configuration on error.
+        """
+        initial_value = getattr(self, name)
+        configuration_option_name = '%s_%s' % (self._prefix, name)
+        setter(self._section_name, configuration_option_name, value)
+        current_value = getattr(self, name)
+
+        signal = Signal(
+              self, initial_value=initial_value, current_value=current_value)
+        try:
+            self.notify(name, signal)
+        except:
+            setter(
+                self._section_name, configuration_option_name, initial_value)
+            raise
 
     @property
     def file(self):
@@ -75,8 +92,8 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @file.setter
     def file(self, value):
-        self._proxy.setStringOrNone(
-                self._section_name, self._prefix + '_file', value)
+        self._updateWithNotify(
+            setter=self._proxy.setStringOrNone, name='file', value=value)
 
     @property
     def file_rotate_external(self):
@@ -87,9 +104,11 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @file_rotate_external.setter
     def file_rotate_external(self, value):
-        self._proxy.setBoolean(
-                self._section_name,
-                self._prefix + '_file_rotate_external', value)
+        self._updateWithNotify(
+            setter=self._proxy.setBoolean,
+            name='file_rotate_external',
+            value=value,
+            )
 
     @property
     def file_rotate_count(self):
@@ -103,11 +122,11 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @file_rotate_count.setter
     def file_rotate_count(self, value):
-        self._proxy.setIntegerOrNone(
-                self._section_name,
-                self._prefix + '_file_rotate_count',
-                value,
-                )
+        self._updateWithNotify(
+            setter=self._proxy.setIntegerOrNone,
+            name='file_rotate_count',
+            value=value,
+            )
 
     @property
     def file_rotate_at_size(self):
@@ -121,11 +140,11 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @file_rotate_at_size.setter
     def file_rotate_at_size(self, value):
-        self._proxy.setIntegerOrNone(
-                self._section_name,
-                self._prefix + '_file_rotate_at_size',
-                value,
-                )
+        self._updateWithNotify(
+            setter=self._proxy.setIntegerOrNone,
+            name='file_rotate_at_size',
+            value=value,
+            )
 
     @property
     def file_rotate_each(self):
@@ -150,10 +169,11 @@ class LogConfigurationSection(ConfigurationSectionMixin):
         else:
             update_value = self._fileRotateEachToHumanReadable(value)
 
-        self._proxy.setStringOrNone(
-                self._section_name,
-                self._prefix + '_file_rotate_each',
-                update_value)
+        self._updateWithNotify(
+            setter=self._proxy.setStringOrNone,
+            name='file_rotate_each',
+            value=update_value,
+            )
 
     def _fileRotateEachToMachineReadable(self, value):
         """
@@ -266,12 +286,6 @@ class LogConfigurationSection(ConfigurationSectionMixin):
             _(u'Wrong value for logger rotation based on time interval. '
               u'%s' % (details)))
 
-    def _sendNotify(self, option, initial_value, current_value):
-        '''Generic notifier when a log section value changed.'''
-        signal = Signal(
-              self, initial_value=initial_value, current_value=current_value)
-        self.notify(option, signal)
-
     @property
     def enabled_groups(self):
         '''Return the list of enabled log groups.'''
@@ -306,8 +320,8 @@ class LogConfigurationSection(ConfigurationSectionMixin):
 
     @windows_eventlog.setter
     def windows_eventlog(self, value):
-        return self._proxy.setStringOrNone(
-                self._section_name,
-                self._prefix + '_windows_eventlog',
-                value,
-                )
+        self._updateWithNotify(
+            setter=self._proxy.setStringOrNone,
+            name='windows_eventlog',
+            value=value,
+            )

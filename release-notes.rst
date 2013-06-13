@@ -1,6 +1,23 @@
 Release notes for chevah.utils
 ==============================
 
+
+0.17.1 - 07/06/2013
+-------------------
+
+* Notify changes in LogConfigurationSection for `file_rotate_external`,
+  `file_roate_at_size`, `file_rotate_each`, `file_rotate_count`.
+* When notification fails, revert configuration value.
+
+
+0.17.0 - 06/06/2013
+-------------------
+
+* Notify changes in LogConfigurationSection for `file`, 'syslog' and
+  `windows_eventlog`.
+* Automatically reconfigure file, syslog and windows_eventlog.
+
+
 0.16.0 - 05/06/2013
 -------------------
 
@@ -16,6 +33,7 @@ Release notes for chevah.utils
   `IPropertyMixin`.
 * `WithConfigurationPropertyMixin` renamed to
   `PropertiesMixin`.
+
 
 0.14.0 - 22/05/2013
 -------------------

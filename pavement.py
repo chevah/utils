@@ -4,17 +4,24 @@
 Build script for chevah-compat.
 """
 from __future__ import with_statement
+import os
 import sys
 
+if os.name == 'nt':
+    # Use shorter temp folder on Windows.
+    import tempfile
+    tempfile.tempdir = "c:\\temp"
+
+
 # This value is pavers by bash. Use a strict format.
-BRINK_VERSION = '0.22.0'
+BRINK_VERSION = '0.24.0'
 PYTHON_VERSION = '2.7'
 
 RUN_PACKAGES = [
     # FIXME:1022:
     # For new we need to update it by hand.
-    'chevah-compat==0.6.0',
-    'chevah-empirical==0.13.0',
+    'chevah-compat==0.8.2',
+    'chevah-empirical==0.14.0',
     'zope.interface==3.8.0',
     'twisted==12.1.0-chevah3',
     'pyasn1',
@@ -72,12 +79,12 @@ from brink.pavement_commons import (
     pave,
     pqm,
     SETUP,
-    test,
+    test_python,
     test_remote,
     test_normal,
     test_super,
     )
-from paver.easy import needs, task
+from paver.easy import consume_args, needs, task
 
 # Make pylint shut up.
 buildbot_list
@@ -90,7 +97,7 @@ lint
 merge_init
 merge_commit
 pqm
-test
+test_python
 test_remote
 test_normal
 test_super
@@ -99,7 +106,10 @@ SETUP['product']['name'] = 'chevah-utils'
 SETUP['folders']['source'] = u'chevah/utils'
 SETUP['repository']['name'] = u'utils'
 SETUP['github']['repo'] = u'chevah/utils'
-SETUP['pocket-lint']['include_files'] = ['pavement.py']
+SETUP['pocket-lint']['include_files'] = [
+    'pavement.py',
+    'release-notes.rst',
+    ]
 SETUP['pocket-lint']['include_folders'] = ['chevah/utils']
 SETUP['pocket-lint']['exclude_files'] = []
 SETUP['test']['package'] = 'chevah.utils.tests'
@@ -107,7 +117,15 @@ SETUP['test']['elevated'] = 'elevated'
 
 
 @task
+@needs('deps_testing', 'deps_build')
 def deps():
+    """
+    Install all dependencies.
+    """
+
+
+@task
+def deps_testing():
     """
     Install dependencies for testing environment.
     """
@@ -123,7 +141,7 @@ def deps():
 
 
 @task
-@needs('deps')
+@needs('deps_testing')
 def deps_build():
     """
     Install dependencies for build environment.
@@ -154,3 +172,30 @@ def build():
     print "Building in " + build_target
     import setup
     setup.distribution.run_command('install')
+
+
+@task
+@needs('test_python')
+@consume_args
+def test(args):
+    """
+    Run python tests.
+    """
+
+
+@task
+@needs('deps_testing', 'test')
+@consume_args
+def test_os_dependent(args):
+    """
+    Run OS independent tests.
+    """
+
+
+@task
+@consume_args
+@needs('deps_build', 'lint')
+def test_os_independent(args):
+    """
+    Run OS dependent tests.
+    """
