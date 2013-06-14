@@ -42,7 +42,7 @@ from chevah.utils.exceptions import (
     UtilsError,
     )
 from chevah.utils.helpers import _
-from chevah.utils.observer import ObserverMixin
+from chevah.utils.observer import ObserverMixin, Signal
 
 if os.name == 'nt':
     END_OF_LINE = '\r\n'
@@ -138,6 +138,7 @@ class StdOutHandler(StreamHandler, object):
 
     def __init__(self):
         super(StdOutHandler, self).__init__()
+        self.name = 'Standard output'
 
     def flush(self):
         '''Flushes the stream.'''
@@ -313,12 +314,14 @@ class _Logger(ObserverMixin):
 
         Return the added handler, or `None.
         """
-        if not self._configuration.syslog:
+        syslog = self._configuration.syslog
+        if not syslog:
             return None
 
         try:
             handler = SysLogHandler(
-                self._configuration.syslog, facility=SysLogHandler.LOG_DAEMON)
+                syslog, facility=SysLogHandler.LOG_DAEMON)
+            handler.name = u'Syslog at %s' % str(syslog)
         except Exception, error:
             raise UtilsError(u'1013',
                 _(u'Failed to start the Syslog logger. %s' % (error)))
@@ -347,6 +350,7 @@ class _Logger(ObserverMixin):
                 dllname=self.NT_EVENTLOG_DDL,
                 logtype=self.NT_EVENTLOG_TYPE,
                 )
+            handler.name = 'Windows Event as %s' % (source_name)
         except Exception, error:
             raise UtilsError(u'1014',
                 _(u'Failed to start the Windows Event logger. %s' % (error)))
@@ -374,6 +378,8 @@ class _Logger(ObserverMixin):
             if self._configuration.file_rotate_external:
                 handler = WatchedFileHandler(
                     log_path, encoding='utf-8')
+                handler.name = u'External rotated file %s' % (
+                    self._configuration.file)
             elif each and each[0] > 0:
                 interval_count, interval_type = each
                 handler = TimedRotatingFileHandler(
@@ -383,6 +389,10 @@ class _Logger(ObserverMixin):
                     backupCount=count,
                     encoding='utf-8',
                     )
+                handler.name = (
+                    u'Time base rotated file %s at %s keeping %s '
+                    u'rotated archives' % (
+                        self._configuration.file, each, count))
             elif bytes:
                 handler = RotatingFileHandler(
                     log_path,
@@ -390,8 +400,13 @@ class _Logger(ObserverMixin):
                     backupCount=count,
                     encoding='utf-8',
                     )
+                handler.name = (
+                    u'Size base rotated file %s at %s bytes '
+                    u'keeping %s rotated archives' % (
+                        self._configuration.file, bytes, count))
             else:
                 handler = FileHandler(log_path, encoding='utf-8')
+                handler.name = u'File %s' % (self._configuration.file)
 
             self.addHandler(handler, patch_format=True)
         except Exception, error:
@@ -473,6 +488,8 @@ class _Logger(ObserverMixin):
 
         self._log.addHandler(handler)
         self._new_handler_added = True
+        if handler.name:
+            self.notify('add-handler', Signal(self, name=handler._name))
 
     def removeHandler(self, handler):
         """
@@ -482,6 +499,8 @@ class _Logger(ObserverMixin):
             return
         self._log.removeHandler(handler)
         handler.close()
+        if handler.name:
+            self.notify('remove-handler', Signal(self, name=handler._name))
 
     def removeAllHandlers(self):
         """
