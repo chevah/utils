@@ -1,6 +1,11 @@
 Release notes for chevah.utils
 ==============================
 
+0.19.0 - 15/07/2013
+-------------------
+
+* Added possibility to specify a comment to a generated ssh key file.
+
 
 0.18.0 - 07/06/2013
 -------------------
