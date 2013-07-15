@@ -60,7 +60,7 @@ class Key(ConchSSHKey):
         if public_file:
             public_file.write(self.public_openssh)
             if comment:
-                comment = (' %s') % (comment)
-                public_file.write(comment)
+                public_file.write(u' '.encode('utf-8'))
+                public_file.write(comment.encode('utf-8'))
         if private_file:
             private_file.write(self.private_openssh)

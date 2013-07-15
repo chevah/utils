@@ -129,13 +129,17 @@ class TestKey(LogTestCase):
         Check file serialization for a RSA key.
         """
         key = Key.fromString(data=RSA_PRIVATE_KEY)
+
         public_file = StringIO()
         private_file = StringIO()
-        comment = 'this is a comment'
+        comment = u'this is a comment'.encode('utf-8')
+        public_key = ('%s %s') % (RSA_PUBLIC_KEY_OPENSSH, comment)
+
         key.store(
             private_file=private_file,
             public_file=public_file,
-            comment=comment,)
-        public_key = ('%s %s') % (RSA_PUBLIC_KEY_OPENSSH, comment)
+            comment=comment,
+            )
+
         self.assertEqual(RSA_PRIVATE_KEY, private_file.getvalue())
         self.assertEqual(public_file.getvalue(), public_key)
