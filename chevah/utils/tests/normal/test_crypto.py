@@ -123,3 +123,19 @@ class TestKey(LogTestCase):
         key.store(private_file=private_file, public_file=public_file)
         self.assertEqual(DSA_PRIVATE_KEY, private_file.getvalue())
         self.assertEqual(DSA_PUBLIC_KEY_OPENSSH, public_file.getvalue())
+
+    def test_key_store_comment(self):
+        """
+        Check file serialization for a RSA key.
+        """
+        key = Key.fromString(data=RSA_PRIVATE_KEY)
+        public_file = StringIO()
+        private_file = StringIO()
+        comment = 'this is a comment'
+        key.store(
+            private_file=private_file,
+            public_file=public_file,
+            comment=comment,)
+        public_key = ('%s %s') % (RSA_PUBLIC_KEY_OPENSSH, comment)
+        self.assertEqual(RSA_PRIVATE_KEY, private_file.getvalue())
+        self.assertEqual(public_file.getvalue(), public_key)

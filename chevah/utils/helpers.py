@@ -39,6 +39,7 @@ def generate_ssh_key(options):
     message = ''
     try:
         key_size = options.key_size
+        key_comment = options.key_comment
 
         if options.key_type.lower() == u'rsa':
             key_type = crypto.TYPE_RSA
@@ -61,7 +62,7 @@ def generate_ssh_key(options):
             key.store(private_file=file_handler)
 
         with open(public_file, 'wb') as file_handler:
-            key.store(public_file=file_handler)
+            key.store(public_file=file_handler, comment=key_comment)
 
         message = (
             'SSH key of type "%s" and length "%d" generated as '
