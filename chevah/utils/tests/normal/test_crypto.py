@@ -132,7 +132,7 @@ class TestKey(LogTestCase):
 
         public_file = StringIO()
         private_file = StringIO()
-        comment = mk.string().encode('utf-8')
+        comment = u'this is a comment'.encode('utf-8')
         public_key = ('%s %s') % (RSA_PUBLIC_KEY_OPENSSH, comment)
 
         key.store(
