@@ -142,7 +142,4 @@ class TestKey(LogTestCase):
             )
 
         self.assertEqual(RSA_PRIVATE_KEY, private_file.getvalue())
-        # key.store serializes the unicode as utf-8, remember
-        # crypto.Key.store. We need to properly decode them before doing the
-        # comparison.
         self.assertEqual(public_file.getvalue().decode('utf-8'), public_key)
