@@ -10,7 +10,7 @@ from nose.plugins.attrib import attr
 
 from chevah.utils.crypto import Key
 from chevah.utils.exceptions import UtilsError
-from chevah.utils.testing import LogTestCase
+from chevah.utils.testing import LogTestCase, manufacture as mk
 
 PUBLIC_RSA_ARMOR_START = u'-----BEGIN PUBLIC KEY-----\n'
 PUBLIC_RSA_ARMOR_END = u'\n-----END PUBLIC KEY-----\n'
@@ -132,8 +132,8 @@ class TestKey(LogTestCase):
 
         public_file = StringIO()
         private_file = StringIO()
-        comment = u'this is a comment'.encode('utf-8')
-        public_key = ('%s %s') % (RSA_PUBLIC_KEY_OPENSSH, comment)
+        comment = mk.string()
+        public_key = u'%s %s' % (RSA_PUBLIC_KEY_OPENSSH, comment)
 
         key.store(
             private_file=private_file,
@@ -142,4 +142,7 @@ class TestKey(LogTestCase):
             )
 
         self.assertEqual(RSA_PRIVATE_KEY, private_file.getvalue())
-        self.assertEqual(public_file.getvalue(), public_key)
+        # key.store serializes the unicode as utf-8, remember
+        # crypto.Key.store. We need to properly decode them before doing the
+        # comparison.
+        self.assertEqual(public_file.getvalue().decode('utf-8'), public_key)
