@@ -10,7 +10,7 @@ from nose.plugins.attrib import attr
 
 from chevah.utils.crypto import Key
 from chevah.utils.exceptions import UtilsError
-from chevah.utils.testing import LogTestCase
+from chevah.utils.testing import LogTestCase, manufacture as mk
 
 PUBLIC_RSA_ARMOR_START = u'-----BEGIN PUBLIC KEY-----\n'
 PUBLIC_RSA_ARMOR_END = u'\n-----END PUBLIC KEY-----\n'
@@ -132,7 +132,7 @@ class TestKey(LogTestCase):
 
         public_file = StringIO()
         private_file = StringIO()
-        comment = u'this is a comment'.encode('utf-8')
+        comment = mk.string().encode('utf-8')
         public_key = ('%s %s') % (RSA_PUBLIC_KEY_OPENSSH, comment)
 
         key.store(
