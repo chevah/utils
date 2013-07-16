@@ -10,7 +10,7 @@ from nose.plugins.attrib import attr
 
 from chevah.utils.crypto import Key
 from chevah.utils.exceptions import UtilsError
-from chevah.utils.testing import LogTestCase, manufacture as mk
+from chevah.utils.testing import LogTestCase
 
 PUBLIC_RSA_ARMOR_START = u'-----BEGIN PUBLIC KEY-----\n'
 PUBLIC_RSA_ARMOR_END = u'\n-----END PUBLIC KEY-----\n'
