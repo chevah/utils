@@ -71,7 +71,8 @@ def generate_ssh_key(options):
             key_size,
             public_file,
             private_file,
-            options.key_comment,)
+            options.key_comment,
+            )
         exit_code = 0
 
     except UtilsError, error:
