@@ -16,3 +16,5 @@ EventTestCase
 LogTestCase
 UtilsTestCase
 manufacture
+# Export manufacture as 'mk' short name.
+mk = manufacture

@@ -10,7 +10,7 @@ from nose.plugins.attrib import attr
 
 from chevah.utils.crypto import Key
 from chevah.utils.exceptions import UtilsError
-from chevah.utils.testing import LogTestCase
+from chevah.utils.testing import LogTestCase, mk
 
 PUBLIC_RSA_ARMOR_START = u'-----BEGIN PUBLIC KEY-----\n'
 PUBLIC_RSA_ARMOR_END = u'\n-----END PUBLIC KEY-----\n'
@@ -123,3 +123,21 @@ class TestKey(LogTestCase):
         key.store(private_file=private_file, public_file=public_file)
         self.assertEqual(DSA_PRIVATE_KEY, private_file.getvalue())
         self.assertEqual(DSA_PUBLIC_KEY_OPENSSH, public_file.getvalue())
+
+    def test_key_store_comment(self):
+        """
+        When serializing a SSH public key to a file, a random comment can be
+        added.
+        """
+        key = Key.fromString(data=RSA_PUBLIC_KEY_OPENSSH)
+        public_file = StringIO()
+        comment = mk.string()
+        public_key_serialization = u'%s %s' % (
+            RSA_PUBLIC_KEY_OPENSSH, comment)
+
+        key.store(public_file=public_file, comment=comment)
+
+        result_key = Key.fromString(public_file.getvalue())
+        self.assertEqual(key.data, result_key.data)
+        self.assertEqual(
+            public_file.getvalue().decode('utf-8'), public_key_serialization)
