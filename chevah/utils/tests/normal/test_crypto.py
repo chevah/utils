@@ -135,10 +135,11 @@ class TestKey(LogTestCase):
         comment = mk.string()
         public_key_serialization = u'%s %s' % (
             RSA_PUBLIC_KEY_OPENSSH, comment)
-        result_key = Key.fromString(public_key_serialization)
 
         key.store(public_file=public_file, comment=comment)
 
+        result_key = Key.fromString(public_file.getvalue())
+
+        self.assertEqual(key.data, result_key.data)
         self.assertEqual(
             public_file.getvalue().decode('utf-8'), public_key_serialization)
-        self.assertEqual(key.data, result_key.data)

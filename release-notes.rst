@@ -2,6 +2,12 @@ Release notes for chevah.utils
 ==============================
 
 
+0.19.1 - 17/07/2013
+-------------------
+
+* Bump version of minor review changes.
+
+
 0.19.0 - 15/07/2013
 -------------------
 
