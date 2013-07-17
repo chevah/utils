@@ -126,20 +126,19 @@ class TestKey(LogTestCase):
 
     def test_key_store_comment(self):
         """
-        Check file serialization for a RSA key.
+        When serializing a SSH public key to a file, a random comment can be
+        added.
         """
-        key = Key.fromString(data=RSA_PRIVATE_KEY)
+        key = Key.fromString(data=RSA_PUBLIC_KEY_OPENSSH)
 
         public_file = StringIO()
-        private_file = StringIO()
         comment = mk.string()
-        public_key = u'%s %s' % (RSA_PUBLIC_KEY_OPENSSH, comment)
+        public_key_serialization = u'%s %s' % (
+            RSA_PUBLIC_KEY_OPENSSH, comment)
+        result_key = Key.fromString(public_key_serialization)
 
-        key.store(
-            private_file=private_file,
-            public_file=public_file,
-            comment=comment,
-            )
+        key.store(public_file=public_file, comment=comment)
 
-        self.assertEqual(RSA_PRIVATE_KEY, private_file.getvalue())
-        self.assertEqual(public_file.getvalue().decode('utf-8'), public_key)
+        self.assertEqual(
+            public_file.getvalue().decode('utf-8'), public_key_serialization)
+        self.assertEqual(key.data, result_key.data)

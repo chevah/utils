@@ -55,12 +55,15 @@ class Key(ConchSSHKey):
         '''Return the OpenSSH representation for private key part.'''
         return self.public().toString(type='openssh')
 
-    def store(self, public_file=None, private_file=None, comment=None):
+    def store(self,
+            public_file=None, private_file=None, comment=None):
         '''Store the public and private key into a file.'''
         if public_file:
-            public_file.write(self.public_openssh)
             if comment:
-                public_file.write(u' '.encode('utf-8'))
-                public_file.write(comment.encode('utf-8'))
+                public_content = '%s %s' % (
+                    self.public_openssh, comment.encode('utf-8'))
+            else:
+                public_content = self.public_openssh
+            public_file.write(public_content)
         if private_file:
             private_file.write(self.private_openssh)
