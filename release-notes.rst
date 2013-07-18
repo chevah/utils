@@ -2,6 +2,12 @@ Release notes for chevah.utils
 ==============================
 
 
+0.19.2 - 18/07/2013
+-------------------
+
+* Added missing space in SSH key generation command line message.
+
+
 0.19.1 - 17/07/2013
 -------------------
 

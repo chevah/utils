@@ -65,7 +65,7 @@ def generate_ssh_key(options):
 
         message = (
             'SSH key of type "%s" and length "%d" generated as '
-            'public key file "%s" and private key file "%s"'
+            'public key file "%s" and private key file "%s" '
             'having comment "%s".') % (
             options.key_type,
             key_size,
