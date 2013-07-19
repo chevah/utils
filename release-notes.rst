@@ -2,6 +2,13 @@ Release notes for chevah.utils
 ==============================
 
 
+0.19.3 - 19/07/2013
+-------------------
+
+* Added a more user friendly message when generating SSH key and no
+  comment is specified.
+
+
 0.19.2 - 18/07/2013
 -------------------
 
