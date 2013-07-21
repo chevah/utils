@@ -667,8 +667,10 @@ class TestFileConfigurationProxy(UtilsTestCase):
         config = self._getConfig(content=content)
 
         config.setBoolean('some_section', u'some_boolean', 'No')
-
         self.assertFalse(config.getBoolean(u'some_section', u'some_boolean'))
+
+        config.setBoolean('some_section', u'some_boolean', True)
+        self.assertTrue(config.getBoolean(u'some_section', u'some_boolean'))
 
     def test_setBoolean_invalid(self):
         """
@@ -687,6 +689,31 @@ class TestFileConfigurationProxy(UtilsTestCase):
         self.assertExceptionID(u'1001', context.exception)
         self.assertContains('boolean value', context.exception.message)
         self.assertTrue(config.getBoolean(u'some_section', u'some_boolean'))
+
+    def test_setBooleanInherit_valid(self):
+        """
+        It can set a boolean value or the special inherit value.
+        """
+        content = (
+            u'[some_section]\n'
+            u'some_boolean: yes\n'
+            )
+        config = self._getConfig(content=content)
+
+        config.setBooleanOrInherit('some_section', u'some_boolean', False)
+        self.assertFalse(
+            config.getBooleanOrInherit(u'some_section', u'some_boolean'))
+
+        config.setBooleanOrInherit('some_section', u'some_boolean', 'YeS')
+        self.assertTrue(
+            config.getBooleanOrInherit(u'some_section', u'some_boolean'))
+
+        config.setBooleanOrInherit(
+            'some_section', u'some_boolean', CONFIGURATION_INHERIT[0])
+        self.assertEqual(
+            CONFIGURATION_INHERIT[0],
+            config.getBooleanOrInherit(u'some_section', u'some_boolean'),
+            )
 
     def test_booleanConverter_valid(self):
         """

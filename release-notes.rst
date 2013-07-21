@@ -2,6 +2,12 @@ Release notes for chevah.utils
 ==============================
 
 
+0.20.1 - 21/07/2013
+-------------------
+
+* Fix setting special boolean value.
+
+
 0.20.0 - 21/07/2013
 -------------------
 

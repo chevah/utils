@@ -340,7 +340,9 @@ class FileConfigurationProxy(object):
 
     def setBooleanOrInherit(self, section, option, value):
         '''See `IConfigurationProxy`.'''
-        if value.lower() in CONFIGURATION_INHERIT:
+        if (isinstance(value, basestring) and
+                value.lower() in CONFIGURATION_INHERIT
+            ):
             self.setString(
                 section, option, CONFIGURATION_INHERIT[0])
         else:
