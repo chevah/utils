@@ -2,6 +2,13 @@ Release notes for chevah.utils
 ==============================
 
 
+0.20.0 - 21/07/2013
+-------------------
+
+* Don't set bad value for configuration options and raise an error when
+  setting bad value.
+
+
 0.19.2 - 18/07/2013
 -------------------
 

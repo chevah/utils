@@ -130,7 +130,10 @@ class FileConfigurationProxy(object):
         '''See `IConfigurationProxy`.'''
         return self._raw_config.sections()
 
-    def _call(self, method, section, option, type_string=''):
+    def _get(self, method, section, option, type_string=''):
+        """
+        Helper to get a value for a specific type.
+        """
         try:
             return method(section, option)
         except ValueError, error:
@@ -167,9 +170,28 @@ class FileConfigurationProxy(object):
             u'All exceptions should have been previously catch for '
             'section:%s option:%s.' % (section, option))
 
+    def _set(self, converter, section, option, value, type_string=''):
+        """
+        Helper to set a value for a specific type.
+        """
+        try:
+            converted_value = converter(value)
+        except ValueError, error:
+            raise UtilsError(u'1001', _(
+                u'Cannot set %(type)s value %(value)s for option %(option)s '
+                u'in %(section)s. %(error)s') % {
+                    'type': type_string,
+                    'value': value,
+                    'option': option,
+                    'section': section,
+                    'error': str(error),
+                    }
+                )
+        self._raw_config.set(section, option, unicode(converted_value))
+
     def getString(self, section, option):
         '''See `IConfigurationProxy`.'''
-        value = self._call(
+        value = self._get(
             self._raw_config.get, section, option, 'string')
         if type(value) is not unicode:
             value = value.decode('utf-8')
@@ -242,7 +264,7 @@ class FileConfigurationProxy(object):
 
     def getInteger(self, section, option):
         '''See `IConfigurationProxy`.'''
-        return self._call(
+        return self._get(
             self._raw_config.getint, section, option, 'integer number')
 
     def getIntegerOrNone(self, section, option):
@@ -255,44 +277,87 @@ class FileConfigurationProxy(object):
 
     def setInteger(self, section, option, value):
         '''See `IConfigurationProxy`.'''
-        return self._raw_config.set(section, option, unicode(value))
+        return self._set(
+            int, section, option, value, type_string='integer')
 
     def setIntegerOrNone(self, section, option, value):
         '''See `IConfigurationProxy`.'''
         if value is None:
             value = CONFIGURATION_DISABLED_VALUE
-        return self._raw_config.set(section, option, unicode(value))
+            return self._raw_config.set(section, option, unicode(value))
+        else:
+            return self.setInteger(section, option, value)
 
     def getBoolean(self, section, option):
         '''See `IConfigurationProxy`.'''
-        return self._call(
+        return self._get(
             self._raw_config.getboolean, section, option, 'boolean')
 
     def getBooleanOrInherit(self, section, option):
+        """
+        See `IConfigurationProxy`.
+        """
         value = self.getString(section, option)
         if value.lower() in CONFIGURATION_INHERIT:
             return CONFIGURATION_INHERIT[0]
 
         return self.getBoolean(section, option)
 
+    def _booleanConverter(self, input):
+        """
+        Convert input value to a boolean.
+        """
+        if input in [True, False]:
+            return input
+
+        if input in [1, '1']:
+            return True
+
+        if input in [0, '0']:
+            return False
+
+        try:
+            input_lower = input.lower()
+        except:
+            raise ValueError('Not a boolean value: %s' % (input))
+
+        if input_lower in ['yes', 'true']:
+            return True
+        if input_lower in ['no', 'false']:
+            return False
+
+        raise ValueError('Not a boolean value: %s' % (input))
+
     def setBoolean(self, section, option, value):
         '''See `IConfigurationProxy`.'''
-        return self._raw_config.set(section, option, unicode(value))
+        return self._set(
+            self._booleanConverter,
+            section,
+            option,
+            value,
+            type_string='boolean',
+            )
 
     def setBooleanOrInherit(self, section, option, value):
         '''See `IConfigurationProxy`.'''
-        if value is True or value is False:
-            self.setBoolean(section, option, value)
-        elif value.lower() in CONFIGURATION_INHERIT:
+        if value.lower() in CONFIGURATION_INHERIT:
             self.setString(
                 section, option, CONFIGURATION_INHERIT[0])
         else:
-            raise AssertionError('Not a boolean for Inherit value.')
+            self.setBoolean(section, option, value)
 
     def getFloat(self, section, option):
-        '''See `IConfigurationProxy`.'''
-        return self._call(
+        """
+        See `IConfigurationProxy`.
+        """
+        return self._get(
             self._raw_config.getfloat, section, option, 'floating number')
+
+    def setFloat(self, section, option, value):
+        """
+        See `IConfigurationProxy`.
+        """
+        return self._set(float, section, option, value, 'floating number')
 
 
 class ConfigurationFileMixin(PropertyMixin):
