@@ -64,26 +64,20 @@ def generate_ssh_key(options):
             key.store(public_file=file_handler, comment=options.key_comment)
 
         if options.key_comment:
-            message = (
-                'SSH key of type "%s" and length "%d" generated as '
-                'public key file "%s" and private key file "%s" '
-                'having comment "%s".') % (
-                options.key_type,
-                key_size,
-                public_file,
-                private_file,
-                options.key_comment,
-                )
+            comment = 'having comment "%s"' % (options.key_comment)
         else:
-            message = (
-                'SSH key of type "%s" and length "%d" generated as '
-                'public key file "%s" and private key file "%s" '
-                'without a comment.') % (
-                options.key_type,
-                key_size,
-                public_file,
-                private_file,
-                )
+            comment = 'without a comment'
+
+        message = (
+            'SSH key of type "%s" and length "%d" generated as '
+            'public key file "%s" and private key file "%s" %s.') % (
+            options.key_type,
+            key_size,
+            public_file,
+            private_file,
+            comment,
+            )
+
         exit_code = 0
 
     except UtilsError, error:

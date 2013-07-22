@@ -2,6 +2,12 @@ Release notes for chevah.utils
 ==============================
 
 
+0.19.4 - 22/07/2013
+-------------------
+
+* Removed redundant code from the message when generating SSH key.
+
+
 0.19.3 - 19/07/2013
 -------------------
 
