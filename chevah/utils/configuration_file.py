@@ -130,7 +130,7 @@ class FileConfigurationProxy(object):
         '''See `IConfigurationProxy`.'''
         return self._raw_config.sections()
 
-    def _get(self, method, section, option, type_string=''):
+    def _get(self, method, section, option, type_name=''):
         """
         Helper to get a value for a specific type.
         """
@@ -140,7 +140,7 @@ class FileConfigurationProxy(object):
             raise UtilsError(u'1000', _(
                 u'Wrong %(type)s value for option "%(option)s" in '
                 u'section "%(section)s". %(error_details)s' % {
-                    'type': type_string,
+                    'type': type_name,
                     'option': option,
                     'section': section,
                     'error_details': unicode(error),
@@ -170,7 +170,7 @@ class FileConfigurationProxy(object):
             u'All exceptions should have been previously catch for '
             'section:%s option:%s.' % (section, option))
 
-    def _set(self, converter, section, option, value, type_string=''):
+    def _set(self, converter, section, option, value, type_name=''):
         """
         Helper to set a value for a specific type.
         """
@@ -180,7 +180,7 @@ class FileConfigurationProxy(object):
             raise UtilsError(u'1001', _(
                 u'Cannot set %(type)s value %(value)s for option %(option)s '
                 u'in %(section)s. %(error)s') % {
-                    'type': type_string,
+                    'type': type_name,
                     'value': value,
                     'option': option,
                     'section': section,
@@ -278,7 +278,7 @@ class FileConfigurationProxy(object):
     def setInteger(self, section, option, value):
         '''See `IConfigurationProxy`.'''
         return self._set(
-            int, section, option, value, type_string='integer')
+            int, section, option, value, type_name='integer')
 
     def setIntegerOrNone(self, section, option, value):
         '''See `IConfigurationProxy`.'''
@@ -335,7 +335,7 @@ class FileConfigurationProxy(object):
             section,
             option,
             value,
-            type_string='boolean',
+            type_name='boolean',
             )
 
     def setBooleanOrInherit(self, section, option, value):

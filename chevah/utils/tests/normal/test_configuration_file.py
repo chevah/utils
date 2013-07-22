@@ -546,7 +546,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         self.check_setStringOrInherit(
             "getStringSpecial", "setStringSpecial")
 
-    def _getConfig(self, content):
+    def makeConfiguration(self, content):
         config_file = StringIO(content)
         config = FileConfigurationProxy(
             configuration_file=config_file)
@@ -562,7 +562,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
             u'some_none: Disabled\n'
             )
 
-        config = self._getConfig(content=content)
+        config = self.makeConfiguration(content=content)
 
         self.assertIsNone(
             config.getIntegerOrNone(u'some_section', u'some_none'))
@@ -576,7 +576,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
             u'some_int: 7\n'
             )
 
-        config = self._getConfig(content=content)
+        config = self.makeConfiguration(content=content)
 
         self.assertEqual(
             7,
@@ -590,7 +590,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
             u'[some_section]\n'
             u'some_int: 7\n'
             )
-        config = self._getConfig(content=content)
+        config = self.makeConfiguration(content=content)
 
         config.setInteger('some_section', u'some_int', 10)
 
@@ -606,7 +606,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
             u'[some_section]\n'
             u'some_int: 7\n'
             )
-        config = self._getConfig(content=content)
+        config = self.makeConfiguration(content=content)
 
         with self.assertRaises(UtilsError) as context:
             config.setInteger('some_section', u'some_int', 'bad-value')
@@ -624,7 +624,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
             u'[some_section]\n'
             u'some_int: 7\n'
             )
-        config = self._getConfig(content=content)
+        config = self.makeConfiguration(content=content)
 
         config.setInteger('some_section', u'some_int', 100.6)
 
@@ -638,7 +638,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         content = (
             '[section]\n'
             'bool_option: YeS\n')
-        config = self._getConfig(content=content)
+        config = self.makeConfiguration(content=content)
 
         self.assertTrue(config.getBoolean('section', 'bool_option'))
 
@@ -649,7 +649,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         content = (
             '[section]\n'
             'bool_option = 3234\n')
-        config = self._getConfig(content=content)
+        config = self.makeConfiguration(content=content)
 
         with self.assertRaises(UtilsError) as context:
             config.getBoolean('section', 'bool_option')
@@ -664,7 +664,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
             u'[some_section]\n'
             u'some_boolean: yes\n'
             )
-        config = self._getConfig(content=content)
+        config = self.makeConfiguration(content=content)
 
         config.setBoolean('some_section', u'some_boolean', 'No')
         self.assertFalse(config.getBoolean(u'some_section', u'some_boolean'))
@@ -681,7 +681,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
             u'[some_section]\n'
             u'some_boolean: yes\n'
             )
-        config = self._getConfig(content=content)
+        config = self.makeConfiguration(content=content)
 
         with self.assertRaises(UtilsError) as context:
             config.setBoolean('some_section', u'some_boolean', 'bad-value')
@@ -698,7 +698,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
             u'[some_section]\n'
             u'some_boolean: yes\n'
             )
-        config = self._getConfig(content=content)
+        config = self.makeConfiguration(content=content)
 
         config.setBooleanOrInherit('some_section', u'some_boolean', False)
         self.assertFalse(
@@ -719,7 +719,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         """
         Convert free from boolean into standard pyton boolean values.
         """
-        config = self._getConfig(content='')
+        config = self.makeConfiguration(content='')
 
         for value in [True, 1, '1', 'tRuE', 'yEs']:
             self.assertTrue(config._booleanConverter(value))
@@ -731,7 +731,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         """
         An error is raised when value can not be converted.
         """
-        config = self._getConfig(content='')
+        config = self.makeConfiguration(content='')
 
         with self.assertRaises(ValueError):
             config._booleanConverter('no-boolean')
@@ -749,7 +749,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         content = (
             '[section]\n'
             'float_option: 1.43\n')
-        config = self._getConfig(content=content)
+        config = self.makeConfiguration(content=content)
 
         self.assertEqual(1.43, config.getFloat('section', 'float_option'))
 
@@ -760,7 +760,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         content = (
             '[section]\n'
             'float_option: bla\n')
-        config = self._getConfig(content=content)
+        config = self.makeConfiguration(content=content)
 
         with self.assertRaises(UtilsError) as context:
             config.getFloat('section', 'float_option')
@@ -771,15 +771,20 @@ class TestFileConfigurationProxy(UtilsTestCase):
 
     def test_setFload_valid(self):
         """
-        A float value is can be set as float or string.
+        A float value is can be set as float, integer or string.
         """
         content = (
             '[section]\n'
             'float_option: 0\n')
-        config = self._getConfig(content=content)
+        config = self.makeConfiguration(content=content)
 
         config.setFloat('section', 'float_option', 2.45)
         self.assertEqual(2.45, config.getFloat('section', 'float_option'))
+
+        config.setFloat('section', 'float_option', 2)
+        result = config.getFloat('section', 'float_option')
+        self.assertEqual(2.0, result)
+        self.assertIsInstance(float, result)
 
         config.setFloat('section', 'float_option', u'3.45')
         self.assertEqual(3.45, config.getFloat('section', 'float_option'))
@@ -792,7 +797,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         content = (
             '[section]\n'
             'float_option: 2.34\n')
-        config = self._getConfig(content=content)
+        config = self.makeConfiguration(content=content)
 
         with self.assertRaises(UtilsError) as context:
             config.setFloat('section', 'float_option', 'bad-value')
@@ -800,6 +805,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         self.assertExceptionID(u'1001', context.exception)
         self.assertContains(
             'floating number value', context.exception.message)
+        self.assertEqual(2.34, config.getFloat('section', 'float_option'))
 
 
 class DummyConfigurationFileMixin(ConfigurationFileMixin):
