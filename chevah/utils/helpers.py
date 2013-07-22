@@ -5,8 +5,8 @@
 These code is here due to bad design. We should look for refactoring
 the products so that this code is not needed.
 '''
-from __future__ import with_statement
 from socket import gethostname
+import os
 import sys
 import threading
 import urllib
@@ -27,14 +27,24 @@ def _(string):
     return string
 
 
-def generate_ssh_key(options):
-    '''Generate a SSH RSA or DSA key.
+def generate_ssh_key(options, key=None, open_method=None):
+    """
+    Generate a SSH RSA or DSA key.
 
     Return a pair of (exit_code, operation_message).
 
     For success, exit_code is 0.
-    '''
-    from chevah.utils.crypto import Key
+
+    `KeyClass` and `open_method` are helpers for dependency injection
+    during tests.
+    """
+    if key is None:
+        from chevah.utils.crypto import Key
+        key = Key()
+
+    if open_method is None:
+        open_method = open
+
     exit_code = 0
     message = ''
     try:
@@ -54,13 +64,19 @@ def generate_ssh_key(options):
         public_file = u'%s%s' % (
             options.key_file, DEFAULT_PUBLIC_KEY_EXTENSION)
 
-        key = Key()
         key.generate(key_type=key_type, key_size=key_size)
 
-        with open(private_file, 'wb') as file_handler:
+        if os.name == 'posix':
+            private_file_path = private_file.encode('utf-8')
+            public_file_path = public_file.encode('utf-8')
+        else:
+            private_file_path = private_file
+            public_file_path = public_file
+
+        with open_method(private_file_path, 'wb') as file_handler:
             key.store(private_file=file_handler)
 
-        with open(public_file, 'wb') as file_handler:
+        with open_method(public_file_path, 'wb') as file_handler:
             key.store(public_file=file_handler, comment=options.key_comment)
 
         if options.key_comment:
