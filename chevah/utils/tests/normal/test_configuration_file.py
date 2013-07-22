@@ -599,8 +599,8 @@ class TestFileConfigurationProxy(UtilsTestCase):
 
     def test_setInteger_bad_value(self):
         """
-        When setting an integer to a bad value, an error is raised and
-        previous value is kept.
+        When setting an integer to an invalid value, an error is raised and
+        the previous value is kept.
         """
         content = (
             u'[some_section]\n'
@@ -644,7 +644,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
 
     def test_getBoolean_invalid(self):
         """
-        An error is raised when trying to rad a bad boolean value.
+        An error is raised when trying to rad an invalid boolean value.
         """
         content = (
             '[section]\n'
@@ -674,8 +674,8 @@ class TestFileConfigurationProxy(UtilsTestCase):
 
     def test_setBoolean_invalid(self):
         """
-        When a bad boolean is set, the old value is kept and an error is
-        raised.
+        When an invalid boolean value is set, the old value is kept and a
+        error is raised.
         """
         content = (
             u'[some_section]\n'
@@ -854,7 +854,7 @@ class TestConfigurationFileMixin(UtilsTestCase):
 
     def test_create_missing_sections_default(self):
         """
-        When no section names are provied, createMissingSections will
+        When no section names are provided, createMissingSections will
         create default sections.
         """
         config_file = StringIO(u'[section3]\n')
