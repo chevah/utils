@@ -547,11 +547,25 @@ class TestFileConfigurationProxy(UtilsTestCase):
             "getStringSpecial", "setStringSpecial")
 
     def makeConfiguration(self, content):
+        """
+        Returns a configuration mock for testing.
+        """
         config_file = StringIO(content)
         config = FileConfigurationProxy(
             configuration_file=config_file)
         config.load()
         return config
+
+    def makeIntConfiguration(self, value):
+        """
+        Returns a test configuration for Integer values.
+        """
+        template = (
+            u'[some_section]\n'
+            u'some_int: %d\n'
+            )
+        content = template % value
+        return self.makeConfiguration(content)
 
     def test_getIntegerOrNone_none(self):
         """
@@ -571,12 +585,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         """
         Check getIntegerOrNone.
         """
-        content = (
-            u'[some_section]\n'
-            u'some_int: 7\n'
-            )
-
-        config = self.makeConfiguration(content=content)
+        config = self.makeIntConfiguration(7)
 
         self.assertEqual(
             7,
@@ -586,11 +595,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         """
         Set integer can be used for directly setting an integer number.
         """
-        content = (
-            u'[some_section]\n'
-            u'some_int: 7\n'
-            )
-        config = self.makeConfiguration(content=content)
+        config = self.makeIntConfiguration(7)
 
         config.setInteger('some_section', u'some_int', 10)
 
@@ -602,11 +607,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         When setting an integer to an invalid value, an error is raised and
         the previous value is kept.
         """
-        content = (
-            u'[some_section]\n'
-            u'some_int: 7\n'
-            )
-        config = self.makeConfiguration(content=content)
+        config = self.makeIntConfiguration(7)
 
         with self.assertRaises(UtilsError) as context:
             config.setInteger('some_section', u'some_int', 'bad-value')
@@ -620,11 +621,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         """
         Float values are floor rounded to integers.
         """
-        content = (
-            u'[some_section]\n'
-            u'some_int: 7\n'
-            )
-        config = self.makeConfiguration(content=content)
+        config = self.makeIntConfiguration(7)
 
         config.setInteger('some_section', u'some_int', 100.6)
 
