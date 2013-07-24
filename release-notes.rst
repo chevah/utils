@@ -2,6 +2,19 @@ Release notes for chevah.utils
 ==============================
 
 
+0.20.1 - 21/07/2013
+-------------------
+
+* Fix setting special (inherit) boolean value.
+
+
+0.20.0 - 21/07/2013
+-------------------
+
+* Don't set invalid values for configuration options and raise an error when
+  trying to set one.
+
+
 0.19.2 - 18/07/2013
 -------------------
 

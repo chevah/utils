@@ -25,6 +25,26 @@ class TestFileConfigurationProxy(UtilsTestCase):
 
     special_characters = u'~`!@#$%^&*()_\\/-+="\''
 
+    def makeFileConfiguration(self, content):
+        """
+        Returns a file configuration with `content`.
+        """
+        config_file = StringIO(content)
+        config = FileConfigurationProxy(configuration_file=config_file)
+        config.load()
+        return config
+
+    def makeIntegerFileConfiguration(self, value):
+        """
+        Returns a test configuration file with an integer `value`.
+        """
+        template = (
+            u'[section]\n'
+            u'integer: %d\n'
+            )
+        content = template % value
+        return self.makeFileConfiguration(content)
+
     def test_init_with_no_arguments(self):
         """
         An error is raised when initializing with no arguments.
@@ -260,17 +280,6 @@ class TestFileConfigurationProxy(UtilsTestCase):
             config.load()
         self.assertEqual(u'1002', context.exception.event_id)
         config_file.close()
-
-    def test_getBoolean_bad_values(self):
-        '''Test bad value for remote_admin_enabled.'''
-        config_file = StringIO(
-            '[section]\n'
-            'bool_option = 3234\n')
-        config = FileConfigurationProxy(configuration_file=config_file)
-        config.load()
-        with self.assertRaises(UtilsError) as context:
-            config.getBoolean('section', 'bool_option')
-        self.assertEqual(u'1000', context.exception.event_id)
 
     def test_getString(self):
         """
@@ -557,13 +566,6 @@ class TestFileConfigurationProxy(UtilsTestCase):
         self.check_setStringOrInherit(
             "getStringSpecial", "setStringSpecial")
 
-    def _getConfig(self, content):
-        config_file = StringIO(content)
-        config = FileConfigurationProxy(
-            configuration_file=config_file)
-        config.load()
-        return config
-
     def test_getIntegerOrNone_none(self):
         """
         Check getIntegerOrNone.
@@ -573,7 +575,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
             u'some_none: Disabled\n'
             )
 
-        config = self._getConfig(content=content)
+        config = self.makeFileConfiguration(content=content)
 
         self.assertIsNone(
             config.getIntegerOrNone(u'some_section', u'some_none'))
@@ -582,16 +584,220 @@ class TestFileConfigurationProxy(UtilsTestCase):
         """
         Check getIntegerOrNone.
         """
-        content = (
-            u'[some_section]\n'
-            u'some_int: 7\n'
-            )
-
-        config = self._getConfig(content=content)
+        config = self.makeIntegerFileConfiguration(7)
 
         self.assertEqual(
-            7,
-            config.getIntegerOrNone(u'some_section', u'some_int'))
+            7, config.getIntegerOrNone(u'section', u'integer'))
+
+    def test_setInteger_int(self):
+        """
+        Set integer can be used for directly setting an integer number.
+        """
+        config = self.makeIntegerFileConfiguration(7)
+
+        config.setInteger('section', u'integer', 10)
+
+        self.assertEqual(10, config.getInteger(u'section', u'integer'))
+
+    def test_setInteger_bad_value(self):
+        """
+        When setting an integer to an invalid value, an error is raised and
+        the previous value is kept.
+        """
+        config = self.makeIntegerFileConfiguration(7)
+
+        with self.assertRaises(UtilsError) as context:
+            config.setInteger('section', u'integer', 'bad-value')
+
+        self.assertExceptionID(u'1001', context.exception)
+        self.assertContains('integer value', context.exception.message)
+        self.assertEqual(7, config.getInteger(u'section', u'integer'))
+
+    def test_setInteger_float(self):
+        """
+        Float values are floor rounded to integers.
+        """
+        config = self.makeIntegerFileConfiguration(7)
+
+        config.setInteger('section', u'integer', 100.6)
+
+        self.assertEqual(100, config.getInteger(u'section', u'integer'))
+
+    def test_getBoolean_valid(self):
+        """
+        A boolean value is read if stored in human readable boolean.
+        """
+        content = (
+            '[section]\n'
+            'bool_option: YeS\n')
+        config = self.makeFileConfiguration(content=content)
+
+        self.assertTrue(config.getBoolean('section', 'bool_option'))
+
+    def test_getBoolean_invalid(self):
+        """
+        An error is raised when trying to rad an invalid boolean value.
+        """
+        content = (
+            '[section]\n'
+            'bool_option = 3234\n')
+        config = self.makeFileConfiguration(content=content)
+
+        with self.assertRaises(UtilsError) as context:
+            config.getBoolean('section', 'bool_option')
+
+        self.assertEqual(u'1000', context.exception.event_id)
+
+    def test_setBoolean_valid(self):
+        """
+        It can set a boolean value specified as free form.
+        """
+        content = (
+            u'[some_section]\n'
+            u'some_boolean: yes\n'
+            )
+        config = self.makeFileConfiguration(content=content)
+
+        config.setBoolean('some_section', u'some_boolean', 'No')
+        self.assertFalse(config.getBoolean(u'some_section', u'some_boolean'))
+
+        config.setBoolean('some_section', u'some_boolean', True)
+        self.assertTrue(config.getBoolean(u'some_section', u'some_boolean'))
+
+    def test_setBoolean_invalid(self):
+        """
+        When an invalid boolean value is set, the old value is kept and a
+        error is raised.
+        """
+        content = (
+            u'[some_section]\n'
+            u'some_boolean: yes\n'
+            )
+        config = self.makeFileConfiguration(content=content)
+
+        with self.assertRaises(UtilsError) as context:
+            config.setBoolean('some_section', u'some_boolean', 'bad-value')
+
+        self.assertExceptionID(u'1001', context.exception)
+        self.assertContains('boolean value', context.exception.message)
+        self.assertTrue(config.getBoolean(u'some_section', u'some_boolean'))
+
+    def test_setBooleanInherit_valid(self):
+        """
+        It can set a boolean value or the special inherit value.
+        """
+        content = (
+            u'[some_section]\n'
+            u'some_boolean: yes\n'
+            )
+        config = self.makeFileConfiguration(content=content)
+
+        config.setBooleanOrInherit('some_section', u'some_boolean', False)
+        self.assertFalse(
+            config.getBooleanOrInherit(u'some_section', u'some_boolean'))
+
+        config.setBooleanOrInherit('some_section', u'some_boolean', 'YeS')
+        self.assertTrue(
+            config.getBooleanOrInherit(u'some_section', u'some_boolean'))
+
+        config.setBooleanOrInherit(
+            'some_section', u'some_boolean', CONFIGURATION_INHERIT[0])
+        self.assertEqual(
+            CONFIGURATION_INHERIT[0],
+            config.getBooleanOrInherit(u'some_section', u'some_boolean'),
+            )
+
+    def test_booleanConverter_valid(self):
+        """
+        Convert free from boolean into standard pyton boolean values.
+        """
+        config = self.makeFileConfiguration(content='')
+
+        for value in [True, 1, '1', 'tRuE', 'yEs']:
+            self.assertTrue(config._booleanConverter(value))
+
+        for value in [False, 0, '0', 'falSE', 'nO']:
+            self.assertFalse(config._booleanConverter(value))
+
+    def test_booleanConverter_invalid(self):
+        """
+        An error is raised when value can not be converted.
+        """
+        config = self.makeFileConfiguration(content='')
+
+        with self.assertRaises(ValueError):
+            config._booleanConverter('no-boolean')
+
+        with self.assertRaises(ValueError):
+            config._booleanConverter(object())
+
+        with self.assertRaises(ValueError):
+            config._booleanConverter(4)
+
+    def test_getFload_valid(self):
+        """
+        A float value is can be read.
+        """
+        content = (
+            '[section]\n'
+            'float_option: 1.43\n')
+        config = self.makeFileConfiguration(content=content)
+
+        self.assertEqual(1.43, config.getFloat('section', 'float_option'))
+
+    def test_getFload_invalid(self):
+        """
+        An error is raised when value is not float.
+        """
+        content = (
+            '[section]\n'
+            'float_option: bla\n')
+        config = self.makeFileConfiguration(content=content)
+
+        with self.assertRaises(UtilsError) as context:
+            config.getFloat('section', 'float_option')
+
+        self.assertExceptionID(u'1000', context.exception)
+        self.assertContains(
+            'floating number value', context.exception.message)
+
+    def test_setFload_valid(self):
+        """
+        A float value is can be set as float, integer or string.
+        """
+        content = (
+            '[section]\n'
+            'float_option: 0\n')
+        config = self.makeFileConfiguration(content=content)
+
+        config.setFloat('section', 'float_option', 2.45)
+        self.assertEqual(2.45, config.getFloat('section', 'float_option'))
+
+        config.setFloat('section', 'float_option', 2)
+        result = config.getFloat('section', 'float_option')
+        self.assertEqual(2.0, result)
+        self.assertIsInstance(float, result)
+
+        config.setFloat('section', 'float_option', u'3.45')
+        self.assertEqual(3.45, config.getFloat('section', 'float_option'))
+
+    def test_setFload_invalid(self):
+        """
+        When setting an invalid float value, error is raised and previous
+        value is kept.
+        """
+        content = (
+            '[section]\n'
+            'float_option: 2.34\n')
+        config = self.makeFileConfiguration(content=content)
+
+        with self.assertRaises(UtilsError) as context:
+            config.setFloat('section', 'float_option', 'bad-value')
+
+        self.assertExceptionID(u'1001', context.exception)
+        self.assertContains(
+            'floating number value', context.exception.message)
+        self.assertEqual(2.34, config.getFloat('section', 'float_option'))
 
 
 class DummyConfigurationFileMixin(ConfigurationFileMixin):
@@ -646,7 +852,7 @@ class TestConfigurationFileMixin(UtilsTestCase):
 
     def test_create_missing_sections_default(self):
         """
-        When no section names are provied, createMissingSections will
+        When no section names are provided, createMissingSections will
         create default sections.
         """
         config_file = StringIO(u'[section3]\n')

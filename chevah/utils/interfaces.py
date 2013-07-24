@@ -43,19 +43,53 @@ class IConfigurationProxy(Interface):
         '''Set the String value for `option` from `section`.'''
 
     def getInteger(section, option):
-        '''Return the Integer value for `option` from `section`.'''
+        """
+        Return the Integer value for `option` from `section`.
+        """
 
-    def getint(section, option):
-        '''Raise AssertionError if low level methods are called.'''
+    def getIntegerOrNone(section, option):
+        """
+        Return the Integer value for `option` from `section` or the special
+        `None` value.
+        """
+
+    def setInteger(section, option):
+        """
+        Set value as integer number.
+        """
+
+    def setIntegerOrNone(section, option):
+        """
+        Set value as integer number or the special `None` value.
+        """
 
     def getBoolean(section, option):
         '''Return the Boolean value for `option` from `section`.'''
 
+    def getBooleanOrInherit(section, option):
+        """
+        Return the Boolean value for `option` from `section` or the
+        INHERIT value.
+        """
+
     def setBoolean(section, option, value):
         '''Set the Boolean value for `option` from `section`.'''
 
+    def setBooleanOrInherit(section, option, value):
+        """
+        Set the Boolean value for `option` from `section` or the INHERIT
+        value.
+        """
+
     def getFloat(section, option):
-        '''Return the Float value for `option` from `section`.'''
+        """
+        Return the value for `option` from `section` as floating number.
+        """
+
+    def setFloat(section, option, value):
+        """
+        Set value as floating number.
+        """
 
 
 class IPropertyMixin(Interface):
