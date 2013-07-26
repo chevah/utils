@@ -80,13 +80,13 @@ def generate_ssh_key(options, key=None, open_method=None):
             key.store(public_file=file_handler, comment=options.key_comment)
 
         if options.key_comment:
-            comment = 'having comment "%s"' % (options.key_comment)
+            comment = u'having comment "%s"' % (options.key_comment)
         else:
-            comment = 'without a comment'
+            comment = u'without a comment'
 
         message = (
-            'SSH key of type "%s" and length "%d" generated as '
-            'public key file "%s" and private key file "%s" %s.') % (
+            u'SSH key of type "%s" and length "%d" generated as '
+            u'public key file "%s" and private key file "%s" %s.') % (
             options.key_type,
             key_size,
             public_file,

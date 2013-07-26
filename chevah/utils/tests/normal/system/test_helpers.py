@@ -34,6 +34,7 @@ class TestHelpers(UtilsTestCase):
             key_comment=u'%s %s' % (mk.string(), mk.string()),
             )
         self.assertFalse(mk.fs.exists(private_segments))
+        self.assertFalse(mk.fs.exists(public_segments))
 
         try:
             exit_code, message = generate_ssh_key(options)
