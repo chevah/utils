@@ -2,6 +2,13 @@ Release notes for chevah.utils
 ==============================
 
 
+0.21.0 - 27/07/2013
+-------------------
+
+* Configuration file received default values using native data.
+* FileConfigurationProxy now reads and writes JSON data.
+
+
 0.20.1 - 21/07/2013
 -------------------
 

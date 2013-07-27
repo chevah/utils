@@ -39,7 +39,7 @@ class TestLogConfigurationSection(UtilsTestCase):
         self.assertIsNone(section.file)
         self.assertFalse(section.file_rotate_external)
         self.assertEqual(0, section.file_rotate_at_size)
-        self.assertIsNone(section.file_rotate_each)
+        self.assertEqual((0, u's'), section.file_rotate_each)
         self.assertEqual(0, section.file_rotate_count)
         self.assertIsNone(section.syslog)
         self.assertIsNone(section.windows_eventlog)

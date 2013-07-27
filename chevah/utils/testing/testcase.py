@@ -8,7 +8,6 @@ import json
 
 from chevah.empirical.testcase import ChevahTestCase
 from chevah.utils.constants import (
-    CONFIGURATION_DISABLED_VALUES,
     CONFIGURATION_INHERIT,
     )
 
@@ -24,28 +23,11 @@ class UtilsTestCase(ChevahTestCase):
      * checks that temporary folder is clean at exit
     """
 
-    def defaultBoolean(self, option):
-        '''Return default boolean value.'''
-        _boolean_states = {'1': True, 'yes': True, 'true': True,
-                                      'on': True,
-                           '0': False, 'no': False, 'false': False,
-                                       'off': False}
-        return _boolean_states[
-            self.CONFIGURATION_DEFAULTS[option].lower()]
-
-    def defaultString(self, option):
-        '''Return default boolean value.'''
+    def defaultValue(self, option):
+        """
+        Return value from defaults.
+        """
         return self.CONFIGURATION_DEFAULTS[option]
-
-    def defaultStringOrNone(self, option):
-        '''Return default boolean value.'''
-        value = self.CONFIGURATION_DEFAULTS[option]
-        if value in CONFIGURATION_DISABLED_VALUES:
-            return None
-
-    def defaultInteger(self, option):
-        '''Return default boolean value.'''
-        return int(self.CONFIGURATION_DEFAULTS[option])
 
     def assertPropertyString(self, config_factory, key):
         """

@@ -27,14 +27,14 @@ CONFIGURATION_ALL_LOG_ENABLED_GROUPS = u'all'
 
 # Log configuration section.
 LOG_SECTION_DEFAULTS = {
-    'log_enabled': 'Yes',
-    'log_file': u'None',
-    'log_file_rotate_external': 'No',
-    'log_file_rotate_at_size': 'Disabled',
-    'log_file_rotate_each': 'Disabled',
-    'log_file_rotate_count': 'Disabled',
-    'log_syslog': u'None',
-    'log_windows_eventlog': u'None',
+    'log_enabled': True,
+    'log_file': u'',
+    'log_file_rotate_external': False,
+    'log_file_rotate_at_size': 0,
+    'log_file_rotate_each': '0 seconds',
+    'log_file_rotate_count': 0,
+    'log_syslog': u'',
+    'log_windows_eventlog': u'',
     'log_enabled_groups': CONFIGURATION_ALL_LOG_ENABLED_GROUPS,
 }
 

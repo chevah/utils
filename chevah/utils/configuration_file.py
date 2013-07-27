@@ -4,6 +4,7 @@
 Module for configuration loaded from local files.
 """
 import ConfigParser
+import json
 
 from zope.interface import implements
 
@@ -32,7 +33,13 @@ class FileConfigurationProxy(object):
 
     def __init__(self, configuration_path=None, configuration_file=None,
                  defaults=None):
-        self._raw_config = ConfigParser.RawConfigParser(defaults)
+        raw_defaults = None
+        if defaults:
+            raw_defaults = {}
+            for key, value in defaults.items():
+                raw_defaults[key] = json.dumps(value)
+
+        self._raw_config = ConfigParser.RawConfigParser(raw_defaults)
         self._configuration_path = configuration_path
         if configuration_path:
             configuration_segments = local_filesystem.getSegmentsFromRealPath(
@@ -176,7 +183,7 @@ class FileConfigurationProxy(object):
         """
         try:
             converted_value = converter(value)
-        except ValueError, error:
+        except (ValueError, TypeError), error:
             raise UtilsError(u'1001', _(
                 u'Cannot set %(type)s value %(value)s for option %(option)s '
                 u'in %(section)s. %(error)s') % {
@@ -360,6 +367,22 @@ class FileConfigurationProxy(object):
         See `IConfigurationProxy`.
         """
         return self._set(float, section, option, value, 'floating number')
+
+    def getJSON(self, section, option):
+        """
+        See `IConfigurationProxy`.
+        """
+        def get_json(section, option):
+            raw = self._raw_config.get(section, option)
+            return json.loads(raw)
+
+        return self._get(get_json, section, option, 'JSON data')
+
+    def setJSON(self, section, option, value):
+        """
+        See `IConfigurationProxy`.
+        """
+        return self._set(json.dumps, section, option, value, 'JSON data')
 
 
 class ConfigurationFileMixin(PropertyMixin):
