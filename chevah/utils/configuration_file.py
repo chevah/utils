@@ -77,32 +77,49 @@ class FileConfigurationProxy(object):
         else:
             self._configuration_file.close()
 
-    def save(self):
-        '''Store the configuration into file.'''
-        if self._configuration_path:
-            real_segments = local_filesystem.getSegmentsFromRealPath(
-                self._configuration_path)
-            tmp_segments = real_segments[:]
-            tmp_segments[-1] = tmp_segments[-1] + u'.tmp'
-            store_file = local_filesystem.openFileForWriting(
-                    tmp_segments, utf8=True)
-            for section in self._raw_config._sections:
-                store_file.write(u'[%s]\n' % section)
-                items = self._raw_config._sections[section].items()
-                for (key, value) in items:
-                    if key != u'__name__':
-                        store_file.write(u'%s = %s\n' %
-                                 (key,
-                                 unicode(value).replace(u'\n', u'\n\t')))
-                store_file.write('\n')
-            store_file.close()
-            # We delete the file first to work around windows problems.
-            local_filesystem.deleteFile(real_segments)
-            local_filesystem.rename(tmp_segments, real_segments)
-        else:
+    def save(self, configuration_file=None):
+        """
+        Store the configuration into file.
+
+        By default, it stores the data, in the same *path* fromw
+        which it was loaded from.
+
+        `configuration_file` argument is provided to help with testing.
+        """
+        if configuration_file:
+            self._writeToFile(store_file=configuration_file)
+            return
+
+        if not self._configuration_path:
             raise AssertionError(
                 'Trying to save a configuration that was not loaded from '
-                ' a file')
+                ' a file from disk.')
+
+        real_segments = local_filesystem.getSegmentsFromRealPath(
+            self._configuration_path)
+        tmp_segments = real_segments[:]
+        tmp_segments[-1] = tmp_segments[-1] + u'.tmp'
+        store_file = local_filesystem.openFileForWriting(
+                tmp_segments, utf8=True)
+        self._writeToFile(store_file=store_file)
+        store_file.close()
+        # We delete the file first to work around windows problems.
+        local_filesystem.deleteFile(real_segments)
+        local_filesystem.rename(tmp_segments, real_segments)
+
+    def _writeToFile(self, store_file):
+        """
+        Write serialized configuration to a file stream.
+        """
+        for section in self._raw_config._sections:
+            store_file.write(u'[%s]\n' % section)
+            items = self._raw_config._sections[section].items()
+            for (key, value) in items:
+                if key != u'__name__':
+                    store_file.write(u'%s = %s\n' %
+                             (key,
+                             unicode(value).replace(u'\n', u'\n\t')))
+            store_file.write('\n')
 
     def get(self, section, option):
         '''Raise AssertionError if low level methods are called.'''

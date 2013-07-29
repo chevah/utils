@@ -592,6 +592,56 @@ class TestFileConfigurationProxy(UtilsTestCase):
         self.check_setStringOrInherit(
             "getStringSpecial", "setStringSpecial")
 
+    def test_getString_multi_line(self):
+        """
+        Multi line text can be read and all leading spaces or tabs for new
+        lines are stripped.
+        """
+        content = (
+            u'[some_section]\n'
+            u'space_value: space\n'
+            u'            multi-line\n'
+            u'tab_value: tag\n'
+            u'\t\t\tmarker\n'
+            u'normal_value: bla\n'
+            )
+
+        config = self.makeFileConfiguration(content=content)
+
+        self.assertEqual(
+            u'space\nmulti-line',
+            config.getString(u'some_section', u'space_value'))
+        self.assertEqual(
+            u'tag\nmarker',
+            config.getString(u'some_section', u'tab_value'))
+
+    def test_setString_multi_line(self):
+        """
+        Multi line text can be written and is stored in in file using
+        tab marker.
+        """
+        content = (
+            u'[some_section]\n'
+            u'some_value: start\n'
+            )
+        config = self.makeFileConfiguration(content=content)
+
+        config.setString(u'some_section', u'some_value', 'multi\nline\n')
+
+        self.assertEqual(
+            u'multi\nline\n',
+            config.getString(u'some_section', u'some_value'))
+        # Check how the changes are stored on the serialized file.
+        store_file = StringIO()
+        config.save(configuration_file=store_file)
+        self.assertEqual(
+            u'[some_section]\n'
+            'some_value = multi\n'
+            '\tline\n'
+            '\t\n'
+            '\n',
+            store_file.getvalue())
+
     def test_getIntegerOrNone_none(self):
         """
         Check getIntegerOrNone.
@@ -831,11 +881,13 @@ class TestFileConfigurationProxy(UtilsTestCase):
         """
         content = (
             '[section]\n'
-            'json: [1, "a", 1.3, true]\n')
+            'json: [1, "a", 1.3, true, "multi\\nline"]\n')
         config = self.makeFileConfiguration(content=content)
 
         self.assertEqual(
-            [1, 'a', 1.3, True], config.getJSON('section', 'json'))
+            [1, u'a', 1.3, True, u'multi\nline'],
+            config.getJSON('section', 'json'),
+            )
 
     def test_getJSON_invalid(self):
         """
@@ -864,6 +916,9 @@ class TestFileConfigurationProxy(UtilsTestCase):
 
         config.setJSON('section', 'json', 'test')
         self.assertEqual(u'test', config.getJSON('section', 'json'))
+
+        config.setJSON('section', 'json', 'multi\nline')
+        self.assertEqual(u'multi\nline', config.getJSON('section', 'json'))
 
         config.setJSON('section', 'json', '')
         self.assertEqual(u'', config.getJSON('section', 'json'))
