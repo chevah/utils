@@ -60,6 +60,21 @@
     "data": {}
 },
 
+"1001": {
+    "message": "Cannot set %(type)s value %(value)s for option %(option)s in %(section)s. %(error)s",
+    "groups": ["operational", "failure"],
+    "version_added": "2.1.0",
+    "version_removed": "None",
+    "description": "None",
+    "data": {
+        "type": "Type of value that was requested to be set.",
+        "value": "Value that was requested to be set.",
+        "option": "Name of the option that was set.",
+        "section": "Name of the section in which option was set.",
+        "error": "More details about the error."
+    }
+},
+
 "1002": {
     "message": "Could not parse the configuration file. .*",
     "groups": ["operational", "failure"],
