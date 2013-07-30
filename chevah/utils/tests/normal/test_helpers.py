@@ -125,7 +125,6 @@ class TestHelpers(UtilsTestCase):
         key.generate.assert_called_once_with(
             key_type=crypto.TYPE_DSA, key_size=2048)
         # Both private and public keys are stored.
-        self.assertEqual(2, key.store.call_count)
         key.store.assert_has_calls([
             call(private_file=open_method),
             call(public_file=open_method, comment=u'this is a comment'),

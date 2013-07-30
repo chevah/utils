@@ -19,11 +19,13 @@ class TestHelpers(UtilsTestCase):
     @attr('slow')
     def test_generate_ssh_key(self):
         """
-        Test SSH key generation with different key options.
+        Private/public key pair is generated, stored in the specified files
+        and are of desired type/length.
         """
         file_path, private_segments = mk.fs.makePathInTemp()
         public_segments = private_segments[:]
         public_segments[-1] = u'%s.pub' % (public_segments[-1])
+        comment = u'%s %s' % (mk.string(), mk.string())
         options = object()
         # The current code don't allow creating smaller keys, so at 1024 bit,
         # this test is very slow.
@@ -31,7 +33,7 @@ class TestHelpers(UtilsTestCase):
             key_size=1024,
             key_type='rsa',
             key_file=file_path,
-            key_comment=u'%s %s' % (mk.string(), mk.string()),
+            key_comment=comment,
             )
         self.assertFalse(mk.fs.exists(private_segments))
         self.assertFalse(mk.fs.exists(public_segments))
@@ -46,4 +48,5 @@ class TestHelpers(UtilsTestCase):
             mk.fs.deleteFile(public_segments)
         self.assertContains('type "rsa"',  message)
         self.assertContains('length "1024"', message)
+        self.assertContains('having comment "%s"' % comment, message)
         self.assertEqual(0, exit_code)
