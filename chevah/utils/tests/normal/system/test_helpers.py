@@ -19,7 +19,7 @@ class TestHelpers(UtilsTestCase):
     @attr('slow')
     def test_generate_ssh_key(self):
         """
-        Test SSH key generation with different key options.
+        SSH key generation with custom key options.
         """
         file_path, private_segments = mk.fs.makePathInTemp()
         public_segments = private_segments[:]
