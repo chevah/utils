@@ -46,7 +46,7 @@ class DummyOpenContext(object):
 
 class TestHelpers(UtilsTestCase):
     """
-    Tests for helpers.
+    Unit tests for helpers.
     """
 
     def test_import_as_string_error(self):
@@ -63,45 +63,6 @@ class TestHelpers(UtilsTestCase):
         module = import_as_string('chevah.utils')
 
         self.assertEqual('chevah.utils', module.__name__)
-
-    def test_generate_ssh_key_default_values(self):
-        """
-        When no file and no comment is provided, it will use default
-        values.
-        """
-        options = self.Bunch(
-            key_size=1024,
-            key_type=u'RSA',
-            key_file=None,
-            key_comment=None,
-            )
-        key = DummyKey()
-        open_method = DummyOpenContext()
-
-        exit_code, message = generate_ssh_key(
-            options, key=key, open_method=open_method)
-
-        # Key is generated with requested arguments.
-        key.generate.assert_called_once_with(
-            key_type=crypto.TYPE_RSA, key_size=1024)
-        # Both private and public keys are stored.
-        key.store.assert_has_calls([
-            call(private_file=open_method),
-            call(public_file=open_method, comment=None),
-            ])
-        # First is writes the private key.
-        self.assertEqual(
-            {'path': 'id_rsa', 'mode': 'wb'}, open_method.calls[0])
-        # Then it writes the public key.
-        self.assertEqual(
-            {'path': 'id_rsa.pub', 'mode': 'wb'}, open_method.calls[1])
-        self.assertEqual(
-            u'SSH key of type "RSA" and length "1024" generated as public '
-            u'key file "id_rsa.pub" and private key file "id_rsa" without '
-            u'a comment.',
-            message,
-            )
-        self.assertEqual(0, exit_code)
 
     def test_generate_ssh_key_custom_values(self):
         """
@@ -120,15 +81,16 @@ class TestHelpers(UtilsTestCase):
         exit_code, message = generate_ssh_key(
             options, key=key, open_method=open_method)
 
-        # Key is generated with requested arguments.
+        # Key is generated with requested type and length.
         key.generate.assert_called_once_with(
             key_type=crypto.TYPE_DSA, key_size=2048)
-        # Both private and public keys are stored.
+        # Both private key and public key with comments are stored.
+		self.assertEqual(2, key.store.call_count)
         key.store.assert_has_calls([
             call(private_file=open_method),
             call(public_file=open_method, comment=u'this is a comment'),
             ])
-        # First is writes the private key.
+        # First it writes the private key.
         self.assertEqual(
             {'path': 'test_file', 'mode': 'wb'}, open_method.calls[0])
         # Then it writes the public key.
@@ -141,3 +103,38 @@ class TestHelpers(UtilsTestCase):
             message,
             )
         self.assertEqual(0, exit_code)
+
+    def test_generate_ssh_key_default_values(self):
+        """
+        When no path and no comment are provided, it will use default
+        values.
+        """
+        options = self.Bunch(
+            key_size=1024,
+            key_type=u'RSA',
+            key_file=None,
+            key_comment=None,
+            )
+        key = DummyKey()
+        open_method = DummyOpenContext()
+
+        exit_code, message = generate_ssh_key(
+            options, key=key, open_method=open_method)
+
+        # Writes private key and public key without a comment.
+        key.store.assert_has_calls([
+            call(private_file=open_method),
+            call(public_file=open_method, comment=None),
+            ])
+        # Default file path is used for private and public keys.
+        self.assertEqual(
+            {'path': 'id_rsa', 'mode': 'wb'}, open_method.calls[0])
+        self.assertEqual(
+            {'path': 'id_rsa.pub', 'mode': 'wb'}, open_method.calls[1])
+        # Message inform what default values were used.
+        self.assertEqual(
+            u'SSH key of type "RSA" and length "1024" generated as public '
+            u'key file "id_rsa.pub" and private key file "id_rsa" without '
+            u'a comment.',
+            message,
+            )
