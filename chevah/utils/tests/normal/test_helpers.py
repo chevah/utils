@@ -66,7 +66,7 @@ class TestHelpers(UtilsTestCase):
 
     def test_generate_ssh_key_custom_values(self):
         """
-        When custom values are provided, the key is generated having those
+        When custom values are provided, the key is generated using those
         values.
         """
         options = self.Bunch(
@@ -84,8 +84,8 @@ class TestHelpers(UtilsTestCase):
         # Key is generated with requested type and length.
         key.generate.assert_called_once_with(
             key_type=crypto.TYPE_DSA, key_size=2048)
-        # Both private key and public key with comments are stored.
-		self.assertEqual(2, key.store.call_count)
+        # Both keys are stored. The public key has the specified comment.
+        self.assertEqual(2, key.store.call_count)
         key.store.assert_has_calls([
             call(private_file=open_method),
             call(public_file=open_method, comment=u'this is a comment'),
@@ -111,9 +111,7 @@ class TestHelpers(UtilsTestCase):
         """
         options = self.Bunch(
             key_size=1024,
-            key_type=u'RSA',
-            key_file=None,
-            key_comment=None,
+            key_type=u'RSA'
             )
         key = DummyKey()
         open_method = DummyOpenContext()
@@ -131,7 +129,7 @@ class TestHelpers(UtilsTestCase):
             {'path': 'id_rsa', 'mode': 'wb'}, open_method.calls[0])
         self.assertEqual(
             {'path': 'id_rsa.pub', 'mode': 'wb'}, open_method.calls[1])
-        # Message inform what default values were used.
+        # Message informs what default values were used.
         self.assertEqual(
             u'SSH key of type "RSA" and length "1024" generated as public '
             u'key file "id_rsa.pub" and private key file "id_rsa" without '

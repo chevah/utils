@@ -1,6 +1,14 @@
 Release notes for chevah.utils
 ==============================
 
+
+0.20.3 - 31/07/2013
+-------------------
+
+* Add support for default values for key_file and key_comment when
+  generating SSH keys pair.
+
+
 0.20.2 - 30/07/2013
 -------------------
 
