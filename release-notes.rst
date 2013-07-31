@@ -2,6 +2,12 @@ Release notes for chevah.utils
 ==============================
 
 
+0.20.4 - 31/07/2013
+-------------------
+
+* Use chevah-compat method when dealing with file paths.
+
+
 0.20.3 - 31/07/2013
 -------------------
 

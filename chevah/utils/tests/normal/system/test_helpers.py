@@ -4,7 +4,8 @@
 System tests for helpers.
 """
 from nose.plugins.attrib import attr
-import os
+
+from chevah.compat import LocalFilesystem
 
 from chevah.utils.crypto import Key
 from chevah.utils.helpers import (
@@ -19,6 +20,7 @@ class TestSSHKeysHelpers(UtilsTestCase):
     """
 
     def setUp(self):
+        super(TestSSHKeysHelpers, self).setUp()
         self.private_segments = None
         self.public_segments = None
 
@@ -28,6 +30,8 @@ class TestSSHKeysHelpers(UtilsTestCase):
 
         if self.public_segments:
             mk.fs.deleteFile(self.public_segments)
+
+        super(TestSSHKeysHelpers, self).tearDown()
 
     @attr('slow')
     def test_generate_ssh_key_pair(self):
@@ -49,9 +53,8 @@ class TestSSHKeysHelpers(UtilsTestCase):
             key_comment=comment,
             )
 
-        if os.name != 'nt':
-            private_path = private_path.encode('utf-8')
-            public_path = public_path.encode('utf-8')
+        private_path = LocalFilesystem.getEncodedPath(private_path)
+        public_path = LocalFilesystem.getEncodedPath(public_path)
 
         self.assertFalse(mk.fs.exists(self.private_segments))
         self.assertFalse(mk.fs.exists(self.public_segments))

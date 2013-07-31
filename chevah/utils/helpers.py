@@ -6,13 +6,14 @@ These code is here due to bad design. We should look for refactoring
 the products so that this code is not needed.
 '''
 from socket import gethostname
-import os
 import sys
 import threading
 import urllib
 import urlparse
 
 from OpenSSL import crypto
+
+from chevah.compat import LocalFilesystem
 
 from chevah.utils.constants import (
     DEFAULT_PUBLIC_KEY_EXTENSION,
@@ -67,12 +68,8 @@ def generate_ssh_key(options, key=None, open_method=None):
 
         key.generate(key_type=key_type, key_size=key_size)
 
-        if os.name == 'posix':
-            private_file_path = private_file.encode('utf-8')
-            public_file_path = public_file.encode('utf-8')
-        else:
-            private_file_path = private_file
-            public_file_path = public_file
+        private_file_path = LocalFilesystem.getEncodedPath(private_file)
+        public_file_path = LocalFilesystem.getEncodedPath(public_file)
 
         with open_method(private_file_path, 'wb') as file_handler:
             key.store(private_file=file_handler)
