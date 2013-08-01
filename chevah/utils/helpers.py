@@ -5,7 +5,6 @@
 These code is here due to bad design. We should look for refactoring
 the products so that this code is not needed.
 '''
-from __future__ import with_statement
 from socket import gethostname
 import sys
 import threading
@@ -13,6 +12,8 @@ import urllib
 import urlparse
 
 from OpenSSL import crypto
+
+from chevah.compat import LocalFilesystem
 
 from chevah.utils.constants import (
     DEFAULT_PUBLIC_KEY_EXTENSION,
@@ -27,14 +28,24 @@ def _(string):
     return string
 
 
-def generate_ssh_key(options):
-    '''Generate a SSH RSA or DSA key.
+def generate_ssh_key(options, key=None, open_method=None):
+    """
+    Generate a SSH RSA or DSA key.
 
     Return a pair of (exit_code, operation_message).
 
     For success, exit_code is 0.
-    '''
-    from chevah.utils.crypto import Key
+
+    `key` and `open_method` are helpers for dependency injection
+    during tests.
+    """
+    if key is None:
+        from chevah.utils.crypto import Key
+        key = Key()
+
+    if open_method is None:
+        open_method = open
+
     exit_code = 0
     message = ''
     try:
@@ -47,32 +58,42 @@ def generate_ssh_key(options):
         else:
             key_type = options.key_type
 
-        if options.key_file is None:
+        if not hasattr(options, 'key_file') or options.key_file is None:
             options.key_file = 'id_%s' % (options.key_type.lower())
+
         private_file = options.key_file
 
         public_file = u'%s%s' % (
             options.key_file, DEFAULT_PUBLIC_KEY_EXTENSION)
 
-        key = Key()
         key.generate(key_type=key_type, key_size=key_size)
 
-        with open(private_file, 'wb') as file_handler:
+        private_file_path = LocalFilesystem.getEncodedPath(private_file)
+        public_file_path = LocalFilesystem.getEncodedPath(public_file)
+
+        with open_method(private_file_path, 'wb') as file_handler:
             key.store(private_file=file_handler)
 
-        with open(public_file, 'wb') as file_handler:
-            key.store(public_file=file_handler, comment=options.key_comment)
+        key_comment = None
+        if hasattr(options, 'key_comment') and options.key_comment:
+            key_comment = options.key_comment
+            message_comment = u'having comment "%s"' % key_comment
+        else:
+            message_comment = u'without a comment'
+
+        with open_method(public_file_path, 'wb') as file_handler:
+            key.store(public_file=file_handler, comment=key_comment)
 
         message = (
-            'SSH key of type "%s" and length "%d" generated as '
-            'public key file "%s" and private key file "%s" '
-            'having comment "%s".') % (
+            u'SSH key of type "%s" and length "%d" generated as '
+            u'public key file "%s" and private key file "%s" %s.') % (
             options.key_type,
             key_size,
             public_file,
             private_file,
-            options.key_comment,
+            message_comment,
             )
+
         exit_code = 0
 
     except UtilsError, error:

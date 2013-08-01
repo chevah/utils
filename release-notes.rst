@@ -2,6 +2,25 @@ Release notes for chevah.utils
 ==============================
 
 
+0.20.4 - 31/07/2013
+-------------------
+
+* Use chevah-compat method when dealing with file paths.
+
+
+0.20.3 - 31/07/2013
+-------------------
+
+* Add support for default values for key_file and key_comment when
+  generating SSH keys pair.
+
+
+0.20.2 - 30/07/2013
+-------------------
+
+* Merge latest fixed from 0.19.4.
+
+
 0.20.1 - 21/07/2013
 -------------------
 
@@ -13,6 +32,19 @@ Release notes for chevah.utils
 
 * Don't set invalid values for configuration options and raise an error when
   trying to set one.
+
+
+0.19.4 - 22/07/2013
+-------------------
+
+* Removed redundant code from the message when generating SSH key.
+
+
+0.19.3 - 19/07/2013
+-------------------
+
+* Added a more user friendly message when generating SSH key and no
+  comment is specified.
 
 
 0.19.2 - 18/07/2013
