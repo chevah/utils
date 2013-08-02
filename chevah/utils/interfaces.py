@@ -53,12 +53,12 @@ class IConfigurationProxy(Interface):
         `None` value.
         """
 
-    def setInteger(section, option):
+    def setInteger(section, option, value):
         """
         Set value as integer number.
         """
 
-    def setIntegerOrNone(section, option):
+    def setIntegerOrNone(section, option, value):
         """
         Set value as integer number or the special `None` value.
         """
@@ -89,6 +89,16 @@ class IConfigurationProxy(Interface):
     def setFloat(section, option, value):
         """
         Set value as floating number.
+        """
+
+    def getJSON(section, option):
+        """
+        Return the JSON de-serialization value for `option` from `section`.
+        """
+
+    def setJSON(section, option, value):
+        """
+        Set value as JSON serialization.
         """
 
 

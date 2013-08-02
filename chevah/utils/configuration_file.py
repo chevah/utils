@@ -4,6 +4,7 @@
 Module for configuration loaded from local files.
 """
 import ConfigParser
+import json
 
 from zope.interface import implements
 
@@ -32,7 +33,13 @@ class FileConfigurationProxy(object):
 
     def __init__(self, configuration_path=None, configuration_file=None,
                  defaults=None):
-        self._raw_config = ConfigParser.RawConfigParser(defaults)
+        raw_defaults = None
+        if defaults:
+            raw_defaults = {}
+            for key, value in defaults.items():
+                raw_defaults[key] = json.dumps(value)
+
+        self._raw_config = ConfigParser.RawConfigParser(raw_defaults)
         self._configuration_path = configuration_path
         if configuration_path:
             configuration_segments = local_filesystem.getSegmentsFromRealPath(
@@ -70,32 +77,49 @@ class FileConfigurationProxy(object):
         else:
             self._configuration_file.close()
 
-    def save(self):
-        '''Store the configuration into file.'''
-        if self._configuration_path:
-            real_segments = local_filesystem.getSegmentsFromRealPath(
-                self._configuration_path)
-            tmp_segments = real_segments[:]
-            tmp_segments[-1] = tmp_segments[-1] + u'.tmp'
-            store_file = local_filesystem.openFileForWriting(
-                    tmp_segments, utf8=True)
-            for section in self._raw_config._sections:
-                store_file.write(u'[%s]\n' % section)
-                items = self._raw_config._sections[section].items()
-                for (key, value) in items:
-                    if key != u'__name__':
-                        store_file.write(u'%s = %s\n' %
-                                 (key,
-                                 unicode(value).replace(u'\n', u'\n\t')))
-                store_file.write('\n')
-            store_file.close()
-            # We delete the file first to work around windows problems.
-            local_filesystem.deleteFile(real_segments)
-            local_filesystem.rename(tmp_segments, real_segments)
-        else:
+    def save(self, configuration_file=None):
+        """
+        Store the configuration into file.
+
+        By default, it stores the data, in the same *path* fromw
+        which it was loaded from.
+
+        `configuration_file` argument is provided to help with testing.
+        """
+        if configuration_file:
+            self._writeToFile(store_file=configuration_file)
+            return
+
+        if not self._configuration_path:
             raise AssertionError(
                 'Trying to save a configuration that was not loaded from '
-                ' a file')
+                ' a file from disk.')
+
+        real_segments = local_filesystem.getSegmentsFromRealPath(
+            self._configuration_path)
+        tmp_segments = real_segments[:]
+        tmp_segments[-1] = tmp_segments[-1] + u'.tmp'
+        store_file = local_filesystem.openFileForWriting(
+                tmp_segments, utf8=True)
+        self._writeToFile(store_file=store_file)
+        store_file.close()
+        # We delete the file first to work around windows problems.
+        local_filesystem.deleteFile(real_segments)
+        local_filesystem.rename(tmp_segments, real_segments)
+
+    def _writeToFile(self, store_file):
+        """
+        Write serialized configuration to a file stream.
+        """
+        for section in self._raw_config._sections:
+            store_file.write(u'[%s]\n' % section)
+            items = self._raw_config._sections[section].items()
+            for (key, value) in items:
+                if key != u'__name__':
+                    store_file.write(u'%s = %s\n' %
+                             (key,
+                             unicode(value).replace(u'\n', u'\n\t')))
+            store_file.write('\n')
 
     def get(self, section, option):
         '''Raise AssertionError if low level methods are called.'''
@@ -176,7 +200,7 @@ class FileConfigurationProxy(object):
         """
         try:
             converted_value = converter(value)
-        except ValueError, error:
+        except (ValueError, TypeError), error:
             raise UtilsError(u'1001', _(
                 u'Cannot set %(type)s value %(value)s for option %(option)s '
                 u'in %(section)s. %(error)s') % {
@@ -360,6 +384,22 @@ class FileConfigurationProxy(object):
         See `IConfigurationProxy`.
         """
         return self._set(float, section, option, value, 'floating number')
+
+    def getJSON(self, section, option):
+        """
+        See `IConfigurationProxy`.
+        """
+        def get_json(section, option):
+            raw = self._raw_config.get(section, option)
+            return json.loads(raw)
+
+        return self._get(get_json, section, option, 'JSON data')
+
+    def setJSON(self, section, option, value):
+        """
+        See `IConfigurationProxy`.
+        """
+        return self._set(json.dumps, section, option, value, 'JSON data')
 
 
 class ConfigurationFileMixin(PropertyMixin):

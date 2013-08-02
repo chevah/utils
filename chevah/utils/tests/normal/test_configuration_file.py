@@ -18,6 +18,7 @@ from chevah.utils.constants import CONFIGURATION_INHERIT
 from chevah.utils.exceptions import (
     UtilsError,
     )
+from chevah.utils.interfaces import IConfigurationProxy
 
 
 class TestFileConfigurationProxy(UtilsTestCase):
@@ -25,12 +26,13 @@ class TestFileConfigurationProxy(UtilsTestCase):
 
     special_characters = u'~`!@#$%^&*()_\\/-+="\''
 
-    def makeFileConfiguration(self, content):
+    def makeFileConfiguration(self, content, defaults=None):
         """
         Returns a file configuration with `content`.
         """
         config_file = StringIO(content)
-        config = FileConfigurationProxy(configuration_file=config_file)
+        config = FileConfigurationProxy(
+            configuration_file=config_file, defaults=defaults)
         config.load()
         return config
 
@@ -62,6 +64,30 @@ class TestFileConfigurationProxy(UtilsTestCase):
                 configuration_path='some-path',
                 configuration_file=config_file)
         self.assertEqual(u'1011', context.exception.event_id)
+
+    def test_init_with_defaults(self):
+        """
+        It can be initialized with default values provided as native Python
+        data.
+        """
+        defaults = {
+            'integer': 123,
+            'boolean': True,
+            'float': 1.23,
+            'string': u'abc\u0219',
+            'json': ['a', 'b', 'c'],
+        }
+        content = '[section]'
+
+        config = self.makeFileConfiguration(
+            content=content, defaults=defaults)
+
+        self.assertProvides(IConfigurationProxy, config)
+        self.assertEqual(123, config.getInteger('section', 'integer'))
+        self.assertEqual(1.23, config.getFloat('section', 'float'))
+        self.assertEqual(u'abc\\u0219', config.getString('section', 'string'))
+        self.assertIsTrue(config.getBoolean('section', 'boolean'))
+        self.assertEqual(['a', 'b', 'c'], config.getJSON('section', 'json'))
 
     def test_init_no_read_to_config_file(self):
         '''Test loading a configuration file with no read permissions.'''
@@ -566,6 +592,56 @@ class TestFileConfigurationProxy(UtilsTestCase):
         self.check_setStringOrInherit(
             "getStringSpecial", "setStringSpecial")
 
+    def test_getString_multi_line(self):
+        """
+        Multi line text can be read and all leading spaces or tabs for new
+        lines are stripped.
+        """
+        content = (
+            u'[some_section]\n'
+            u'space_value: space\n'
+            u'            multi-line\n'
+            u'tab_value: tag\n'
+            u'\t\t\tmarker\n'
+            u'normal_value: bla\n'
+            )
+
+        config = self.makeFileConfiguration(content=content)
+
+        self.assertEqual(
+            u'space\nmulti-line',
+            config.getString(u'some_section', u'space_value'))
+        self.assertEqual(
+            u'tag\nmarker',
+            config.getString(u'some_section', u'tab_value'))
+
+    def test_setString_multi_line(self):
+        """
+        Multi line text can be written and is stored in in file using
+        tab marker.
+        """
+        content = (
+            u'[some_section]\n'
+            u'some_value: start\n'
+            )
+        config = self.makeFileConfiguration(content=content)
+
+        config.setString(u'some_section', u'some_value', 'multi\nline\n')
+
+        self.assertEqual(
+            u'multi\nline\n',
+            config.getString(u'some_section', u'some_value'))
+        # Check how the changes are stored on the serialized file.
+        store_file = StringIO()
+        config.save(configuration_file=store_file)
+        self.assertEqual(
+            u'[some_section]\n'
+            'some_value = multi\n'
+            '\tline\n'
+            '\t\n'
+            '\n',
+            store_file.getvalue())
+
     def test_getIntegerOrNone_none(self):
         """
         Check getIntegerOrNone.
@@ -734,7 +810,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         with self.assertRaises(ValueError):
             config._booleanConverter(4)
 
-    def test_getFload_valid(self):
+    def test_getFloat_valid(self):
         """
         A float value is can be read.
         """
@@ -745,7 +821,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
 
         self.assertEqual(1.43, config.getFloat('section', 'float_option'))
 
-    def test_getFload_invalid(self):
+    def test_getFloat_invalid(self):
         """
         An error is raised when value is not float.
         """
@@ -761,7 +837,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         self.assertContains(
             'floating number value', context.exception.message)
 
-    def test_setFload_valid(self):
+    def test_setFloat_valid(self):
         """
         A float value is can be set as float, integer or string.
         """
@@ -781,7 +857,7 @@ class TestFileConfigurationProxy(UtilsTestCase):
         config.setFloat('section', 'float_option', u'3.45')
         self.assertEqual(3.45, config.getFloat('section', 'float_option'))
 
-    def test_setFload_invalid(self):
+    def test_setFloat_invalid(self):
         """
         When setting an invalid float value, error is raised and previous
         value is kept.
@@ -798,6 +874,87 @@ class TestFileConfigurationProxy(UtilsTestCase):
         self.assertContains(
             'floating number value', context.exception.message)
         self.assertEqual(2.34, config.getFloat('section', 'float_option'))
+
+    def test_getJSON_valid(self):
+        """
+        Any JSON value can be read.
+        """
+        content = (
+            '[section]\n'
+            'json: [1, "a", 1.3, true, "multi\\nline"]\n')
+        config = self.makeFileConfiguration(content=content)
+
+        self.assertEqual(
+            [1, u'a', 1.3, True, u'multi\nline'],
+            config.getJSON('section', 'json'),
+            )
+
+    def test_getJSON_invalid(self):
+        """
+        An error is raised when JSON data is not valid.
+        """
+        content = (
+            '[section]\n'
+            'json: [1, a", 1.3, true]\n')
+        config = self.makeFileConfiguration(content=content)
+
+        with self.assertRaises(UtilsError) as context:
+            config.getJSON('section', 'json')
+
+        self.assertExceptionID(u'1000', context.exception)
+        self.assertContains(
+            'JSON data value', context.exception.message)
+
+    def test_setJSON_valid(self):
+        """
+        Any raw data can we set as JSON.
+        """
+        content = (
+            '[section]\n'
+            'json: ""\n')
+        config = self.makeFileConfiguration(content=content)
+
+        config.setJSON('section', 'json', 'test')
+        self.assertEqual(u'test', config.getJSON('section', 'json'))
+
+        config.setJSON('section', 'json', 'multi\nline')
+        self.assertEqual(u'multi\nline', config.getJSON('section', 'json'))
+
+        config.setJSON('section', 'json', '')
+        self.assertEqual(u'', config.getJSON('section', 'json'))
+
+        value = manufacture.string()
+        config.setJSON('section', 'json', value)
+        self.assertEqual(value, config.getJSON('section', 'json'))
+
+        config.setJSON('section', 'json', 2.45)
+        self.assertEqual(2.45, config.getJSON('section', 'json'))
+
+        config.setJSON('section', 'json', 2)
+        self.assertEqual(2, config.getJSON('section', 'json'))
+
+        config.setJSON('section', 'json', [1, 2])
+        self.assertEqual([1, 2], config.getJSON('section', 'json'))
+
+    def test_setJSON_invalid(self):
+        """
+        An error is raised when setting invalid JSON data.
+        """
+        initial_value = manufacture.string()
+        content = (
+            '[section]\n'
+            'json: "%s"\n') % (initial_value)
+        config = self.makeFileConfiguration(content=content)
+        # Check that value is valid, just to be extra safe.
+        self.assertEqual(initial_value, config.getJSON('section', 'json'))
+
+        with self.assertRaises(UtilsError) as context:
+            config.setJSON('section', 'json', object())
+
+        self.assertExceptionID(u'1001', context.exception)
+        self.assertContains(
+            'JSON data value', context.exception.message)
+        self.assertEqual(initial_value, config.getJSON('section', 'json'))
 
 
 class DummyConfigurationFileMixin(ConfigurationFileMixin):
